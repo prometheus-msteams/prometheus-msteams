@@ -3,6 +3,9 @@
 *.dll
 *.so
 *.dylib
+promteams
+promteams-*
+issue/
 
 # Test binary, build with `go test -c`
 *.test
