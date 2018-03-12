@@ -5,7 +5,7 @@
 *.dylib
 promteams
 promteams-*
-issue/
+examples/
 
 # Test binary, build with `go test -c`
 *.test
