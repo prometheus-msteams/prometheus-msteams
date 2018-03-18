@@ -18,7 +18,7 @@ jobs:
           command: |
             if [[ $CIRCLE_BRANCH == "master" ]]; then
               docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-              make docker_push VERSION=latest
+              make docker_push
             fi
             if [[ $CIRCLE_TAG ]]; then
               docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}

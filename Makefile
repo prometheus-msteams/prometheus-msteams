@@ -31,7 +31,7 @@ windows:
 
 docker: clean getdep test linux
 	echo Performing a docker build
-	docker build --build-arg version=${VERSION} -t ${GITHUB_USERNAME}/${BINARY}:${VERSION} .
+	docker build --build-arg VERSION=${VERSION} -t ${GITHUB_USERNAME}/${BINARY}:${VERSION} .
 
 docker_push: docker
 	docker push ${GITHUB_USERNAME}/${BINARY}:${VERSION}
