@@ -2,21 +2,22 @@
 
 A lightweight Go Web Server that accepts POST alert message from Prometheus Alertmanager and sends it to Microsoft Teams Channels using an incoming webhook url.
 
-* Built with `go 1.10`
-* Tested with Prometheus `2.2.0` and AlertManager `0.14.0`
-
 ## Docker Installation
 
 ```bash
-docker run -d -p 2000:2000 --name="promteams" -e MARKDOWN_ENABLED=yes -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxxx-xxxx-xxx" docker.io/bzon/promteams:latest
+docker run -d -p 2000:2000 \
+    --name="promteams" \
+    -e MARKDOWN_ENABLED=yes \
+    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxxx-xxxx-xxx" \
+    docker.io/bzon/prometheus-msteams:latest
 ```
 
 ## Go Installation
 
 ```bash
 go build
-./promteams server --help
-./promteams server -l localhost -p 2000 -w "https://outlook.office.com/webhook/xxxx-xxxx-xxx"
+./prometheus-msteams server --help
+./prometheus-msteams server -l localhost -p 2000 -w "https://outlook.office.com/webhook/xxxx-xxxx-xxx"
 ```
 
 ## Alert Manager Configuration
@@ -31,13 +32,13 @@ route:
     group_interval: 30s
     repeat_interval: 30s
     group_wait: 30s
-    receiver: 'teams_proxy'
+    receiver: 'prometheus-msteams'
 
 receivers:
-    - name: 'teams_proxy'
+    - name: 'prometheus-msteams'
       webhook_configs:
           - send_resolved: true
-            url: 'http://docker.for.mac.host.internal:8080/alertmanager'
+            url: 'http://localhost:2000/alertmanager'
 ```
 
 ## Debugging
