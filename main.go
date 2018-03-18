@@ -1,4 +1,4 @@
-// Copyright © 2018 bryansazon@hotmail.com
+// Copyright © 2018 bzon <bryansazon@hotmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/bzon/promteams/cmd"
+import "github.com/bzon/prometheus-msteams/cmd"
 
 func main() {
 	cmd.Execute()

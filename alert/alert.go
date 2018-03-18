@@ -1,12 +1,34 @@
-package handler
+// Copyright © 2018 bzon <bryansazon@hotmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+package alert
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // CardCounter displays in the logs
@@ -60,18 +82,26 @@ type TeamsMessageCardSectionFacts struct {
 	Value string `json:"value"`
 }
 
-// AlertManagerHandler handles incoming request to /alertmanager
-func AlertManagerHandler(w http.ResponseWriter, r *http.Request) {
+// DecodePrometheusAlert decodes Prometheus JSON Request Body to PrometheusAlertMessage struct
+func (p *PrometheusAlertMessage) DecodePrometheusAlert(r io.Reader) error {
+	decoder := json.NewDecoder(r)
+	err := decoder.Decode(p)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PrometheusAlertManagerHandler handles incoming request to /alertmanager
+func PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Error: Only accepts POST requests.", http.StatusBadRequest)
+		http.Error(w, "Server only accepts POST requests.", http.StatusMethodNotAllowed)
 		return
 	}
-	decoder := json.NewDecoder(r.Body)
 	var p PrometheusAlertMessage
-	err := decoder.Decode(&p)
+	err := p.DecodePrometheusAlert(r.Body)
 	if err != nil {
-		msg := fmt.Sprintf("Error: encoding message: %v", err)
-		log.Println(msg)
+		msg := fmt.Sprintf("Server decoding error %v", err)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
@@ -87,7 +117,11 @@ func AlertManagerHandler(w http.ResponseWriter, r *http.Request) {
 	err = c.SendCard()
 	if err != nil {
 		log.Println(err)
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		return
 	}
+	CardCounter++
+	log.Printf("Total Card sent since uptime: %d\n", CardCounter)
 }
 
 // SendCard sends the JSON Encoded TeamsMessageCard
@@ -97,15 +131,15 @@ func (c *TeamsMessageCard) SendCard() error {
 	url := os.Getenv("TEAMS_INCOMING_WEBHOOK_URL")
 	resp, err := http.Post(url, "application/json", b)
 	if err != nil {
-		log.Println(err)
+		if strings.Contains(fmt.Sprintf("%v", err), "Post : unsupported protocol scheme") {
+			return fmt.Errorf("%v. The Teams Webhook configuration might be missing or is incorrectly configured in the Server side", err)
+		}
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Error: %s", resp.Status)
 	}
-	CardCounter++
-	log.Printf("Total Card sent since uptime: %d\n", CardCounter)
 	return nil
 }
 

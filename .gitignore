@@ -3,9 +3,8 @@
 *.dll
 *.so
 *.dylib
-promteams
-promteams-*
-examples/
+prometheus-msteams-*
+prometheus-msteams*
 
 # Test binary, build with `go test -c`
 *.test

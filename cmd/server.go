@@ -1,4 +1,4 @@
-// Copyright © 2018 bryansazon@hotmail.com
+// Copyright © 2018 bzon <bryansazon@hotmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/bzon/promteams/handler"
+	"github.com/bzon/prometheus-msteams/alert"
 	"github.com/spf13/cobra"
 )
 
@@ -60,6 +60,6 @@ func server(cmd *cobra.Command, args []string) {
 	}
 	log.Printf("promteams server started listening at %s\n", server)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/alertmanager", handler.AlertManagerHandler)
+	mux.HandleFunc("/alertmanager", alert.PrometheusAlertManagerHandler)
 	log.Fatal(http.ListenAndServe(server, mux))
 }
