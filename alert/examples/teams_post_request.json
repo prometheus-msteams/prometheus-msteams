@@ -1,0 +1,43 @@
+{
+    "@type": "MessageCard",
+    "@context": "http://schema.org/extensions",
+    "themeColor": "8C1A1A",
+    "summary": "Server High Memory usage",
+    "title": "Prometheus Alert (firing)",
+    "sections": [
+        {
+            "activityTitle": "[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)",
+            "facts": [
+                {
+                    "name": "description",
+                    "value": "10.80.40.11 reported high memory usage with 23.28%."
+                },
+                {
+                    "name": "summary",
+                    "value": "Server High Memory usage"
+                },
+                {
+                    "name": "alertname",
+                    "value": "high_memory_load"
+                },
+                {
+                    "name": "instance",
+                    "value": "10.80.40.11:9100"
+                },
+                {
+                    "name": "job",
+                    "value": "docker_nodes"
+                },
+                {
+                    "name": "monitor",
+                    "value": "master"
+                },
+                {
+                    "name": "severity",
+                    "value": "warning"
+                }
+            ],
+            "markdown": false
+        }
+    ]
+}

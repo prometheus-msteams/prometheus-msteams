@@ -1,9 +1,9 @@
-BINARY = promteams
+BINARY = prometheus-msteams
 VET_REPORT = vet.report
 TEST_REPORT = tests.xml
 GOARCH = amd64
 
-VERSION?=?
+VERSION?=latest
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
@@ -15,19 +15,33 @@ BUILD_DIR=${GOPATH}/src/github.com/${GITHUB_USERNAME}/${BINARY}
 LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.BRANCH=${BRANCH}"
 
 # Build the project
-all: clean linux darwin windows
+all: clean getdep linux darwin windows
 
 linux: 
+	echo Build for linux ${GOARCH}
 	GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-linux-${GOARCH} . 
 
 darwin:
+	echo Build for darwin ${GOARCH}
 	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-darwin-${GOARCH} .
 
 windows:
+	echo Build for windows ${GOARCH}
 	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-windows-${GOARCH}.exe . 
 
-docker: clean linux
-	docker build --build-arg version=${VERSION} --build-arg commit=${COMMIT} --build-arg branch=${BRANCH} -t ${GITHUB_USERNAME}/${BINARY} .
+docker: clean getdep test linux
+	echo Performing a docker build
+	docker build --build-arg version=${VERSION} -t ${GITHUB_USERNAME}/${BINARY}:${VERSION} .
+
+docker_push: docker
+	docker push ${GITHUB_USERNAME}/${BINARY}:${VERSION}
+
+test:
+	echo Performing a go test
+	go test ./... -v
+
+getdep:
+	go get -v ./...
 
 vet:
 	godep go vet ./... > ${VET_REPORT} 2>&1

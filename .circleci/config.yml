@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.10
+    working_directory: /go/src/github.com/bzon/prometheus-msteams
+    steps:  
+      - checkout
+      - setup_remote_docker
+      - run: 
+          name: Get dependencies
+          command: go get -v -t -d ./...
+      - run:
+          name: Test
+          command: go test ./... -v
+      - deploy:
+          name: Publish deployable branches
+          command: |
+            if [[ $CIRCLE_BRANCH == "master" ]]; then
+              docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+              make docker_push VERSION=latest
+            fi
+            if [[ $CIRCLE_TAG ]]; then
+              docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+              make docker_push VERSION=$CIRCLE_TAG
+            fi
