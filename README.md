@@ -15,9 +15,9 @@ docker run -d -p 2000:2000 \
 ## Go Installation
 
 ```bash
-go build
-./prometheus-msteams server --help
-./prometheus-msteams server -l localhost -p 2000 -w "https://outlook.office.com/webhook/xxxx-xxxx-xxx"
+go get github.com/bzon/prometheus-msteams
+prometheus-msteams server --help
+prometheus-msteams server -l localhost -p 2000 -w "https://outlook.office.com/webhook/xxxx-xxxx-xxx"
 ```
 
 ## Alert Manager Configuration
@@ -43,15 +43,89 @@ receivers:
 
 ## Debugging
 
-For debugging purposes, I'm encoding and writing Request Body to `os.Stdout` so we can see the POST from Alertmanager and the POST to MS Teams.
+For debugging purposes, you will see the JSON body received from Prometheus and the JSON body created to be sent to Microsoft Teams.
 
 ```json
-2018/03/05 03:42:16 Request received
-{"version":"4","groupKey":"{}:{alertname=\"jenkins_down\"}","status":"firing","receiver":"teams_proxy","groupLabels":{"alertname":"jenkins_down"},"commonLabels":{"alertname":"jenkins_down","monitor":"docker-host-alpha","name":"jenkins","severity":"critical"},"commonAnnotations":{"description":"Jenkins container is down for more than 30 seconds.","summary":"Jenkins down"},"externalURL":"http://67067274c8d9:9093","alerts":[{"labels":{"alertname":"jenkins_down","monitor":"docker-host-alpha","name":"jenkins","severity":"critical"},"annotations":{"description":"Jenkins container is down for more than 30 seconds.","summary":"Jenkins down"},"startsAt":"2018-03-04T16:04:36.125572966Z","endsAt":"0001-01-01T00:00:00Z"}]}
-2018/03/05 03:42:16 Creating a card
-{"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"8C1A1A","summary":"Jenkins down","title":"Prometheus Alert (firing)","sections":[{"activityTitle":"[Jenkins container is down for more than 30 seconds.](http://67067274c8d9:9093)","facts":[{"name":"alertname","value":"jenkins_down"},{"name":"monitor","value":"docker-host-alpha"},{"name":"name","value":"jenkins"},{"name":"severity","value":"critical"}],"markdown":true}]}
-2018/03/05 03:42:16 Sending the card
-2018/03/05 03:42:17 Total Card sent since uptime: 2
+2018/03/19 11:21:23 Request received from Prometheus Alert Manager
+{
+   "version": "4",
+   "groupKey": "{}:{alertname=\"high_memory_load\"}",
+   "status": "firing",
+   "receiver": "teams_proxy",
+   "groupLabels": {
+     "alertname": "high_memory_load"
+   },
+   "commonLabels": {
+     "alertname": "high_memory_load",
+     "monitor": "master",
+     "severity": "warning"
+   },
+   "commonAnnotations": {
+     "summary": "Server High Memory usage"
+   },
+   "externalURL": "http://docker.for.mac.host.internal:9093",
+   "alerts": [
+     {
+       "labels": {
+         "alertname": "high_memory_load",
+         "instance": "10.80.40.11:9100",
+         "job": "docker_nodes",
+         "monitor": "master",
+         "severity": "warning"
+       },
+       "annotations": {
+         "description": "10.80.40.11 reported high memory usage with 23.28%.",
+         "summary": "Server High Memory usage"
+       },
+       "startsAt": "2018-03-07T06:33:21.873077559-05:00",
+       "endsAt": "0001-01-01T00:00:00Z"
+     }
+   ]
+ }
+2018/03/19 11:21:23 Created a card for Microsoft Teams
+{
+   "@type": "MessageCard",
+   "@context": "http://schema.org/extensions",
+   "themeColor": "8C1A1A",
+   "summary": "Server High Memory usage",
+   "title": "Prometheus Alert (firing)",
+   "sections": [
+     {
+       "activityTitle": "[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)",
+       "facts": [
+         {
+           "name": "description",
+           "value": "10.80.40.11 reported high memory usage with 23.28%."
+         },
+         {
+           "name": "summary",
+           "value": "Server High Memory usage"
+         },
+         {
+           "name": "job",
+           "value": "docker_nodes"
+         },
+         {
+           "name": "monitor",
+           "value": "master"
+         },
+         {
+           "name": "severity",
+           "value": "warning"
+         },
+         {
+           "name": "alertname",
+           "value": "high_memory_load"
+         },
+         {
+           "name": "instance",
+           "value": "10.80.40.11:9100"
+         }
+       ],
+       "markdown": false
+     }
+   ]
+ }
 ```
 
 ## Why

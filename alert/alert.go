@@ -107,7 +107,7 @@ func PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// For Debugging, display the Request in JSON Format
-	log.Println("Request received")
+	log.Println("Request received from Prometheus Alert Manager")
 	promBytes, _ := json.MarshalIndent(p, " ", "  ")
 	fmt.Println(string(promBytes))
 
@@ -116,7 +116,7 @@ func PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Request) {
 	c.CreateCard(p)
 
 	// For Debugging, display the Request Body to send in JSON Format
-	log.Println("Creating a card")
+	log.Println("Created a card for Microsoft Teams")
 	cardBytes, _ := json.MarshalIndent(c, " ", "  ")
 	fmt.Println(string(cardBytes))
 
