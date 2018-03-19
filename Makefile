@@ -40,6 +40,10 @@ test:
 	echo Performing a go test
 	go test ./... -v
 
+coverage:
+	echo Performing test with coverage
+	go test ./... -v -race -coverprofile=coverage.txt -covermode=atomic
+
 getdep:
 	go get -v ./...
 

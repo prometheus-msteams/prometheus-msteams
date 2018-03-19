@@ -28,38 +28,75 @@ import (
 
 	"github.com/bzon/prometheus-msteams/alert"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Runs the promteams server.",
-	Long:  `Runs the promteams server.`,
-	Run:   server,
+	Short: "Runs the prometheus-mteams server.",
+	Long: `
+By using a --config file, you will be able to define multiple prometheus request uri and webhook for different channels.
+
+This is an example config file content in YAML format.
+
+---
+connectors:
+- channel_1: https://outlook.office.com/webhook/xxxx/hook/for/channel1
+- channel_2: https://outlook.office.com/webhook/xxxx/hook/for/channel2
+
+`,
+	Run: server,
 }
 
 var (
 	serverPort          int
 	serverListenAddress string
 	teamsWebhookURL     string
+	requestURI          string
 )
+
+// TeamsConfig is the struct for config files
+type TeamsConfig struct {
+	Connectors []map[string]string
+}
 
 func init() {
 	RootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().IntVarP(&serverPort, "port", "p", 2000, "port on which the server will listen")
 	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l", "0.0.0.0", "the address on which the server will listen")
-	serverCmd.Flags().StringVarP(&teamsWebhookURL, "webhook-url", "w", "", "the incoming webhook url to post the alert messages")
+	serverCmd.Flags().StringVarP(&requestURI, "request-uri", "r", "alertmanager", "the request uri path. Do not use this if using a config file.")
+	serverCmd.Flags().StringVarP(&teamsWebhookURL, "webhook-url", "w", "", "the incoming webhook url to post the alert messages. Do not use this if using a config file.")
 }
 
 func server(cmd *cobra.Command, args []string) {
-	server := serverListenAddress + ":" + strconv.Itoa(serverPort)
-	err := os.Setenv("TEAMS_INCOMING_WEBHOOK_URL", teamsWebhookURL)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	log.Printf("promteams server started listening at %s\n", server)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/alertmanager", alert.PrometheusAlertManagerHandler)
+	teamsCfg := new(TeamsConfig)
+	viper.Unmarshal(teamsCfg)
+	if len(teamsCfg.Connectors) == 0 {
+		if len(requestURI) == 0 || len(teamsWebhookURL) == 0 {
+			log.Println("A config file (-f) or --request-uri or --webhook-url is not found.")
+			cmd.Usage()
+			os.Exit(1)
+		}
+		handleMuxFuncs(requestURI, teamsWebhookURL, mux)
+	} else {
+		for _, teamMap := range teamsCfg.Connectors {
+			for uri, webhook := range teamMap {
+				handleMuxFuncs(uri, webhook, mux)
+			}
+		}
+	}
+	server := serverListenAddress + ":" + strconv.Itoa(serverPort)
+	log.Printf("prometheus-msteams server started listening at %s\n", server)
 	log.Fatal(http.ListenAndServe(server, mux))
+}
+
+func handleMuxFuncs(uri string, webhook string, mux *http.ServeMux) {
+	team := alert.Teams{
+		RequestURI: "/" + uri,
+		WebhookURL: webhook,
+	}
+	log.Printf("Adding request uri path %s\n", team.RequestURI)
+	mux.HandleFunc(team.RequestURI, team.PrometheusAlertManagerHandler)
 }
