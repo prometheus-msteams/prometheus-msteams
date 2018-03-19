@@ -105,15 +105,21 @@ func PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+
 	// For Debugging, display the Request in JSON Format
 	log.Println("Request received")
-	json.NewEncoder(os.Stdout).Encode(p)
+	promBytes, _ := json.MarshalIndent(p, " ", "  ")
+	fmt.Println(string(promBytes))
+
 	// Create the Card
 	c := new(TeamsMessageCard)
 	c.CreateCard(p)
+
 	// For Debugging, display the Request Body to send in JSON Format
 	log.Println("Creating a card")
-	json.NewEncoder(os.Stdout).Encode(c)
+	cardBytes, _ := json.MarshalIndent(c, " ", "  ")
+	fmt.Println(string(cardBytes))
+
 	err = c.SendCard()
 	if err != nil {
 		log.Println(err)
@@ -126,19 +132,19 @@ func PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Request) {
 
 // SendCard sends the JSON Encoded TeamsMessageCard
 func (c *TeamsMessageCard) SendCard() error {
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(c)
+	buffer := new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(c)
 	url := os.Getenv("TEAMS_INCOMING_WEBHOOK_URL")
-	resp, err := http.Post(url, "application/json", b)
+	res, err := http.Post(url, "application/json", buffer)
 	if err != nil {
 		if strings.Contains(fmt.Sprintf("%v", err), "Post : unsupported protocol scheme") {
 			return fmt.Errorf("%v. The Teams Webhook configuration might be missing or is incorrectly configured in the Server side", err)
 		}
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Error: %s", resp.Status)
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("Error: %s", res.Status)
 	}
 	return nil
 }

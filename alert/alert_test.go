@@ -63,16 +63,16 @@ func TestAlertManagerHandler(t *testing.T) {
 		}
 		t.Run("decode prometheus alert json", func(t *testing.T) {
 			var p PrometheusAlertMessage
-			promReader := bytes.NewBuffer(promAlertInBytes)
-			err = p.DecodePrometheusAlert(promReader)
+			promBuffer := bytes.NewBuffer(promAlertInBytes)
+			err = p.DecodePrometheusAlert(promBuffer)
 			if err != nil {
 				t.Fatal(err)
 			}
 		})
 
 		t.Run("send prometheus alert json", func(t *testing.T) {
-			promReader := bytes.NewBuffer(promAlertInBytes)
-			res, err := http.Post(ts.URL+"/alertmanager", "application/json", promReader)
+			promBuffer := bytes.NewBuffer(promAlertInBytes)
+			res, err := http.Post(ts.URL+"/alertmanager", "application/json", promBuffer)
 			if err != nil {
 				t.Fatal(err)
 			}
