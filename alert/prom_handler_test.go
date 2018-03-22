@@ -10,6 +10,7 @@ import (
 )
 
 func TestAlertManagerHandler(t *testing.T) {
+	os.Setenv("MARKDOWN_ENABLED", "yes")
 	testTable := []struct {
 		name           string
 		promAlertJSON  string
