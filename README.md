@@ -5,6 +5,8 @@
 
 A lightweight Go Web Server that accepts POST alert message from Prometheus Alertmanager and sends it to Microsoft Teams Channels using an incoming webhook url.
 
+![](./docs/teams_screenshot.png)
+
 ## Configuration File
 
 It is recommended to use a config file to make the webserver expose multiple request uri that can cater multiple Teams channel webhooks.
