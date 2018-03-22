@@ -12,7 +12,9 @@ jobs:
           command: go get -v -t -d ./...
       - run:
           name: Test
-          command: go test ./... -v
+          command: |
+            make coverage
+            bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
       - deploy:
           name: Publish deployable branches
           command: |

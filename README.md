@@ -2,13 +2,35 @@
 
 A lightweight Go Web Server that accepts POST alert message from Prometheus Alertmanager and sends it to Microsoft Teams Channels using an incoming webhook url.
 
+## Configuration File
+
+It is recommended to use a config file to make the webserver expose multiple request uri that can cater multiple Teams channel webhooks.
+
+```yaml
+# /tmp/config.yml
+connectors:
+- high_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/bbb"
+- low_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/ccc"
+```
+
 ## Docker Installation
+
+For a single webhook setup. No need to for a config file.
 
 ```bash
 docker run -d -p 2000:2000 \
     --name="promteams" \
-    -e MARKDOWN_ENABLED=yes \
-    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxxx-xxxx-xxx" \
+    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxxx/aaa/bbb" \
+    docker.io/bzon/prometheus-msteams:latest
+```
+
+For a multiple webhook setup.
+
+```bash
+docker run -d -p 2000:2000 \
+    --name="promteams" \
+    -e CONFIG_FILE=/tmp/config.yml \
+    -v /tmp/config.yml:/tmp/config.yml \
     docker.io/bzon/prometheus-msteams:latest
 ```
 
@@ -17,28 +39,76 @@ docker run -d -p 2000:2000 \
 ```bash
 go get github.com/bzon/prometheus-msteams
 prometheus-msteams server --help
+```
+
+For a single webhook setup. No need to for a config file.
+
+```bash
 prometheus-msteams server -l localhost -p 2000 -w "https://outlook.office.com/webhook/xxxx-xxxx-xxx"
+```
+
+For a multiple webhook setup.
+
+```bash
+prometheus-msteams server -l localhost -p 2000 -f /tmp/config.yml
+```
+
+## Development and Testing
+
+```bash
+export GOTEST_TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxxx-xxxx-xxx"
+make test
 ```
 
 ## Alert Manager Configuration
 
 You can try [stefanprodan's](https://github.com/stefanprodan) [Prometheus in Docker](https://github.com/stefanprodan/dockprom) to help you setup your Sandbox environment quickly.
 
-Your Alertmanager would have a configuration like this.
+Your Alertmanager would have a configuration like these.
+
+For a single webhook setup.
 
 ```yaml
 route:
-    group_by: ['alertname']
-    group_interval: 30s
-    repeat_interval: 30s
-    group_wait: 30s
-    receiver: 'prometheus-msteams'
+  group_by: ['alertname']
+  group_interval: 30s
+  repeat_interval: 30s
+  group_wait: 30s
+  receiver: 'prometheus-msteams'
 
 receivers:
-    - name: 'prometheus-msteams'
-      webhook_configs:
-          - send_resolved: true
-            url: 'http://localhost:2000/alertmanager'
+- name: 'prometheus-msteams'
+  webhook_configs:
+  - send_resolved: true
+    url: 'http://localhost:2000/alertmanager'
+```
+
+For a multiple webhook setup.
+
+```yaml
+route:
+  group_by: ['alertname']
+  group_interval: 30s
+  repeat_interval: 30s
+  group_wait: 30s
+  receiver: 'low_priority_receiver'  # Fallback.
+  routes:
+   - match:
+       severity: critical
+     receiver: high_priority_receiver
+   - match:
+       severity: warning
+     receiver: low_priority_receiver
+
+receivers:
+- name: 'high_priority_receiver'
+  webhook_configs:
+    - send_resolved: true
+      url: 'http://localhost:2000/high_priority_channel'
+- name: 'low_priority_receiver'
+  webhook_configs:
+    - send_resolved: true
+      url: 'http://localhost:2000/low_priority_channel'
 ```
 
 ## Debugging
