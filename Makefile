@@ -29,7 +29,7 @@ windows:
 	echo Build for windows ${GOARCH}
 	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-windows-${GOARCH}.exe . 
 
-docker: clean getdep test linux
+docker: clean getdep linux
 	echo Performing a docker build
 	docker build --build-arg VERSION=${VERSION} -t ${GITHUB_USERNAME}/${BINARY}:${VERSION} .
 
