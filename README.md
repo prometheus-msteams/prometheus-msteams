@@ -43,6 +43,11 @@ docker run -d -p 2000:2000 \
 
 ```bash
 go get github.com/bzon/prometheus-msteams
+```
+
+## Binary Usage
+
+```bash
 prometheus-msteams server --help
 ```
 
