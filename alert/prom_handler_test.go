@@ -18,7 +18,7 @@ func TestAlertManagerHandler(t *testing.T) {
 		teams          Teams
 	}{
 		{
-			name:           "send a teams card using wrong webhook must return 404",
+			name:           "send a teams card using an invalid route must return 404",
 			promAlertJSON:  "examples/prom_post_request.json",
 			postStatusCode: http.StatusNotFound,
 			teams: Teams{
@@ -31,7 +31,7 @@ func TestAlertManagerHandler(t *testing.T) {
 			promAlertJSON:  "examples/prom_post_request.json",
 			postStatusCode: http.StatusInternalServerError,
 			teams: Teams{
-				RequestURI: "/teams_empty",
+				RequestURI: "/teams_ok_but_config_err",
 			},
 		},
 		{
@@ -46,7 +46,11 @@ func TestAlertManagerHandler(t *testing.T) {
 	}
 
 	for _, tc := range testTable {
-		ts := httptest.NewServer(http.HandlerFunc(tc.teams.PrometheusAlertManagerHandler))
+		mux := http.NewServeMux()
+		// Valid routes
+		mux.HandleFunc("/teams_ok_but_config_err", tc.teams.PrometheusAlertManagerHandler)
+		mux.HandleFunc("/teams_ok", tc.teams.PrometheusAlertManagerHandler)
+		ts := httptest.NewServer(mux)
 		defer ts.Close()
 
 		promAlertInBytes, err := ioutil.ReadFile(tc.promAlertJSON)

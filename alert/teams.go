@@ -51,22 +51,25 @@ type Teams struct {
 }
 
 // SendCard sends the JSON Encoded TeamsMessageCard
-func (t *Teams) SendCard() (int, error) {
+func (t *Teams) SendCard() (*http.Response, error) {
 	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(t.Card)
+	err := json.NewEncoder(buffer).Encode(t.Card)
+	if err != nil {
+		return nil, err
+	}
 	res, err := http.Post(t.WebhookURL, "application/json", buffer)
 	if err != nil {
-		return res.StatusCode, err
+		return nil, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return res.StatusCode, fmt.Errorf("Error: %s", res.Status)
+		return nil, fmt.Errorf("Error: %s", res.Status)
 	}
-	return res.StatusCode, nil
+	return res, nil
 }
 
 // CreateCard creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
-func (c *TeamsMessageCard) CreateCard(p PrometheusAlertMessage) error {
+func (c *TeamsMessageCard) CreateCard(p PrometheusAlertMessage) {
 	c.Type = messageType
 	c.Context = context
 	switch p.Status {
@@ -97,5 +100,4 @@ func (c *TeamsMessageCard) CreateCard(p PrometheusAlertMessage) error {
 		}
 		c.Sections = append(c.Sections, s)
 	}
-	return nil
 }
