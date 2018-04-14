@@ -38,7 +38,7 @@ docker_push: docker
 
 test:
 	echo Performing a go test
-	go test ./... -v
+	go test ./... -v -race
 
 coverage:
 	echo Performing test with coverage

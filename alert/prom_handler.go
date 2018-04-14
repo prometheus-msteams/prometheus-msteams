@@ -3,9 +3,9 @@ package alert
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -42,48 +42,45 @@ func (t *Teams) PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Req
 	}
 	if !strings.HasPrefix(t.WebhookURL, "http") {
 		msg := fmt.Sprintf("Please check the server webhook configuration for %s\n", r.RequestURI)
+		log.Println(msg)
 		http.Error(w, msg, http.StatusInternalServerError)
-		log.Printf("The webhook url for %s is invalid\n", r.RequestURI)
 		return
 	}
 	var p PrometheusAlertMessage
-	err := p.DecodePrometheusAlert(r.Body)
+	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
-		msg := fmt.Sprintf("Server decoding error %v", err)
-		http.Error(w, msg, http.StatusBadRequest)
+		msg := fmt.Sprintf("Failed decoding prometheus alert message: %v", err)
+		log.Println(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("%s received a request from Prometheus Alert Manager\n", r.RequestURI)
 
 	// For Debugging, display the Request in JSON Format
-	log.Printf("%s received a request from Prometheus Alert Manager\n", r.RequestURI)
-	promBytes, _ := json.MarshalIndent(p, " ", "  ")
-	fmt.Println(string(promBytes))
+	if os.Getenv("PROMTEAMS_DEBUG") == "true" {
+		promBytes, _ := json.MarshalIndent(p, " ", "  ")
+		fmt.Println(string(promBytes))
+	}
 
 	// Create the Card
-	// card := new(TeamsMessageCard)
 	t.Card.CreateCard(p)
+	log.Printf("Created a card for Microsoft Teams %s\n", r.RequestURI)
 
 	// For Debugging, display the Request Body to send in JSON Format
-	log.Printf("Created a card for Microsoft Teams %s\n", r.RequestURI)
-	cardBytes, _ := json.MarshalIndent(t.Card, " ", "  ")
-	fmt.Println(string(cardBytes))
+	if os.Getenv("PROMTEAMS_DEBUG") == "true" {
+		cardBytes, _ := json.MarshalIndent(t.Card, "", "  ")
+		fmt.Println(string(cardBytes))
+	}
 
-	statusCode, err := t.SendCard()
+	res, err := t.SendCard()
 	if err != nil {
 		log.Println(err)
-		http.Error(w, fmt.Sprintf("%v", err), statusCode)
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 		return
 	}
+	defer res.Body.Close()
+	log.Println(res.Status)
 	CardCounter++
 	log.Printf("Total Card sent since uptime: %d\n", CardCounter)
-}
-
-// DecodePrometheusAlert decodes Prometheus JSON Request Body to PrometheusAlertMessage struct
-func (p *PrometheusAlertMessage) DecodePrometheusAlert(r io.Reader) error {
-	decoder := json.NewDecoder(r)
-	err := decoder.Decode(p)
-	if err != nil {
-		return err
-	}
-	return nil
 }

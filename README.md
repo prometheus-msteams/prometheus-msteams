@@ -123,7 +123,7 @@ receivers:
 
 ## Debugging
 
-For debugging purposes, you will see the JSON body received from Prometheus and the JSON body created to be sent to Microsoft Teams.
+For debugging purposes, set the following environment variable `PROMTEAMS_DEBUG=true` to see the JSON body received from Prometheus and the JSON body created to be sent to Microsoft Teams.
 
 ```json
 2018/03/19 11:21:23 Request received from Prometheus Alert Manager
