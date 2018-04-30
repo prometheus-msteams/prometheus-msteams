@@ -2,6 +2,7 @@ BINARY = prometheus-msteams
 VET_REPORT = vet.report
 TEST_REPORT = tests.xml
 GOARCH = amd64
+BINDIR = bin
 
 VERSION?=latest
 COMMIT=$(shell git rev-parse HEAD)
@@ -15,19 +16,27 @@ BUILD_DIR=${GOPATH}/src/github.com/${GITHUB_USERNAME}/${BINARY}
 LDFLAGS = -ldflags "-X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X main.BRANCH=${BRANCH}"
 
 # Build the project
-all: clean getdep linux darwin windows
+all: clean getdep create_bin_dir linux darwin windows
+	cd ${BINDIR} && shasum -a 256 ** > shasum256.txt
 
+create_bin_dir:
+	rm -fr ${BINDIR}
+	mkdir -p ${BINDIR}
+
+github_release:
+	github-release release -u bzon -r prometheus-msteams -t ${VERSION} -n ${VERSION}
+	
 linux: 
 	echo Build for linux ${GOARCH}
-	GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-linux-${GOARCH} . 
+	GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINDIR}/${BINARY}-linux-${GOARCH} . 
 
 darwin:
 	echo Build for darwin ${GOARCH}
-	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-darwin-${GOARCH} .
+	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINDIR}/${BINARY}-darwin-${GOARCH} .
 
 windows:
 	echo Build for windows ${GOARCH}
-	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-windows-${GOARCH}.exe . 
+	GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINDIR}/${BINARY}-windows-${GOARCH}.exe . 
 
 docker: clean getdep linux
 	echo Performing a docker build
@@ -56,4 +65,5 @@ fmt:
 clean:
 	-rm -f ${TEST_REPORT}
 	-rm -f ${VET_REPORT}
+	-rm -fr ${BINDIR}
 	-rm -f ${BINARY}-*
