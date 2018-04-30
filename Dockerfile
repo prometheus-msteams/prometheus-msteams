@@ -17,7 +17,7 @@ LABEL summary=$SUMMARY \
       description="A lightweight Go Web Server that accepts POST alert message from Prometheus Alertmanager and sends it to Microsoft Teams Channels using an incoming webhook url." \
       version=$VERSION
 
-ADD prometheus-msteams-linux-amd64 /bin/promteams
+ADD bin/prometheus-msteams-linux-amd64 /bin/promteams
 COPY docker/cmd.sh /bin/container-cmd
 
 CMD /bin/container-cmd
