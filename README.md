@@ -1,5 +1,8 @@
-[![CircleCI](https://circleci.com/gh/bzon/prometheus-msteams.svg?style=svg)](https://circleci.com/gh/bzon/prometheus-msteams)
 [![codecov](https://codecov.io/gh/bzon/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/bzon/prometheus-msteams)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bzon/prometheus-msteams)](https://goreportcard.com/report/github.com/bzon/prometheus-msteams)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/bzon/prometheus-msteams)
+[![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
+[![CircleCI](https://circleci.com/gh/bzon/prometheus-msteams.svg?style=svg)](https://circleci.com/gh/bzon/prometheus-msteams)
 
 # Overview
 
