@@ -75,7 +75,7 @@ func server(cmd *cobra.Command, args []string) {
 	viper.Unmarshal(teamsCfg)
 	if len(teamsCfg.Connectors) == 0 {
 		if len(requestURI) == 0 || len(teamsWebhookURL) == 0 {
-			log.Println("A config file (-f) or --request-uri or --webhook-url is not found.")
+			log.Println("No connectors were defined properly.")
 			cmd.Usage()
 			os.Exit(1)
 		}
