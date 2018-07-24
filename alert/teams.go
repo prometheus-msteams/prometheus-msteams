@@ -72,6 +72,7 @@ func (t *Teams) SendCard() (*http.Response, error) {
 func (c *TeamsMessageCard) CreateCard(p PrometheusAlertMessage) {
 	c.Type = messageType
 	c.Context = context
+	c.Sections = []TeamsMessageCardSection{}
 	switch p.Status {
 	case "resolved":
 		c.ThemeColor = colorResolved
