@@ -4,11 +4,11 @@
 [![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
 [![CircleCI](https://circleci.com/gh/bzon/prometheus-msteams.svg?style=svg)](https://circleci.com/gh/bzon/prometheus-msteams)
 
+![](./docs/teams_screenshot.png)
+
 # Overview
 
-A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url.
-
-![](./docs/teams_screenshot.png)
+A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? The [docker image](https://hub.docker.com/r/bzon/prometheus-msteams/tags/) is just __7 MB__!
 
 ## Table of Contents
 
