@@ -41,6 +41,7 @@ __OPTION 1:__ Run using docker.
 docker run -d -p 2000:2000 \
     --name="promteams" \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
+    -e TEAMS_REQUEST_URI=alertmanager \
     -e PROMTEAMS_DEBUG="true" \
     docker.io/bzon/prometheus-msteams:latest
 ```
