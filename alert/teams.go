@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // Constants for Sending a Card
@@ -97,6 +98,12 @@ func (c *TeamsMessageCard) CreateCard(p PrometheusAlertMessage) {
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
 		for key, val := range alert.Labels {
+			// Auto escape underscores if markdown is enabled
+			if useMarkdown {
+				if strings.Contains(val, "_") {
+					val = strings.Replace(val, "_", "\\_", -1)
+				}
+			}
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
 		c.Sections = append(c.Sections, s)

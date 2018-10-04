@@ -19,7 +19,7 @@
         {
             "labels": {
                 "alertname": "high_memory_load",
-                "instance": "10.80.40.11:9100",
+                "instance": "instance-with-hyphen_and_underscore",
                 "job": "docker_nodes",
                 "monitor": "master",
                 "severity": "warning"
