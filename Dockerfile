@@ -9,7 +9,7 @@ ARG VERSION
 ENV VERSION=$VERSION \
     MARKDOWN_ENABLED=yes \
     CONFIG_FILE="$HOME/.prometheus-msteams.yaml" \
-    TEAMS_REQUEST_URI="/alertmanager" \
+    TEAMS_REQUEST_URI="alertmanager" \
     TEAMS_INCOMING_WEBHOOK_URL="" \
     PROMTEAMS_DEBUG="true"
 
