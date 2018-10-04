@@ -83,8 +83,10 @@ func (c *TeamsMessageCard) CreateCard(p PrometheusAlertMessage) {
 		c.ThemeColor = colorUnknown
 	}
 	c.Title = fmt.Sprintf("Prometheus Alert (%s)", p.Status)
-	if value, notEmpty := p.CommonAnnotations["summary"]; notEmpty {
+	if value, ok := p.CommonAnnotations["summary"]; ok {
 		c.Summary = value
+	} else {
+		c.Summary = "n/a"
 	}
 	useMarkdown := false
 	if v := os.Getenv("MARKDOWN_ENABLED"); v == "yes" {
