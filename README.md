@@ -30,6 +30,7 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 * [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
   * [Creating the Configuration File](#creating-the-configuration-file)
   * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+* [Kubernetes Deployment](#kubernetes-deployment)
 * [Developers Build Guide](#developers-build-guide)
 
 <!-- vim-markdown-toc -->
@@ -219,6 +220,10 @@ receivers:
     - send_resolved: true
       url: 'http://localhost:2000/low_priority_channel' # request handler 2
 ```
+
+## Kubernetes Deployment
+
+See [Helm Guide](./chart/README.md).
 
 ## Developers Build Guide
 

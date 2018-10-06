@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: prometheus-msteams-config
+ namespace: default
+data:
+  connectors.yaml: |
+    {{- with $.Values.connectors }}
+    connectors:
+{{ toYaml . | indent 6 }}
+    {{- end}}

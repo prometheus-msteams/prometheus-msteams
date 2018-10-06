@@ -1,0 +1,33 @@
+---
+replicaCount: 1
+
+image:
+  repository: bzon/prometheus-msteams 
+  tag: v1.0
+  pullPolicy: Always
+
+container:
+  port: 2000
+  additionalArgs: []
+
+resources:
+  limits:
+    cpu: 10m
+    memory: 32Mi
+  requests:
+    cpu: 1m
+    memory: 8Mi
+
+service:
+  type: ClusterIP
+  port: 2000
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Replace this!
+connectors:
+  - alertmanager: https://outlook.office.com/webhook/xxxxx/IncomingWebhook/xxxx/xxxxx

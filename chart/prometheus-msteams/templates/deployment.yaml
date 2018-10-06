@@ -1,0 +1,59 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "app.name" . }}
+  labels:
+    app: {{ template "app.name" . }}
+    chart: {{ template "app.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "app.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "app.name" . }}
+        release: {{ .Release.Name }}
+    {{- if .Values.podAnnotations }}
+      annotations:
+    {{ toYaml .Values.podAnnotations | indent 8 }}
+    {{- end }}
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-msteams-config
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+          args:
+            - --config=/etc/config/connectors.yaml
+          {{- with .Values.container.additionalArgs }}
+{{ toYaml . | indent 12 }}
+          {{- end}}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - name: http
+            containerPort: {{ .Values.container.port }}
+            protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

@@ -4,8 +4,8 @@ bin/
 *.dll
 *.so
 *.dylib
-prometheus-msteams-*
-prometheus-msteams
+/prometheus-msteams-*
+/prometheus-msteams
 
 # Test binary, build with `go test -c`
 *.test
