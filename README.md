@@ -1,4 +1,5 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
+[![Image Size](https://images.microbadger.com/badges/image/bzon/prometheus-msteams.svg)](https://microbadger.com/images/bzon/prometheus-msteams "Get your own image badge on microbadger.com")
 [![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
 [![Build Status](https://travis-ci.org/bzon/prometheus-msteams.svg?branch=master)](https://travis-ci.org/bzon/prometheus-msteams)
 [![codecov](https://codecov.io/gh/bzon/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/bzon/prometheus-msteams)
