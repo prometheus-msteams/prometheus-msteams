@@ -21,14 +21,18 @@
 package cmd
 
 import (
-	"log"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/bzon/prometheus-msteams/alert"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // serverCmd represents the server command
@@ -54,49 +58,136 @@ var (
 	serverListenAddress string
 	teamsWebhookURL     string
 	requestURI          string
+	logLevel            string
+	configFile          string
+	markdownEnabled     bool
 )
 
 // TeamsConfig is the struct for config files
+// The Connectors key is the request path for Prometheus to post
+// The Connectors value is the Teams webhook url
 type TeamsConfig struct {
-	Connectors []map[string]string
+	Connectors []map[string]string `yaml:"connectors"`
 }
 
 func init() {
+	log.SetFormatter(&log.TextFormatter{})
 	RootCmd.AddCommand(serverCmd)
-	serverCmd.Flags().IntVarP(&serverPort, "port", "p", 2000, "port on which the server will listen")
-	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l", "0.0.0.0", "the address on which the server will listen")
-	serverCmd.Flags().StringVarP(&requestURI, "request-uri", "r", "alertmanager", "the request uri path. Do not use this if using a config file.")
-	serverCmd.Flags().StringVarP(&teamsWebhookURL, "webhook-url", "w", "", "the incoming webhook url to post the alert messages. Do not use this if using a config file.")
+	serverCmd.Flags().IntVarP(&serverPort, "port", "p", 2000,
+		"The port on which the server will listen to.")
+	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l",
+		"0.0.0.0", "The address on which the server will listen to.")
+	serverCmd.Flags().StringVarP(&requestURI, "request-uri", "r", "alertmanager",
+		"The default request uri path where Prometheus will post to.")
+	serverCmd.Flags().StringVarP(&teamsWebhookURL, "webhook-url", "w", "",
+		"The default Microsoft Teams Webhook connector.")
+	serverCmd.Flags().StringVar(&logLevel, "log-level", "DEBUG",
+		"Log levels: INFO | DEBUG | WARN | ERROR | FATAL | PANIC")
+	serverCmd.Flags().BoolVar(&markdownEnabled, "markdown", true,
+		"Format the prometheus alert in Microsoft Teams with markdown.")
+	serverCmd.Flags().StringVar(&configFile, "config", "",
+		"The connectors configuration file. "+
+			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
+
+	// NOTE: Can we use viper for this?
+	// This is placed to support people who still depends
+	// on these environment variable as of version 0.0.3
+	if v, ok := os.LookupEnv("TEAMS_REQUEST_URI"); ok {
+		requestURI = v
+	}
+	if v, ok := os.LookupEnv("TEAMS_INCOMING_WEBHOOK_URL"); ok {
+		teamsWebhookURL = v
+	}
+	if v, ok := os.LookupEnv("CONFIG_FILE"); ok {
+		configFile = v
+	}
+}
+
+func setLogLevel(l string) {
+	switch l {
+	case "INFO":
+		log.SetLevel(log.InfoLevel)
+	case "DEBUG":
+		log.SetLevel(log.DebugLevel)
+	case "WARN":
+		log.SetLevel(log.WarnLevel)
+	case "ERROR":
+		log.SetLevel(log.ErrorLevel)
+	case "FATAL":
+		log.SetLevel(log.FatalLevel)
+	case "PANIC":
+		log.SetLevel(log.PanicLevel)
+	default:
+		log.Fatal("Error: Invalid log-level")
+	}
+}
+
+func parseConfigFile(f string) *TeamsConfig {
+	log.Infof("Parsing the configuration file: %s", configFile)
+	b, err := ioutil.ReadFile(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cfg := &TeamsConfig{}
+	if err = yaml.Unmarshal(b, cfg); err != nil {
+		log.Fatal(err)
+	}
+	return cfg
 }
 
 func server(cmd *cobra.Command, args []string) {
-	mux := http.NewServeMux()
-	teamsCfg := new(TeamsConfig)
-	viper.Unmarshal(teamsCfg)
+	setLogLevel(logLevel)
+	log.Infof(getVersion())
+
+	teamsCfg := &TeamsConfig{}
+	if configFile != "" {
+		log.Warn("If the 'config' flag is used, the" +
+			" 'webhook-url' and 'request-uri' flags will be ignored.")
+		teamsCfg = parseConfigFile(configFile)
+	}
+
+	// If no connectors are found, use the request-uri and webhook-url from flags
 	if len(teamsCfg.Connectors) == 0 {
-		if len(requestURI) == 0 || len(teamsWebhookURL) == 0 {
-			log.Println("No connectors were defined properly.")
+		if requestURI == "" || teamsWebhookURL == "" {
+			log.Error("No valid connector configuration found")
 			cmd.Usage()
 			os.Exit(1)
 		}
-		handleMuxFuncs(requestURI, teamsWebhookURL, mux)
-	} else {
-		for _, teamMap := range teamsCfg.Connectors {
-			for uri, webhook := range teamMap {
-				handleMuxFuncs(uri, webhook, mux)
-			}
+		cfgFromFlags := map[string]string{requestURI: teamsWebhookURL}
+		teamsCfg.Connectors = append(teamsCfg.Connectors, cfgFromFlags)
+	}
+
+	mux := http.NewServeMux()
+	for _, teamMap := range teamsCfg.Connectors {
+		for uri, webhook := range teamMap {
+			addPrometheusHandler(uri, webhook, mux)
 		}
 	}
+	mux.HandleFunc("/config", teamsCfg.configHandler)
+	mux.Handle("/metrics", promhttp.Handler())
 	server := serverListenAddress + ":" + strconv.Itoa(serverPort)
-	log.Printf("prometheus-msteams server started listening at %s\n", server)
+	log.Infof("prometheus-msteams server started listening at %s", server)
 	log.Fatal(http.ListenAndServe(server, mux))
 }
 
-func handleMuxFuncs(uri string, webhook string, mux *http.ServeMux) {
-	team := alert.Teams{
-		RequestURI: "/" + uri,
-		WebhookURL: webhook,
+func addPrometheusHandler(uri string, webhook string, mux *http.ServeMux) {
+	promWebhook := alert.PrometheusWebhook{
+		RequestURI:      "/" + uri,
+		TeamsWebhookURL: webhook,
+		MarkdownEnabled: markdownEnabled,
 	}
-	log.Printf("Adding request uri path %s\n", team.RequestURI)
-	mux.HandleFunc(team.RequestURI, team.PrometheusAlertManagerHandler)
+	log.Infof("Creating the server request path %q with webhook %q",
+		promWebhook.RequestURI, promWebhook.TeamsWebhookURL)
+	mux.HandleFunc(promWebhook.RequestURI,
+		promWebhook.PrometheusAlertManagerHandler)
+}
+
+// configHandler exposes the /config endpoint
+func (teamsCfg *TeamsConfig) configHandler(w http.ResponseWriter, r *http.Request) {
+	b, err := json.MarshalIndent(teamsCfg.Connectors, "", "  ")
+	if err != nil {
+		log.Errorf("Failed unmarshalling Teams Connectors config: %v", err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, string(b))
 }

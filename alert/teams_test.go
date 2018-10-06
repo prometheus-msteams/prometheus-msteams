@@ -17,9 +17,7 @@ func TestCreateCard(t *testing.T) {
 		t.Fatalf("Failed unmarshalling testdata file %s, got error: +%v",
 			testdata, err)
 	}
-
-	var c TeamsMessageCard
-	c.CreateCard(p)
+	c := CreateCard(p, true)
 
 	want := colorFiring
 	got := c.ThemeColor
@@ -46,8 +44,7 @@ func TestStatusColor(t *testing.T) {
 
 	for _, tc := range tt {
 		p := PrometheusAlertMessage{Status: tc.status}
-		var c TeamsMessageCard
-		c.CreateCard(p)
+		c := CreateCard(p, true)
 		if c.ThemeColor != tc.wantColor {
 			t.Fatalf("Failed assigning themes color to card: got %s, want %s",
 				c.ThemeColor, tc.wantColor)

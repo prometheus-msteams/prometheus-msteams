@@ -18,12 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
+package cmd
 
 import (
-	"github.com/bzon/prometheus-msteams/cmd"
+	"fmt"
+
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	cmd.Execute()
+var version, commit, branch, buildDate string
+
+var versionCmd = &cobra.Command{
+	Use:     "version",
+	Aliases: []string{"v"},
+	Short:   "Display application version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(getVersion())
+	},
+}
+
+func init() {
+	RootCmd.AddCommand(versionCmd)
+}
+
+func getVersion() string {
+	return fmt.Sprintf("Version: %s, Commit: %s, Branch: %s, Build Date: %s", version, commit, branch, buildDate)
 }
