@@ -35,6 +35,7 @@ script:
       echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
       make docker-push VERSION=${VERSION}
     fi
+    make darwin windows VERSION=${VERSION}
 
 deploy:
   provider: releases
