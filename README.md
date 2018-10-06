@@ -1,15 +1,18 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
+[![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
+[![Build Status](https://travis-ci.org/bzon/prometheus-msteams.svg?branch=master)](https://travis-ci.org/bzon/prometheus-msteams)
 [![codecov](https://codecov.io/gh/bzon/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/bzon/prometheus-msteams)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bzon/prometheus-msteams)](https://goreportcard.com/report/github.com/bzon/prometheus-msteams)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/bzon/prometheus-msteams)
-[![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
-[![CircleCI](https://circleci.com/gh/bzon/prometheus-msteams.svg?style=svg)](https://circleci.com/gh/bzon/prometheus-msteams)
 
 ![](./docs/teams_screenshot.png)
 
 # Overview
 
 A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? The [docker image](https://hub.docker.com/r/bzon/prometheus-msteams/tags/) is just __7 MB__!
+
+## Synopsis
+
+Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python. 
 
 ## Why choose Go? Not Python or Ruby or Node?
 
@@ -20,15 +23,13 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 <!-- vim-markdown-toc GFM -->
 
 * [Getting Started (Quickstart)](#getting-started-quickstart)
-	* [Installation](#installation)
-	* [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
-	* [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
+  * [Installation](#installation)
+  * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
+  * [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
 * [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
-	* [Creating the Configuration File](#creating-the-configuration-file)
-	* [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
-* [Debugging](#debugging)
-* [Development and Testing](#development-and-testing)
-* [Why?](#why)
+  * [Creating the Configuration File](#creating-the-configuration-file)
+  * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+* [Developers Build Guide](#developers-build-guide)
 
 <!-- vim-markdown-toc -->
 
@@ -47,7 +48,6 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
     -e TEAMS_REQUEST_URI=alertmanager \
-    -e PROMTEAMS_DEBUG="true" \
     docker.io/bzon/prometheus-msteams:latest
 ```
 
@@ -56,7 +56,7 @@ __OPTION 2:__ Run using binary.
 Download the binary for your platform from [RELEASES](https://github.com/bzon/prometheus-msteams/releases), and run it like the following:
 
 ```bash
-PROMTEAMS_DEBUG="true" ./prometheus-msteams server \
+./prometheus-msteams server \
 	-l localhost \
 	-p 2000 \
 	-w "https://outlook.office.com/webhook/xxx"
@@ -134,9 +134,15 @@ The teams channel should received a message.
 
 ## Sending Alerts to Multiple Teams Channel
 
+You can configure this application to serve 2 or more request path and each path can use a unique Teams channel webhook url to post.
+
+![multiChannel](./docs/promteams_multiconfig.png)
+
+This can be achieved by supplying the application a configuration file.
+
 ### Creating the Configuration File
 
-Create a __prometheus-msteams__ config file.
+Create a yaml file with the following format.
 
 ```yaml
 connectors:
@@ -153,20 +159,35 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -v /tmp/config.yml:/tmp/config.yml \
     -e CONFIG_FILE="/tmp/config.yml" \
-    -e PROMTEAMS_DEBUG="true" \
     docker.io/bzon/prometheus-msteams:latest
 ```
 
 When running as a binary, use the __--config__ flag.
 
 ```bash
-PROMTEAMS_DEBUG="true" prometheus-msteams server \
+./prometheus-msteams server \
 	-l localhost \
 	-p 2000 \
 	--config /tmp/config.yml
 ```
 
 This will create the request uri handlers __/high_priority_channel__ and __/low_priority_channel__.
+
+To validate your configuration, see the __/config__ endpoint of the application.
+
+```bash
+curl localhost:2000/config
+
+[
+  {
+    "high_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/bbb"
+  },
+  {
+    "low_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/ccc"
+  }
+]
+```
+
 
 ### Setting up Prometheus Alert Manager
 
@@ -198,100 +219,31 @@ receivers:
       url: 'http://localhost:2000/low_priority_channel' # request handler 2
 ```
 
-## Debugging
+## Developers Build Guide
 
-For debugging purposes, set the following environment variable `PROMTEAMS_DEBUG=true` to see the JSON body received from Prometheus and the JSON body created to be sent to Microsoft Teams.
-
-```json
-2018/03/19 11:21:23 Request received from Prometheus Alert Manager
-{
-   "version": "4",
-   "groupKey": "{}:{alertname=\"high_memory_load\"}",
-   "status": "firing",
-   "receiver": "teams_proxy",
-   "groupLabels": {
-     "alertname": "high_memory_load"
-   },
-   "commonLabels": {
-     "alertname": "high_memory_load",
-     "monitor": "master",
-     "severity": "warning"
-   },
-   "commonAnnotations": {
-     "summary": "Server High Memory usage"
-   },
-   "externalURL": "http://docker.for.mac.host.internal:9093",
-   "alerts": [
-     {
-       "labels": {
-         "alertname": "high_memory_load",
-         "instance": "10.80.40.11:9100",
-         "job": "docker_nodes",
-         "monitor": "master",
-         "severity": "warning"
-       },
-       "annotations": {
-         "description": "10.80.40.11 reported high memory usage with 23.28%.",
-         "summary": "Server High Memory usage"
-       },
-       "startsAt": "2018-03-07T06:33:21.873077559-05:00",
-       "endsAt": "0001-01-01T00:00:00Z"
-     }
-   ]
- }
-2018/03/19 11:21:23 Created a card for Microsoft Teams
-{
-   "@type": "MessageCard",
-   "@context": "http://schema.org/extensions",
-   "themeColor": "8C1A1A",
-   "summary": "Server High Memory usage",
-   "title": "Prometheus Alert (firing)",
-   "sections": [
-     {
-       "activityTitle": "[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)",
-       "facts": [
-         {
-           "name": "description",
-           "value": "10.80.40.11 reported high memory usage with 23.28%."
-         },
-         {
-           "name": "summary",
-           "value": "Server High Memory usage"
-         },
-         {
-           "name": "job",
-           "value": "docker_nodes"
-         },
-         {
-           "name": "monitor",
-           "value": "master"
-         },
-         {
-           "name": "severity",
-           "value": "warning"
-         },
-         {
-           "name": "alertname",
-           "value": "high_memory_load"
-         },
-         {
-           "name": "instance",
-           "value": "10.80.40.11:9100"
-         }
-       ],
-       "markdown": false
-     }
-   ]
- }
-```
-
-## Development and Testing
+**Build**
 
 ```bash
-export GOTEST_TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxxx-xxxx-xxx"
+make dep
+make darwin # for osx
+make linux # for linux
+```
+
+**Test**
+
+```bash
 make test
 ```
 
-## Why?
+**Docker Build**
 
-Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python. 
+```bash
+make docker VERSION=v1
+make docker-push VERSION=v1
+```
+
+
+
+
+
+

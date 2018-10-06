@@ -1,16 +1,33 @@
+// Copyright © 2018 bzon <bryansazon@hotmail.com>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 package alert
 
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"strings"
-)
 
-// CardCounter displays in the logs
-var CardCounter int
+	log "github.com/sirupsen/logrus"
+)
 
 // PrometheusAlertMessage is the request body that Prometheus sent via Generic Webhook
 // The Documentation is in https://prometheus.io/docs/alerting/configuration/#webhook_config
@@ -34,53 +51,63 @@ type Alert struct {
 	EndsAt      string            `json:"endsAt"`
 }
 
+func (p *PrometheusAlertMessage) String() string {
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Errorf("Failed marshalling PrometheusAlertMessage: %v", err)
+	}
+	return string(b)
+}
+
+// PrometheusWebhook holds the request uri and the incoming webhook
+type PrometheusWebhook struct {
+	// RequestURI is the request handler for Prometheus to post to
+	RequestURI string
+	// TeamsWebhookURL is the webhook url of the Teams connector
+	TeamsWebhookURL string
+	// MarkdownEnabled is used to format the Teams message
+	MarkdownEnabled bool
+}
+
 // PrometheusAlertManagerHandler handles incoming request
-func (t *Teams) PrometheusAlertManagerHandler(w http.ResponseWriter, r *http.Request) {
+func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
+	w http.ResponseWriter, r *http.Request) {
+	log.Infof("%s received a request", r.RequestURI)
 	if r.Method != http.MethodPost {
-		http.Error(w, "Server only accepts POST requests.", http.StatusMethodNotAllowed)
+		errMsg := fmt.Sprintf("Invalid request method: %s, "+
+			"this handler only accepts POST requests", r.Method)
+		log.Error(errMsg)
+		http.Error(w, errMsg, http.StatusMethodNotAllowed)
 		return
 	}
-	if !strings.HasPrefix(t.WebhookURL, "http") {
-		msg := fmt.Sprintf("Please check the server webhook configuration for %s\n", r.RequestURI)
-		log.Println(msg)
-		http.Error(w, msg, http.StatusInternalServerError)
+	if !strings.HasPrefix(promWebhook.TeamsWebhookURL, "http") {
+		errMsg := fmt.Sprintf("Invalid webhook url: %s",
+			promWebhook.TeamsWebhookURL)
+		log.Error(errMsg)
+		http.Error(w, errMsg, http.StatusInternalServerError)
 		return
 	}
-	var p PrometheusAlertMessage
-	err := json.NewDecoder(r.Body).Decode(&p)
+	var promAlert PrometheusAlertMessage
+	if err := json.NewDecoder(r.Body).Decode(&promAlert); err != nil {
+		errMsg := fmt.Sprintf("Failed decoding Prometheus alert message: %v", err)
+		log.Error(errMsg)
+		http.Error(w, errMsg, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debug(promAlert)
+	card := CreateCard(promAlert, promWebhook.MarkdownEnabled)
+	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
+	log.Debug(card)
+
+	res, err := SendCard(promWebhook.TeamsWebhookURL, card)
 	if err != nil {
-		msg := fmt.Sprintf("Failed decoding prometheus alert message: %v", err)
-		log.Println(msg)
-		http.Error(w, msg, http.StatusInternalServerError)
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("%s received a request from Prometheus Alert Manager\n", r.RequestURI)
-
-	// For Debugging, display the Request in JSON Format
-	if os.Getenv("PROMTEAMS_DEBUG") == "true" {
-		promBytes, _ := json.MarshalIndent(p, " ", "  ")
-		fmt.Println(string(promBytes))
+	log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
+	if err := res.Body.Close(); err != nil {
+		log.Error(err)
 	}
-
-	// Create the Card
-	t.Card.CreateCard(p)
-	log.Printf("Created a card for Microsoft Teams %s\n", r.RequestURI)
-
-	// For Debugging, display the Request Body to send in JSON Format
-	if os.Getenv("PROMTEAMS_DEBUG") == "true" {
-		cardBytes, _ := json.MarshalIndent(t.Card, "", "  ")
-		fmt.Println(string(cardBytes))
-	}
-
-	res, err := t.SendCard()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
-		return
-	}
-	defer res.Body.Close()
-	log.Println(res.Status)
-	CardCounter++
-	log.Printf("Total Card sent since uptime: %d\n", CardCounter)
 }

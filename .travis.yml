@@ -1,0 +1,49 @@
+language: go
+
+branches:
+  only:
+  - master
+  - /^v.*$/
+
+go:
+  - "1.11.x"
+
+sudo: false
+
+services:
+  - docker
+
+install:
+  - go get github.com/golang/lint/golint
+  - golint -set_exit_status ./...
+  - make dep
+
+script:
+  # Code coverage and testing
+  - make coverage
+  - bash <(curl -s https://codecov.io/bash)
+  # Docker build and deployment
+  # Push only if:
+  # - triggered by a push to master
+  # - triggered by a push to a tag
+  # - not triggered by a pull request
+  # https://docs.travis-ci.com/user/environment-variables/
+  - |
+    export VERSION=${TRAVIS_TAG:-"latest"}
+    make docker VERSION=${VERSION}
+    if [[ (! -z ${TRAVIS_TAG} || ${TRAVIS_BRANCH} == "master") && ${TRAVIS_PULL_REQUEST} == false ]]; then
+      echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
+      make docker-push VERSION=${VERSION}
+    fi
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_OAUTH_TOKEN
+  file:
+    - ./bin/prometheus-msteams-darwin-amd64
+    - ./bin/prometheus-msteams-linux-amd64
+    - ./bin/shasum256.txt
+  skip_cleanup: true
+  on:
+    tags: true
+
