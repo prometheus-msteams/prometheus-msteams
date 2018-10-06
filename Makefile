@@ -37,6 +37,7 @@ darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) go build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) .
 
 windows:
+	go get -v github.com/inconshreveable/mousetrap
 	CGO_ENABLED=0 GOOS=windows GOARCH=$(GOARCH) go build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-windows-$(GOARCH).exe . 
 
 docker: clean dep linux
