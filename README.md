@@ -49,7 +49,7 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
     -e TEAMS_REQUEST_URI=alertmanager \
-    docker.io/bzon/prometheus-msteams:latest
+    docker.io/bzon/prometheus-msteams:v1.0
 ```
 
 __OPTION 2:__ Run using binary.
@@ -160,7 +160,7 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -v /tmp/config.yml:/tmp/config.yml \
     -e CONFIG_FILE="/tmp/config.yml" \
-    docker.io/bzon/prometheus-msteams:latest
+    docker.io/bzon/prometheus-msteams:v1.0
 ```
 
 When running as a binary, use the __--config__ flag.
