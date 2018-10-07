@@ -203,12 +203,12 @@ route:
   group_wait: 30s
   receiver: 'low_priority_receiver'  # default/fallback request handler
   routes:
-   - match:
-     severity: critical
-     receiver: high_priority_receiver
-   - match:
-     severity: warning
-     receiver: low_priority_receiver
+    - receiver: high_priority_receiver
+      match:
+        severity: critical
+    - receiver: low_priority_receiver
+      match:
+        severity: warning
 
 receivers:
 - name: 'high_priority_receiver'
