@@ -43,20 +43,20 @@ type PrometheusAlertMessage struct {
 	Alerts            []Alert           `json:"alerts"`
 }
 
+func (promAlert *PrometheusAlertMessage) String() string {
+	b, err := json.Marshal(promAlert)
+	if err != nil {
+		log.Errorf("Failed marshalling PrometheusAlertMessage: %v", err)
+	}
+	return string(b)
+}
+
 // Alert construct is used by the PrometheusAlertMessage.Alerts
 type Alert struct {
 	Labels      map[string]string `json:"labels"`
 	Annotations map[string]string `json:"annotations"`
 	StartsAt    string            `json:"startsAt"`
 	EndsAt      string            `json:"endsAt"`
-}
-
-func (p *PrometheusAlertMessage) String() string {
-	b, err := json.Marshal(p)
-	if err != nil {
-		log.Errorf("Failed marshalling PrometheusAlertMessage: %v", err)
-	}
-	return string(b)
 }
 
 // PrometheusWebhook holds the request uri and the incoming webhook

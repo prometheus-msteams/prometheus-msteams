@@ -52,6 +52,14 @@ type TeamsMessageCard struct {
 	Sections   []TeamsMessageCardSection `json:"sections"`
 }
 
+func (card *TeamsMessageCard) String() string {
+	b, err := json.Marshal(card)
+	if err != nil {
+		log.Errorf("failed marshalling TeamsMessageCard: %v", err)
+	}
+	return string(b)
+}
+
 // TeamsMessageCardSection is placed under TeamsMessageCard.Sections
 // Each element of AlertWebHook.Alerts will the number of elements of TeamsMessageCard.Sections to create
 type TeamsMessageCardSection struct {
@@ -132,12 +140,4 @@ func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMe
 		card.Sections = append(card.Sections, s)
 	}
 	return card
-}
-
-func (c *TeamsMessageCard) String() string {
-	b, err := json.Marshal(c)
-	if err != nil {
-		log.Errorf("failed marshalling TeamsMessageCard: %v", err)
-	}
-	return string(b)
 }
