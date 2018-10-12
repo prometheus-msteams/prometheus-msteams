@@ -1,5 +1,4 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
-[![Image Size](https://images.microbadger.com/badges/image/bzon/prometheus-msteams.svg)](https://microbadger.com/images/bzon/prometheus-msteams "Get your own image badge on microbadger.com")
 [![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
 [![Build Status](https://travis-ci.org/bzon/prometheus-msteams.svg?branch=master)](https://travis-ci.org/bzon/prometheus-msteams)
 [![codecov](https://codecov.io/gh/bzon/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/bzon/prometheus-msteams)
@@ -43,6 +42,7 @@ How it works.
 
 ### Installation
 
+
 __OPTION 1:__ Run using docker.
 
 ```bash
@@ -63,6 +63,8 @@ Download the binary for your platform from [RELEASES](https://github.com/bzon/pr
 	-p 2000 \
 	-w "https://outlook.office.com/webhook/xxx"
 ```
+
+__OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, checkout the [Kubernetes Deployment Guide](#kubernetes-deployment).
 
 ### Setting up Prometheus Alert Manager
 
