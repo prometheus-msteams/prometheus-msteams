@@ -2,9 +2,11 @@
 replicaCount: 1
 
 image:
-  repository: bzon/prometheus-msteams 
+  repository: bzon/prometheus-msteams
   tag: v1.0.1
   pullPolicy: Always
+
+extraEnvs:
 
 container:
   port: 2000

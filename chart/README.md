@@ -34,6 +34,10 @@ image:
 connectors:
 - high_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx 
 - low_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx
+# extraEnvs is useful for adding extra environment variables such as proxy settings
+extraEnvs:
+  HTTP_PROXY: http://corporateproxy:8080
+  HTTPS_PROXY: http://corporateproxy:8080
 ```
 
 See [Helm Configuration](#helm-configuration) for reference.
@@ -55,6 +59,7 @@ Please see [Prometheus Operator alerting docs](https://github.com/coreos/prometh
 | image.repository         | Image repository                                       | bzon/prometheus-msteams                         |
 | image.tag                | Image tag                                              | v1.0.1                                          |
 | image.pullPolicy         | Image pull policy                                      | Always                                          |
+| extraEnvs                | Extra environment variables                            | {}                                              |
 | connectors               | **Required.** Add your own Microsoft Teams connectors. | See [default](./prometheus-msteams/values.yaml) |
 | container.port           | Container port                                         | 2000                                            |
 | container.additionalArgs | additional prometheus-msteams flags to use             | None                                            |
