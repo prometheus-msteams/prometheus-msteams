@@ -31,9 +31,11 @@ script:
   - |
     export VERSION=${TRAVIS_TAG:-"latest"}
     make docker VERSION=${VERSION}
+    echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
     if [[ (! -z ${TRAVIS_TAG} || ${TRAVIS_BRANCH} == "master") && ${TRAVIS_PULL_REQUEST} == false ]]; then
-      echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
       make docker-push VERSION=${VERSION}
+    else
+      make docker-push VERSION=${TRAVIS_BRANCH}
     fi
     make darwin VERSION=${VERSION}
 
