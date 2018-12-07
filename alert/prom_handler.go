@@ -95,7 +95,7 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 		return
 	}
 
-	log.Debug(promAlert)
+	log.Debug(promAlert.String())
 	card := CreateCard(promAlert, promWebhook.MarkdownEnabled)
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
 	log.Debug(card)
