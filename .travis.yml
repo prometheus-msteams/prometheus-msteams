@@ -4,6 +4,7 @@ branches:
   only:
   - master
   - /^v.*$/
+  - /^issue-\d+/
 
 go:
   - "1.11.x"
