@@ -85,13 +85,17 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
 			webhook, err)
 	}
+	rb, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Infof("Microsoft Teams response text: %s", string(rb))
 	if res.StatusCode != http.StatusOK {
-		resMessage, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, fmt.Errorf("Failed reading Teams http response: %v", err)
 		}
-		return nil, fmt.Errorf("Failed sending to the Teams Channel. Teams http response: %s, %s",
-			res.Status, string(resMessage))
+		return nil, fmt.Errorf("Failed sending to the Teams Channel. Teams http response: %s",
+			res.Status)
 	}
 	if err := res.Body.Close(); err != nil {
 		log.Error(err)
