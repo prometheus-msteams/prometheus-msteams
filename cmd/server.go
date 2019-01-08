@@ -38,7 +38,7 @@ import (
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Runs the prometheus-mteams server.",
+	Short: "Runs the prometheus-msteams server.",
 	Long: `
 By using a --config file, you will be able to define multiple prometheus request uri and webhook for different channels.
 
