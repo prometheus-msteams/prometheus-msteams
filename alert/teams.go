@@ -103,8 +103,8 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 	return res, nil
 }
 
-// CreateCard creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
-func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
+// CreateCardMetadata creates the metadata for alerts of the same type
+func CreateCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
 	card := &TeamsMessageCard{
 		Type:    messageType,
 		Context: context,
@@ -124,6 +124,16 @@ func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMe
 	default:
 		card.ThemeColor = colorUnknown
 	}
+	return card
+}
+
+// CreateCard creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
+func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
+	cards := []*TeamsMessageCard{}
+
+	card := CreateCardMetadata(promAlert, markdownEnabled)
+	cardJSON,_ := json.Marshal(card)
+	cardMetadataLength := len(cardJSON)
 	for _, alert := range promAlert.Alerts {
 		var s TeamsMessageCardSection
 		s.ActivityTitle = fmt.Sprintf("[%s](%s)",
@@ -141,7 +151,17 @@ func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMe
 			}
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
-		card.Sections = append(card.Sections, s)
+		existingSectionJSON,_ := json.Marshal(card)
+		existingSectionLength := len(existingSectionJSON)
+		newSectionJSON,_ := json.Marshal(s)
+		newSectionLength := len(newSectionJSON)
+		// if total length of message exceeds 14KB then split the whole message
+		if (cardMetadataLength + existingSectionLength + newSectionLength) < 14336 {
+			card.Sections = append(card.Sections, s)
+		} else {
+			cards = append(cards, card)
+			card = CreateCardMetadata(promAlert, markdownEnabled)
+		}
 	}
-	return card
+	return cards
 }

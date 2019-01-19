@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestCreateCard(t *testing.T) {
+func TestCreateCards(t *testing.T) {
 	var p PrometheusAlertMessage
 	testdata := "testdata/prom_post_request.json"
 	b, err := ioutil.ReadFile(testdata)
@@ -17,18 +17,20 @@ func TestCreateCard(t *testing.T) {
 		t.Fatalf("Failed unmarshalling testdata file %s, got error: +%v",
 			testdata, err)
 	}
-	c := CreateCard(p, true)
+	cards := CreateCards(p, true)
 
-	want := colorFiring
-	got := c.ThemeColor
-	if got != want {
-		t.Fatalf("TeamsMessageCard.CreatedCard error: got %s, want %s", got, want)
-	}
-
-	want = "Server High Memory usage"
-	got = c.Summary
-	if got != want {
-		t.Fatalf("TeamsMessageCard.CreatedCard error: got %s, want %s", got, want)
+	for _,c := range cards {
+		want := colorFiring
+		got := c.ThemeColor
+		if got != want {
+			t.Fatalf("TeamsMessageCard.CreatedCard error: got %s, want %s", got, want)
+		}
+	
+		want = "Server High Memory usage"
+		got = c.Summary
+		if got != want {
+			t.Fatalf("TeamsMessageCard.CreatedCard error: got %s, want %s", got, want)
+		}
 	}
 }
 
@@ -44,11 +46,12 @@ func TestStatusColor(t *testing.T) {
 
 	for _, tc := range tt {
 		p := PrometheusAlertMessage{Status: tc.status}
-		c := CreateCard(p, true)
-		if c.ThemeColor != tc.wantColor {
-			t.Fatalf("Failed assigning themes color to card: got %s, want %s",
-				c.ThemeColor, tc.wantColor)
+		cards := CreateCards(p, true)
+		for _,c := range cards {
+			if c.ThemeColor != tc.wantColor {
+				t.Fatalf("Failed assigning themes color to card: got %s, want %s",
+					c.ThemeColor, tc.wantColor)
+			}
 		}
-
 	}
 }
