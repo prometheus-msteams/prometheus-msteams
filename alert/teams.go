@@ -127,7 +127,7 @@ func CreateCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 	return card
 }
 
-// CreateCard creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
+// CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
 func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
 	cards := []*TeamsMessageCard{}
 
