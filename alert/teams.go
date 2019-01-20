@@ -161,8 +161,12 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 		if (cardMetadataLength + existingSectionLength + newSectionLength) < 14336 {
 			card.Sections = append(card.Sections, s)
 		} else {
-			cards = append(cards, card)
+			log.Debugf("Card has to be splitted as length of card is %d Bytes, which is about %d KB",
+				cardMetadataLength+existingSectionLength+newSectionLength,
+				(cardMetadataLength+existingSectionLength+newSectionLength)/(1<<(10*1)))
 			card = CreateCardMetadata(promAlert, markdownEnabled)
+			card.Sections = append(card.Sections, s)
+			cards = append(cards, card)
 		}
 	}
 	return cards
