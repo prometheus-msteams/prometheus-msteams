@@ -111,8 +111,8 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 	return res, nil
 }
 
-// CreateCardMetadata creates the metadata for alerts of the same type
-func CreateCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
+// createCardMetadata creates the metadata for alerts of the same type
+func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
 	card := &TeamsMessageCard{
 		Type:    messageType,
 		Context: context,
@@ -138,7 +138,7 @@ func CreateCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 // CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
 func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
 	cards := []*TeamsMessageCard{}
-	card := CreateCardMetadata(promAlert, markdownEnabled)
+	card := createCardMetadata(promAlert, markdownEnabled)
 	cardMetadataJSON := card.String()
 	cardMetadataLength := len(cardMetadataJSON)
 	// append first card to cards
@@ -170,7 +170,7 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 		} else {
 			log.Debugf("Card has to be splitted as length of card is %d Bytes, which is about %d KB",
 				newCardLength, (newCardLength)/(1<<(10*1)))
-			card = CreateCardMetadata(promAlert, markdownEnabled)
+			card = createCardMetadata(promAlert, markdownEnabled)
 			card.Sections = append(card.Sections, s)
 			cards = append(cards, card)
 		}
