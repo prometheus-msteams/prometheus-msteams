@@ -99,6 +99,12 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 	cards := CreateCards(promAlert, promWebhook.MarkdownEnabled)
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
 	log.Debug(cards)
+	totalSize := 0
+	for _, c := range cards {
+		totalSize += len(c.String())
+	}
+	log.Debugf("Size of message is %d Bytes (~%d KB)", totalSize, (totalSize)/(1<<(10*1)))
+	log.Infof("Sending out %d messages ...", len(cards))
 
 	for _, card := range cards {
 		res, err := SendCard(promWebhook.TeamsWebhookURL, card)

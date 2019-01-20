@@ -140,7 +140,7 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 	cards := []*TeamsMessageCard{}
 	card := createCardMetadata(promAlert, markdownEnabled)
 	cardMetadataJSON := card.String()
-	cardMetadataLength := len(cardMetadataJSON)
+	cardMetadataSize := len(cardMetadataJSON)
 	// append first card to cards
 	cards = append(cards, card)
 
@@ -161,15 +161,13 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 			}
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
-		currentCardLength := len(card.String())
-		newSectionLength := len(s.String())
-		newCardLength := cardMetadataLength + currentCardLength + newSectionLength
-		// if total length of message exceeds 14KB then split the whole message
-		if (newCardLength) < 14336 {
+		currentCardSize := len(card.String())
+		newSectionSize := len(s.String())
+		newCardSize := cardMetadataSize + currentCardSize + newSectionSize
+		// if total Size of message exceeds 14KB then split the whole message
+		if (newCardSize) < 14336 {
 			card.Sections = append(card.Sections, s)
 		} else {
-			log.Debugf("Card has to be splitted into multiple messages as length of card is %d Bytes (~%d KB)",
-				newCardLength, (newCardLength)/(1<<(10*1)))
 			card = createCardMetadata(promAlert, markdownEnabled)
 			card.Sections = append(card.Sections, s)
 			cards = append(cards, card)
