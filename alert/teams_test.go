@@ -19,13 +19,13 @@ func TestCreateCards(t *testing.T) {
 	}
 	cards := CreateCards(p, true)
 
-	for _,c := range cards {
+	for _, c := range cards {
 		want := colorFiring
 		got := c.ThemeColor
 		if got != want {
 			t.Fatalf("TeamsMessageCard.CreatedCard error: got %s, want %s", got, want)
 		}
-	
+
 		want = "Server High Memory usage"
 		got = c.Summary
 		if got != want {
@@ -47,7 +47,7 @@ func TestStatusColor(t *testing.T) {
 	for _, tc := range tt {
 		p := PrometheusAlertMessage{Status: tc.status}
 		cards := CreateCards(p, true)
-		for _,c := range cards {
+		for _, c := range cards {
 			if c.ThemeColor != tc.wantColor {
 				t.Fatalf("Failed assigning themes color to card: got %s, want %s",
 					c.ThemeColor, tc.wantColor)

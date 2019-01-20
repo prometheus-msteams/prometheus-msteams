@@ -7,6 +7,7 @@ VERSION?=latest
 COMMIT=$(shell git rev-parse --short HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 BUILD_DATE=$(shell date +%FT%T%z)
+GOFMT_FILES?=$$(find . -name '*.go')
 
 # Symlink into GOPATH
 GITHUB_USERNAME=bzon
@@ -47,6 +48,12 @@ docker-push: docker
 
 run-osx: dep darwin
 	bin/prometheus-msteams-darwin-amd64 server $(RUN_ARGS)
+
+fmt:
+	gofmt -w $(GOFMT_FILES)
+
+lint:
+	golint -set_exit_status ./...
 
 test:
 	go test ./... -v -race

@@ -130,9 +130,11 @@ func CreateCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 // CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
 func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
 	cards := []*TeamsMessageCard{}
-
 	card := CreateCardMetadata(promAlert, markdownEnabled)
-	cardJSON,_ := json.Marshal(card)
+	// append first card to cards
+	cards = append(cards, card)
+
+	cardJSON, _ := json.Marshal(card)
 	cardMetadataLength := len(cardJSON)
 	for _, alert := range promAlert.Alerts {
 		var s TeamsMessageCardSection
@@ -151,9 +153,9 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 			}
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
-		existingSectionJSON,_ := json.Marshal(card)
+		existingSectionJSON, _ := json.Marshal(card)
 		existingSectionLength := len(existingSectionJSON)
-		newSectionJSON,_ := json.Marshal(s)
+		newSectionJSON, _ := json.Marshal(s)
 		newSectionLength := len(newSectionJSON)
 		// if total length of message exceeds 14KB then split the whole message
 		if (cardMetadataLength + existingSectionLength + newSectionLength) < 14336 {
