@@ -6,9 +6,8 @@ import (
 	"testing"
 )
 
-func TestCreateCards(t *testing.T) {
+func createTestCards(testdata string, t *testing.T) []*TeamsMessageCard {
 	var p PrometheusAlertMessage
-	testdata := "testdata/prom_post_request.json"
 	b, err := ioutil.ReadFile(testdata)
 	if err != nil {
 		t.Fatalf("Failed reading file %s got error: +%v", testdata, err)
@@ -17,7 +16,15 @@ func TestCreateCards(t *testing.T) {
 		t.Fatalf("Failed unmarshalling testdata file %s, got error: +%v",
 			testdata, err)
 	}
-	cards := CreateCards(p, true)
+	return CreateCards(p, true)
+}
+func TestCreateCards(t *testing.T) {
+	testdata := "testdata/prom_post_request.json"
+	cards := createTestCards(testdata, t)
+
+	if len(cards) != 1 {
+		t.Fatalf("TeamsMessageCard.CreatedCard error: should create 1 card, got %d cards", len(cards))
+	}
 
 	for _, c := range cards {
 		want := colorFiring
@@ -31,6 +38,15 @@ func TestCreateCards(t *testing.T) {
 		if got != want {
 			t.Fatalf("TeamsMessageCard.CreatedCard error: got %s, want %s", got, want)
 		}
+	}
+}
+
+func TestLargePostRequest(t *testing.T) {
+	testdata := "testdata/large_prom_post_request.json"
+	cards := createTestCards(testdata, t)
+
+	if len(cards) != 2 {
+		t.Fatalf("TeamsMessageCard.CreatedCard error: should create 2 cards, got %d cards", len(cards))
 	}
 }
 
