@@ -68,6 +68,14 @@ type TeamsMessageCardSection struct {
 	Markdown      bool                           `json:"markdown"`
 }
 
+func (section *TeamsMessageCardSection) String() string {
+	b, err := json.Marshal(section)
+	if err != nil {
+		log.Errorf("failed marshalling TeamsMessageCardSection: %v", err)
+	}
+	return string(b)
+}
+
 // TeamsMessageCardSectionFacts is placed under TeamsMessageCardSection.Facts
 type TeamsMessageCardSectionFacts struct {
 	Name  string `json:"name"`
@@ -131,11 +139,11 @@ func CreateCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
 	cards := []*TeamsMessageCard{}
 	card := CreateCardMetadata(promAlert, markdownEnabled)
+	cardMetadataJSON := card.String()
+	cardMetadataLength := len(cardMetadataJSON)
 	// append first card to cards
 	cards = append(cards, card)
 
-	cardJSON, _ := json.Marshal(card)
-	cardMetadataLength := len(cardJSON)
 	for _, alert := range promAlert.Alerts {
 		var s TeamsMessageCardSection
 		s.ActivityTitle = fmt.Sprintf("[%s](%s)",
@@ -153,17 +161,15 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 			}
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
-		existingSectionJSON, _ := json.Marshal(card)
-		existingSectionLength := len(existingSectionJSON)
-		newSectionJSON, _ := json.Marshal(s)
-		newSectionLength := len(newSectionJSON)
+		currentCardLength := len(card.String())
+		newSectionLength := len(s.String())
+		newCardLength := cardMetadataLength + currentCardLength + newSectionLength
 		// if total length of message exceeds 14KB then split the whole message
-		if (cardMetadataLength + existingSectionLength + newSectionLength) < 14336 {
+		if (newCardLength) < 14336 {
 			card.Sections = append(card.Sections, s)
 		} else {
 			log.Debugf("Card has to be splitted as length of card is %d Bytes, which is about %d KB",
-				cardMetadataLength+existingSectionLength+newSectionLength,
-				(cardMetadataLength+existingSectionLength+newSectionLength)/(1<<(10*1)))
+				newCardLength, (newCardLength)/(1<<(10*1)))
 			card = CreateCardMetadata(promAlert, markdownEnabled)
 			card.Sections = append(card.Sections, s)
 			cards = append(cards, card)
