@@ -35,9 +35,10 @@ script:
     echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
     if [[ (! -z ${TRAVIS_TAG} || ${TRAVIS_BRANCH} == "master") && ${TRAVIS_PULL_REQUEST} == false ]]; then
       make docker-push VERSION=${VERSION}
-    else
-      make docker-push VERSION=${TRAVIS_BRANCH}
+    elif [[ ${TRAVIS_PULL_REQUEST} == "true" ]]; then
+      make docker-push VERSION=${TRAVIS_PULL_REQUEST_BRANCH}
     fi
+    
     make darwin VERSION=${VERSION}
 
 deploy:
