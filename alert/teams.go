@@ -137,6 +137,8 @@ func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 
 // CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
 func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
+	// maximum message size of 14336 Bytes (14KB)
+	const maxSize = 14336
 	cards := []*TeamsMessageCard{}
 	card := createCardMetadata(promAlert, markdownEnabled)
 	cardMetadataJSON := card.String()
@@ -164,8 +166,8 @@ func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*Team
 		currentCardSize := len(card.String())
 		newSectionSize := len(s.String())
 		newCardSize := cardMetadataSize + currentCardSize + newSectionSize
-		// if total Size of message exceeds 14KB then split the whole message
-		if (newCardSize) < 14336 {
+		// if total Size of message exceeds maximum message size then split it
+		if (newCardSize) < maxSize {
 			card.Sections = append(card.Sections, s)
 		} else {
 			card = createCardMetadata(promAlert, markdownEnabled)
