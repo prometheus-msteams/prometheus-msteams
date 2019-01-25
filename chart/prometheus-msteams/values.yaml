@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: bzon/prometheus-msteams
-  tag: v1.0.2
+  tag: v1.0.3
   pullPolicy: Always
 
 extraEnvs:
