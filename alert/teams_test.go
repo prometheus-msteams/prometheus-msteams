@@ -18,6 +18,7 @@ func createTestCards(testdata string, t *testing.T) []*TeamsMessageCard {
 	}
 	return CreateCards(p, true)
 }
+
 func TestCreateCards(t *testing.T) {
 	testdata := "testdata/prom_post_request.json"
 	cards := createTestCards(testdata, t)
