@@ -68,6 +68,14 @@ type TeamsMessageCardSection struct {
 	Markdown      bool                           `json:"markdown"`
 }
 
+func (section *TeamsMessageCardSection) String() string {
+	b, err := json.Marshal(section)
+	if err != nil {
+		log.Errorf("failed marshalling TeamsMessageCardSection: %v", err)
+	}
+	return string(b)
+}
+
 // TeamsMessageCardSectionFacts is placed under TeamsMessageCardSection.Facts
 type TeamsMessageCardSectionFacts struct {
 	Name  string `json:"name"`
@@ -103,8 +111,8 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 	return res, nil
 }
 
-// CreateCard creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
-func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
+// createCardMetadata creates the metadata for alerts of the same type
+func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
 	card := &TeamsMessageCard{
 		Type:    messageType,
 		Context: context,
@@ -124,6 +132,20 @@ func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMe
 	default:
 		card.ThemeColor = colorUnknown
 	}
+	return card
+}
+
+// CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
+func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
+	// maximum message size of 14336 Bytes (14KB)
+	const maxSize = 14336
+	cards := []*TeamsMessageCard{}
+	card := createCardMetadata(promAlert, markdownEnabled)
+	cardMetadataJSON := card.String()
+	cardMetadataSize := len(cardMetadataJSON)
+	// append first card to cards
+	cards = append(cards, card)
+
 	for _, alert := range promAlert.Alerts {
 		var s TeamsMessageCardSection
 		s.ActivityTitle = fmt.Sprintf("[%s](%s)",
@@ -141,7 +163,17 @@ func CreateCard(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMe
 			}
 			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
 		}
-		card.Sections = append(card.Sections, s)
+		currentCardSize := len(card.String())
+		newSectionSize := len(s.String())
+		newCardSize := cardMetadataSize + currentCardSize + newSectionSize
+		// if total Size of message exceeds maximum message size then split it
+		if (newCardSize) < maxSize {
+			card.Sections = append(card.Sections, s)
+		} else {
+			card = createCardMetadata(promAlert, markdownEnabled)
+			card.Sections = append(card.Sections, s)
+			cards = append(cards, card)
+		}
 	}
-	return card
+	return cards
 }

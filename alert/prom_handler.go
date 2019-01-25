@@ -96,18 +96,26 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 	}
 
 	log.Debug(promAlert.String())
-	card := CreateCard(promAlert, promWebhook.MarkdownEnabled)
+	cards := CreateCards(promAlert, promWebhook.MarkdownEnabled)
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
-	log.Debug(card)
-
-	res, err := SendCard(promWebhook.TeamsWebhookURL, card)
-	if err != nil {
-		log.Error(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	log.Debug(cards)
+	totalSize := 0
+	for _, c := range cards {
+		totalSize += len(c.String())
 	}
-	log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
-	if err := res.Body.Close(); err != nil {
-		log.Error(err)
+	log.Debugf("Size of message is %d Bytes (~%d KB)", totalSize, (totalSize)/(1<<(10*1)))
+	log.Infof("Sending out %d messages ...", len(cards))
+
+	for _, card := range cards {
+		res, err := SendCard(promWebhook.TeamsWebhookURL, card)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
+		if err := res.Body.Close(); err != nil {
+			log.Error(err)
+		}
 	}
 }
