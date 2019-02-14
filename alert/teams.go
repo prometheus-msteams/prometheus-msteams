@@ -36,8 +36,9 @@ const (
 	messageType   = "MessageCard"
 	context       = "http://schema.org/extensions"
 	colorResolved = "2DC72D"
-	colorFiring   = "8C1A1A"
-	colorUnknown  = "CCCCCC"
+	colorCritical = "8C1A1A"
+	colorWarning  = "FFA500"
+	colorUnknown  = "808080"
 )
 
 // TeamsMessageCard is for the Card Fields to send in Teams
@@ -128,7 +129,14 @@ func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 	case "resolved":
 		card.ThemeColor = colorResolved
 	case "firing":
-		card.ThemeColor = colorFiring
+		switch promAlert.CommonLabels["severity"] {
+		case "critical":
+			card.ThemeColor = colorCritical
+		case "warning":
+			card.ThemeColor = colorWarning
+		default:
+			card.ThemeColor = colorUnknown
+		}
 	default:
 		card.ThemeColor = colorUnknown
 	}
