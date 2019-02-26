@@ -1,7 +1,9 @@
 module github.com/bzon/prometheus-msteams
 
 require (
+	github.com/go-kit/kit v0.8.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/prometheus/alertmanager v0.16.1
 	github.com/prometheus/client_golang v0.9.2
 	github.com/sirupsen/logrus v1.3.0
 	github.com/spf13/cobra v0.0.3

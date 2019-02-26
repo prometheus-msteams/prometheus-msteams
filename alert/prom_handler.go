@@ -26,38 +26,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/prometheus/alertmanager/notify"
 	log "github.com/sirupsen/logrus"
 )
-
-// PrometheusAlertMessage is the request body that Prometheus sent via Generic Webhook
-// The Documentation is in https://prometheus.io/docs/alerting/configuration/#webhook_config
-type PrometheusAlertMessage struct {
-	Version           string            `json:"version"`
-	GroupKey          string            `json:"groupKey"`
-	Status            string            `json:"status"`
-	Receiver          string            `json:"receiver"`
-	GroupLabels       map[string]string `json:"groupLabels"`
-	CommonLabels      map[string]string `json:"commonLabels"`
-	CommonAnnotations map[string]string `json:"commonAnnotations"`
-	ExternalURL       string            `json:"externalURL"`
-	Alerts            []Alert           `json:"alerts"`
-}
-
-func (promAlert *PrometheusAlertMessage) String() string {
-	b, err := json.Marshal(promAlert)
-	if err != nil {
-		log.Errorf("Failed marshalling PrometheusAlertMessage: %v", err)
-	}
-	return string(b)
-}
-
-// Alert construct is used by the PrometheusAlertMessage.Alerts
-type Alert struct {
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
-	StartsAt    string            `json:"startsAt"`
-	EndsAt      string            `json:"endsAt"`
-}
 
 // PrometheusWebhook holds the request uri and the incoming webhook
 type PrometheusWebhook struct {
@@ -67,6 +38,15 @@ type PrometheusWebhook struct {
 	TeamsWebhookURL string
 	// MarkdownEnabled is used to format the Teams message
 	MarkdownEnabled bool
+}
+
+// String converts the incoming alert to a string
+func String(promAlert notify.WebhookMessage) string {
+	b, err := json.Marshal(promAlert)
+	if err != nil {
+		log.Errorf("Failed marshalling PrometheusAlertMessage: %v", err)
+	}
+	return string(b)
 }
 
 // PrometheusAlertManagerHandler handles incoming request
@@ -87,7 +67,7 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 		http.Error(w, errMsg, http.StatusInternalServerError)
 		return
 	}
-	var promAlert PrometheusAlertMessage
+	var promAlert notify.WebhookMessage
 	if err := json.NewDecoder(r.Body).Decode(&promAlert); err != nil {
 		errMsg := fmt.Sprintf("Failed decoding Prometheus alert message: %v", err)
 		log.Error(errMsg)
@@ -95,7 +75,7 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 		return
 	}
 
-	log.Debug(promAlert.String())
+	log.Debug(String(promAlert))
 	cards := CreateCards(promAlert, promWebhook.MarkdownEnabled)
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
 	log.Debug(cards)

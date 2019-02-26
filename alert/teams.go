@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/prometheus/alertmanager/notify"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -112,7 +113,7 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 }
 
 // createCardMetadata creates the metadata for alerts of the same type
-func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
+func createCardMetadata(promAlert notify.WebhookMessage, markdownEnabled bool) *TeamsMessageCard {
 	card := &TeamsMessageCard{
 		Type:    messageType,
 		Context: context,
@@ -136,7 +137,7 @@ func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) 
 }
 
 // CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
-func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
+func CreateCards(promAlert notify.WebhookMessage, markdownEnabled bool) []*TeamsMessageCard {
 	// maximum message size of 14336 Bytes (14KB)
 	const maxSize = 14336
 	cards := []*TeamsMessageCard{}

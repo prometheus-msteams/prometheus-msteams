@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"testing"
+
+	"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/template"
 )
 
 func createTestCards(testdata string, t *testing.T) []*TeamsMessageCard {
-	var p PrometheusAlertMessage
+	var p notify.WebhookMessage
 	b, err := ioutil.ReadFile(testdata)
 	if err != nil {
 		t.Fatalf("Failed reading file %s got error: +%v", testdata, err)
@@ -62,7 +65,8 @@ func TestStatusColor(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		p := PrometheusAlertMessage{Status: tc.status}
+		data := &template.Data{Status: tc.status}
+		p := notify.WebhookMessage{Data: data}
 		cards := CreateCards(p, true)
 		for _, c := range cards {
 			if c.ThemeColor != tc.wantColor {
