@@ -89,8 +89,6 @@ func SendCard(webhook string, card string) (*http.Response, error) {
 	if err := json.Compact(buffer, []byte(card)); err != nil {
 		return nil, fmt.Errorf("Failed encoding message card: %v", err)
 	}
-	log.Debug("Print Buffer")
-	log.Debug(buffer)
 	res, err := http.Post(webhook, "application/json", buffer)
 	if err != nil {
 		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
