@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/template"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -84,11 +84,13 @@ type TeamsMessageCardSectionFacts struct {
 }
 
 // SendCard sends the JSON Encoded TeamsMessageCard
-func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
+func SendCard(webhook string, card string) (*http.Response, error) {
 	buffer := new(bytes.Buffer)
-	if err := json.NewEncoder(buffer).Encode(card); err != nil {
+	if err := json.Compact(buffer, []byte(card)); err != nil {
 		return nil, fmt.Errorf("Failed encoding message card: %v", err)
 	}
+	log.Debug("Print Buffer")
+	log.Debug(buffer)
 	res, err := http.Post(webhook, "application/json", buffer)
 	if err != nil {
 		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
@@ -112,69 +114,61 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 	return res, nil
 }
 
-// createCardMetadata creates the metadata for alerts of the same type
-func createCardMetadata(promAlert notify.WebhookMessage, markdownEnabled bool) *TeamsMessageCard {
-	card := &TeamsMessageCard{
-		Type:    messageType,
-		Context: context,
-		Title:   fmt.Sprintf("Prometheus Alert (%s)", promAlert.Status),
-		// Set a default Summary, this is required for Microsoft Teams
-		Summary: "Prometheus Alert received",
-	}
-	// Override the value of the Summary if the common annotation exists
-	if value, ok := promAlert.CommonAnnotations["summary"]; ok {
-		card.Summary = value
-	}
-	switch promAlert.Status {
-	case "resolved":
-		card.ThemeColor = colorResolved
-	case "firing":
-		card.ThemeColor = colorFiring
-	default:
-		card.ThemeColor = colorUnknown
-	}
-	return card
-}
-
 // CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
-func CreateCards(promAlert notify.WebhookMessage, markdownEnabled bool) []*TeamsMessageCard {
-	// maximum message size of 14336 Bytes (14KB)
-	const maxSize = 14336
-	cards := []*TeamsMessageCard{}
-	card := createCardMetadata(promAlert, markdownEnabled)
-	cardMetadataJSON := card.String()
-	cardMetadataSize := len(cardMetadataJSON)
-	// append first card to cards
-	cards = append(cards, card)
+func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (string, error) {
 
-	for _, alert := range promAlert.Alerts {
-		var s TeamsMessageCardSection
-		s.ActivityTitle = fmt.Sprintf("[%s](%s)",
-			alert.Annotations["description"], promAlert.ExternalURL)
-		s.Markdown = markdownEnabled
-		for key, val := range alert.Annotations {
-			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
-		}
-		for key, val := range alert.Labels {
-			// Auto escape underscores if markdown is enabled
-			if markdownEnabled {
-				if strings.Contains(val, "_") {
-					val = strings.Replace(val, "_", "\\_", -1)
-				}
-			}
-			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
-		}
-		currentCardSize := len(card.String())
-		newSectionSize := len(s.String())
-		newCardSize := cardMetadataSize + currentCardSize + newSectionSize
-		// if total Size of message exceeds maximum message size then split it
-		if (newCardSize) < maxSize {
-			card.Sections = append(card.Sections, s)
-		} else {
-			card = createCardMetadata(promAlert, markdownEnabled)
-			card.Sections = append(card.Sections, s)
-			cards = append(cards, card)
-		}
+	data := &template.Data{
+		Receiver:          promAlert.Receiver,
+		Status:            promAlert.Status,
+		Alerts:            promAlert.Alerts,
+		GroupLabels:       promAlert.GroupLabels,
+		CommonLabels:      promAlert.CommonLabels,
+		CommonAnnotations: promAlert.CommonAnnotations,
+		ExternalURL:       promAlert.ExternalURL,
 	}
-	return cards
+
+	cardString, err := webhook.Template.ExecuteTextString(`{{ template "teams.card" . }}`, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to template alerts: %v", err)
+	}
+
+	// // maximum message size of 14336 Bytes (14KB)
+	// const maxSize = 14336
+	// cards := []*TeamsMessageCard{}
+	// card := createCardMetadata(promAlert, webhook.MarkdownEnabled)
+	// cardMetadataJSON := card.String()
+	// cardMetadataSize := len(cardMetadataJSON)
+	// // append first card to cards
+	// cards = append(cards, card)
+
+	// for _, alert := range promAlert.Alerts {
+	// 	var s TeamsMessageCardSection
+	// 	s.ActivityTitle = fmt.Sprintf("[%s](%s)",
+	// 		alert.Annotations["description"], promAlert.ExternalURL)
+	// 	s.Markdown = webhook.MarkdownEnabled
+	// 	for key, val := range alert.Annotations {
+	// 		s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
+	// 	}
+	// 	for key, val := range alert.Labels {
+	// 		// Auto escape underscores if markdown is enabled
+	// 		if webhook.MarkdownEnabled {
+	// 			if strings.Contains(val, "_") {
+	// 				val = strings.Replace(val, "_", "\\_", -1)
+	// 			}
+	// 		}
+	// 		s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
+	// 	}
+	// 	currentCardSize := len(card.String())
+	// 	newSectionSize := len(s.String())
+	// 	newCardSize := cardMetadataSize + currentCardSize + newSectionSize
+	// 	// if total Size of message exceeds maximum message size then split it
+	// 	if (newCardSize) < maxSize {
+	// 		card.Sections = append(card.Sections, s)
+	// 	} else {
+	// 		card = createCardMetadata(promAlert, webhook.MarkdownEnabled)
+	// 		card.Sections = append(card.Sections, s)
+	// 		cards = append(cards, card)
+	// 	}
+	// }
+	return cardString, nil
 }

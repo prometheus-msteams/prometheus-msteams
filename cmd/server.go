@@ -29,6 +29,7 @@ import (
 	"strconv"
 
 	"github.com/bzon/prometheus-msteams/alert"
+	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -60,6 +61,7 @@ var (
 	requestURI          string
 	logLevel            string
 	configFile          string
+	templatePath        string
 	markdownEnabled     bool
 )
 
@@ -85,6 +87,8 @@ func init() {
 		"Log levels: INFO | DEBUG | WARN | ERROR | FATAL | PANIC")
 	serverCmd.Flags().BoolVar(&markdownEnabled, "markdown", true,
 		"Format the prometheus alert in Microsoft Teams with markdown.")
+	serverCmd.Flags().StringVarP(&templatePath, "template-path", "t", "./default-message-card.tmpl",
+		"path to template for Microsoft Teams Message Card.")
 	serverCmd.Flags().StringVar(&configFile, "config", "",
 		"The connectors configuration file. "+
 			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
@@ -139,6 +143,23 @@ func server(cmd *cobra.Command, args []string) {
 	setLogLevel(logLevel)
 	log.Infof(getVersion())
 
+	funcs := template.DefaultFuncs
+	funcs["counter"] = func() func() int {
+		i := -1
+		return func() int {
+			i++
+			return i
+		}
+	}
+	template.DefaultFuncs = funcs
+
+	tmpl, err := template.FromGlobs(templatePath)
+	if err != nil {
+		log.Error("failed to parse template: %v", err)
+		os.Exit(1)
+	}
+	
+
 	teamsCfg := &TeamsConfig{}
 	if configFile != "" {
 		log.Warn("If the 'config' flag is used, the" +
@@ -160,7 +181,7 @@ func server(cmd *cobra.Command, args []string) {
 	mux := http.NewServeMux()
 	for _, teamMap := range teamsCfg.Connectors {
 		for uri, webhook := range teamMap {
-			addPrometheusHandler(uri, webhook, mux)
+			addPrometheusHandler(uri, webhook, tmpl, mux)
 		}
 	}
 	mux.HandleFunc("/config", teamsCfg.configHandler)
@@ -170,11 +191,12 @@ func server(cmd *cobra.Command, args []string) {
 	log.Fatal(http.ListenAndServe(server, mux))
 }
 
-func addPrometheusHandler(uri string, webhook string, mux *http.ServeMux) {
+func addPrometheusHandler(uri string, webhook string, template *template.Template, mux *http.ServeMux) {
 	promWebhook := alert.PrometheusWebhook{
 		RequestURI:      "/" + uri,
 		TeamsWebhookURL: webhook,
 		MarkdownEnabled: markdownEnabled,
+		Template:        template,
 	}
 	log.Infof("Creating the server request path %q with webhook %q",
 		promWebhook.RequestURI, promWebhook.TeamsWebhookURL)

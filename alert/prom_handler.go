@@ -27,6 +27,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/template"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -38,6 +39,8 @@ type PrometheusWebhook struct {
 	TeamsWebhookURL string
 	// MarkdownEnabled is used to format the Teams message
 	MarkdownEnabled bool
+	// template bundles the teams message card based on a template file
+	Template *template.Template
 }
 
 // String converts the incoming alert to a string
@@ -76,26 +79,41 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 	}
 
 	log.Debug(String(promAlert))
-	cards := CreateCards(promAlert, promWebhook.MarkdownEnabled)
+	cards, err := CreateCards(promAlert, promWebhook)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
 	log.Debug(cards)
-	totalSize := 0
-	for _, c := range cards {
-		totalSize += len(c.String())
-	}
-	log.Debugf("Size of message is %d Bytes (~%d KB)", totalSize, (totalSize)/(1<<(10*1)))
-	log.Infof("Sending out %d messages ...", len(cards))
+	// totalSize := 0
+	// for _, c := range cards {
+	// 	totalSize += len(c.String())
+	// }
+	// log.Debugf("Size of message is %d Bytes (~%d KB)", totalSize, (totalSize)/(1<<(10*1)))
+	// log.Infof("Sending out %d messages ...", len(cards))
 
-	for _, card := range cards {
-		res, err := SendCard(promWebhook.TeamsWebhookURL, card)
-		if err != nil {
-			log.Error(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
-		if err := res.Body.Close(); err != nil {
-			log.Error(err)
-		}
+	// for _, card := range cards {
+	// 	res, err := SendCard(promWebhook.TeamsWebhookURL, card)
+	// 	if err != nil {
+	// 		log.Error(err)
+	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// 	log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
+	// 	if err := res.Body.Close(); err != nil {
+	// 		log.Error(err)
+	// 	}
+	// }
+	res, err := SendCard(promWebhook.TeamsWebhookURL, cards)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+	log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
+	if err := res.Body.Close(); err != nil {
+		log.Error(err)
+	}
+
 }
