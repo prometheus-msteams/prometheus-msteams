@@ -105,6 +105,9 @@ func init() {
 	if v, ok := os.LookupEnv("CONFIG_FILE"); ok {
 		configFile = v
 	}
+	if v, ok := os.LookupEnv("TEMPLATE_PATH"); ok {
+		templatePath = v
+	}
 }
 
 func setLogLevel(l string) {
@@ -155,7 +158,7 @@ func server(cmd *cobra.Command, args []string) {
 
 	tmpl, err := template.FromGlobs(templatePath)
 	if err != nil {
-		log.Error("failed to parse template: %v", err)
+		log.Errorf("failed to parse template: %v", err)
 		os.Exit(1)
 	}
 	
