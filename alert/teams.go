@@ -34,11 +34,13 @@ import (
 
 // Constants for Sending a Card
 const (
-	messageType   = "MessageCard"
-	context       = "http://schema.org/extensions"
-	colorResolved = "2DC72D"
-	colorFiring   = "8C1A1A"
-	colorUnknown  = "CCCCCC"
+	messageType     = "MessageCard"
+	context         = "http://schema.org/extensions"
+	colorResolved   = "2DC72D"
+	colorFiring     = "8C1A1A"
+	colorUnknown    = "CCCCCC"
+	maxSize         = 14336 // maximum message size of 14336 Bytes (14KB)
+	maxCardSections = 10    // maximum number of sections: https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#notes-on-the-office-365-connector-card
 )
 
 // TeamsMessageCard is for the Card Fields to send in Teams
@@ -125,10 +127,12 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 		ExternalURL:       promAlert.ExternalURL,
 	}
 
-	cardString, err := webhook.Template.ExecuteTextString(`{{ template "teams.card" . }}`, data)
+	card, err := webhook.Template.ExecuteTextString(`{{ template "teams.card" . }}`, data)
 	if err != nil {
 		return "", fmt.Errorf("failed to template alerts: %v", err)
 	}
+
+	return card, nil
 
 	// // maximum message size of 14336 Bytes (14KB)
 	// const maxSize = 14336
@@ -168,5 +172,4 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 	// 		cards = append(cards, card)
 	// 	}
 	// }
-	return cardString, nil
 }

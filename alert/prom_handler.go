@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify"
 	"github.com/prometheus/alertmanager/template"
 	log "github.com/sirupsen/logrus"
@@ -86,34 +87,20 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 	}
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
 	log.Debug(cards)
-	// totalSize := 0
-	// for _, c := range cards {
-	// 	totalSize += len(c.String())
-	// }
-	// log.Debugf("Size of message is %d Bytes (~%d KB)", totalSize, (totalSize)/(1<<(10*1)))
-	// log.Infof("Sending out %d messages ...", len(cards))
 
-	// for _, card := range cards {
-	// 	res, err := SendCard(promWebhook.TeamsWebhookURL, card)
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// 	log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
-	// 	if err := res.Body.Close(); err != nil {
-	// 		log.Error(err)
-	// 	}
-	// }
-	res, err := SendCard(promWebhook.TeamsWebhookURL, cards)
-	if err != nil {
-		log.Error(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
-	if err := res.Body.Close(); err != nil {
-		log.Error(err)
-	}
-
+	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
+		cardString := string(card)
+		log.Debugf("Size of message is %d Bytes (~%d KB)", len(cardString), (len(cardString))/(1<<(10*1)))
+		log.Info(cardString)
+		res, err := SendCard(promWebhook.TeamsWebhookURL, cardString)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Infof("A card was successfully sent to Microsoft Teams Channel. Got http status: %s", res.Status)
+		if err := res.Body.Close(); err != nil {
+			log.Error(err)
+		}
+	})
 }

@@ -1,6 +1,7 @@
 module github.com/bzon/prometheus-msteams
 
 require (
+	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
 	github.com/go-kit/kit v0.8.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/prometheus/alertmanager v0.16.1
