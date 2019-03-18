@@ -48,7 +48,7 @@ type PrometheusWebhook struct {
 func String(promAlert notify.WebhookMessage) string {
 	b, err := json.Marshal(promAlert)
 	if err != nil {
-		log.Errorf("Failed marshalling PrometheusAlertMessage: %v", err)
+		log.Errorf("Failed marshalling Prometheus WebhookMessage: %v", err)
 	}
 	return string(b)
 }
@@ -90,8 +90,6 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		cardString := string(card)
-		log.Debugf("Size of message is %d Bytes (~%d KB)", len(cardString), (len(cardString))/(1<<(10*1)))
-		log.Info(cardString)
 		res, err := SendCard(promWebhook.TeamsWebhookURL, cardString)
 		if err != nil {
 			log.Error(err)

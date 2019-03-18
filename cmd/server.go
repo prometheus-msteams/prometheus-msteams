@@ -161,7 +161,6 @@ func server(cmd *cobra.Command, args []string) {
 		log.Errorf("failed to parse template: %v", err)
 		os.Exit(1)
 	}
-	
 
 	teamsCfg := &TeamsConfig{}
 	if configFile != "" {
