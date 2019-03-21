@@ -42,6 +42,8 @@ extraEnvs:
 
 See [Helm Configuration](#helm-configuration) for reference.
 
+Optionally you can customise the [Teams Message Card Template](https://github.com/bzon/prometheus-msteams/tree/master/chart/prometheus-msteams/card.tmpl).
+
 ### Deploy to Kubernetes cluster
 
 ```bash
