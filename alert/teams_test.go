@@ -29,7 +29,7 @@ func createTestCards(p notify.WebhookMessage) string {
 	template.DefaultFuncs = funcs
 	tmpl, err := template.FromGlobs("../default-message-card.tmpl")
 	if err != nil {
-		log.Errorf("failed to parse template: %v", err)
+		log.Errorf("Failed to parse template: %v", err)
 		os.Exit(1)
 	}
 	var webhook *PrometheusWebhook

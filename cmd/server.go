@@ -156,9 +156,14 @@ func server(cmd *cobra.Command, args []string) {
 	}
 	template.DefaultFuncs = funcs
 
+	log.Infof("Parsing the message card template file: %s", templatePath)
+	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+		log.Errorf("Template Path %v does not exist", templatePath)
+		os.Exit(1)
+	}
 	tmpl, err := template.FromGlobs(templatePath)
 	if err != nil {
-		log.Errorf("failed to parse template: %v", err)
+		log.Errorf("Failed to parse template: %v", err)
 		os.Exit(1)
 	}
 
