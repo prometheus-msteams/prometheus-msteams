@@ -25,8 +25,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -88,11 +90,35 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 	if err := json.NewEncoder(buffer).Encode(card); err != nil {
 		return nil, fmt.Errorf("Failed encoding message card: %v", err)
 	}
-	res, err := http.Post(webhook, "application/json", buffer)
-	if err != nil {
-		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
-			webhook, err)
+
+	c := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   30 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
 	}
+
+	req, err := http.NewRequest("POST", webhook, buffer)
+	if err != nil {
+		return nil, fmt.Errorf("Failed creating new client request with webhook url %s. Got the error: %v", webhook, err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v", webhook, err)
+	}
+
+
 	rb, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Error(err)
