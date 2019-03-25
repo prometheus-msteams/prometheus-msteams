@@ -12,7 +12,8 @@
       "severity": "warning"
   },
   "commonAnnotations": {
-      "summary": "Server High Memory usage"
+      "summary": "Server High Memory usage",
+      "runbook": "https://github.com/bzon/prometheus-msteams"
   },
   "externalURL": "http://docker.for.mac.host.internal:9093",
   "alerts": [
