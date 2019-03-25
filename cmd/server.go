@@ -61,7 +61,7 @@ var (
 	requestURI          string
 	logLevel            string
 	configFile          string
-	templatePath        string
+	templateFile        string
 	markdownEnabled     bool
 )
 
@@ -87,8 +87,8 @@ func init() {
 		"Log levels: INFO | DEBUG | WARN | ERROR | FATAL | PANIC")
 	serverCmd.Flags().BoolVar(&markdownEnabled, "markdown", true,
 		"Format the prometheus alert in Microsoft Teams with markdown.")
-	serverCmd.Flags().StringVarP(&templatePath, "template-path", "t", "./default-message-card.tmpl",
-		"path to template for Microsoft Teams Message Card.")
+	serverCmd.Flags().StringVarP(&templateFile, "template-file", "t", "./default-message-card.tmpl",
+		"The Microsoft Teams Message Card template file.")
 	serverCmd.Flags().StringVar(&configFile, "config", "",
 		"The connectors configuration file. "+
 			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
@@ -105,8 +105,8 @@ func init() {
 	if v, ok := os.LookupEnv("CONFIG_FILE"); ok {
 		configFile = v
 	}
-	if v, ok := os.LookupEnv("TEMPLATE_PATH"); ok {
-		templatePath = v
+	if v, ok := os.LookupEnv("TEMPLATE_FILE"); ok {
+		templateFile = v
 	}
 }
 
@@ -156,12 +156,12 @@ func server(cmd *cobra.Command, args []string) {
 	}
 	template.DefaultFuncs = funcs
 
-	log.Infof("Parsing the message card template file: %s", templatePath)
-	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		log.Errorf("Template Path %v does not exist", templatePath)
+	log.Infof("Parsing the message card template file: %s", templateFile)
+	if _, err := os.Stat(templateFile); os.IsNotExist(err) {
+		log.Errorf("Template File %v does not exist", templateFile)
 		os.Exit(1)
 	}
-	tmpl, err := template.FromGlobs(templatePath)
+	tmpl, err := template.FromGlobs(templateFile)
 	if err != nil {
 		log.Errorf("Failed to parse template: %v", err)
 		os.Exit(1)
