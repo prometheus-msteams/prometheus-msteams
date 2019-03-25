@@ -46,7 +46,7 @@ spec:
               mountPath: /etc/template
           args:
             - --config=/etc/config/connectors.yaml
-            - --template-path=/etc/template/card.tmpl
+            - --template-file=/etc/template/card.tmpl
           {{- with .Values.container.additionalArgs }}
 {{ toYaml . | indent 12 }}
           {{- end}}
