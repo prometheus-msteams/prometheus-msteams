@@ -13,8 +13,8 @@ import (
 )
 
 func jsonparserGetString(data []byte, key string) string {
-	get, _, _, _ := jsonparser.Get(data, key)
-	return string(get)
+	val, _, _, _ := jsonparser.Get(data, key)
+	return string(val)
 }
 
 func createTestCards(p notify.WebhookMessage) string {
@@ -81,9 +81,22 @@ func TestCreateCards(t *testing.T) {
 			t.Fatalf("CreateCards error: got %s, want %s", got, want)
 		}
 	})
+
+	// test that 2 alerts get combined to one message
+	testdata = "testdata/prom_post_request_2_alerts.json"
+	cards = createCardsFromPrometheusTestAlert(testdata, t)
+
+	length = 0
+	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
+		length++
+	})
+	if length != 1 {
+		t.Fatalf("CreateCards error: should create 1 card, got %d cards", length)
+	}
 }
 
 func TestLargePostRequest(t *testing.T) {
+	// test larged sized message
 	testdata := "testdata/large_prom_post_request.json"
 	cards := createCardsFromPrometheusTestAlert(testdata, t)
 
@@ -92,7 +105,19 @@ func TestLargePostRequest(t *testing.T) {
 		length++
 	})
 	if length != 2 {
-		t.Fatalf("TeamsMessageCard.CreatedCard error: should create 2 cards, got %d cards", length)
+		t.Fatalf("Too Large sized Message error: should create 2 cards, got %d cards", length)
+	}
+
+	// test too many alerts which results in too many sections
+	testdata = "testdata/prom_post_request_12_alerts.json"
+	cards = createCardsFromPrometheusTestAlert(testdata, t)
+
+	length = 0
+	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
+		length++
+	})
+	if length != 2 {
+		t.Fatalf("Too many Sections error: should create 2 cards, got %d cards", length)
 	}
 }
 

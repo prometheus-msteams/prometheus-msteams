@@ -54,6 +54,13 @@ func compact(data []byte) string {
 	return buffer.String()
 }
 
+func concatKeyValue(key string, val string) string {
+	if strings.HasPrefix(val, "[") {
+		return "\"" + key + "\":" + val
+	}
+	return "\"" + key + "\":\"" + val + "\""
+}
+
 func messageWithoutSections(data []byte) string {
 	messageWithoutSections := "{"
 	c := counter()
@@ -62,7 +69,7 @@ func messageWithoutSections(data []byte) string {
 			if c() != 1 {
 				messageWithoutSections += ","
 			}
-			messageWithoutSections += "\"" + string(key) + "\":\"" + string(value) + "\""
+			messageWithoutSections += concatKeyValue(string(key), string(value))
 		}
 		return nil
 	})
@@ -76,8 +83,6 @@ func splitTooLargeMessage(data []byte) (string, string) {
 	// restOfMessage is used to recursively apply this method and iteratively create valid Teams message cards
 	restOfMessage := "{"
 
-	var concatKeyValue string
-
 	length := len(messageWithoutSections(data))
 
 	// range over each key-value pair in the original message card
@@ -88,9 +93,8 @@ func splitTooLargeMessage(data []byte) (string, string) {
 				finalMessage += ","
 				restOfMessage += ","
 			}
-			concatKeyValue = "\"" + string(key) + "\":\"" + string(value) + "\""
-			finalMessage += concatKeyValue
-			restOfMessage += concatKeyValue
+			finalMessage += concatKeyValue(string(key), string(value))
+			restOfMessage += concatKeyValue(string(key), string(value))
 		}
 		if string(key) == "sections" {
 			if c1() != 1 {
@@ -98,11 +102,11 @@ func splitTooLargeMessage(data []byte) (string, string) {
 				restOfMessage += ","
 				length++
 			}
-			concatKeyValue = "\"" + string(key) + "\":["
-			finalMessage += concatKeyValue
-			restOfMessage += concatKeyValue
+			startSections := "\"" + string(key) + "\":["
+			finalMessage += startSections
+			restOfMessage += startSections
 			length++ // for the "]" at the end of the array
-			length += len(concatKeyValue)
+			length += len(startSections)
 			// counter over section array elements of finalMessage
 			c2 := counter()
 			// counter over section array elements of restOfMessage
