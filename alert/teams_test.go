@@ -144,3 +144,51 @@ func TestStatusColorFiring(t *testing.T) {
 		})
 	}
 }
+
+// TestAlertsSectionsOrdering tests https://github.com/bzon/prometheus-msteams/issues/38 
+func TestAlertsSectionsOrdering(t *testing.T) {
+	testdata := "testdata/prom_post_request.json"
+	cards := createCardsFromPrometheusTestAlert(testdata, t)
+	facts, _, _, _ := jsonparser.Get([]byte(cards), "[0]", "sections", "[0]", "facts")
+	i := 0
+	jsonparser.ArrayEach(facts, func(fact []byte, dataType jsonparser.ValueType, offset int, err error) {
+		key, _, _, _ := jsonparser.Get(fact, "name")
+		switch i {
+		case 0:
+			if string(key) != "description" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "description")
+			}
+			i++
+		case 1:
+			if string(key) != "summary" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "summary")
+			}
+			i++
+		case 2:
+			if string(key) != "alertname" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "alertname")
+			}
+			i++
+		case 3:
+			if string(key) != "instance" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "instance")
+			}
+			i++
+		case 4:
+			if string(key) != "job" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "job")
+			}
+			i++
+		case 5:
+			if string(key) != "monitor" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "monitor")
+			}
+			i++
+		case 6:
+			if string(key) != "severity" {
+				t.Fatalf("Alert out of order: got %s, want %s", string(key), "severity")
+			}
+			i++
+		}
+	})
+}
