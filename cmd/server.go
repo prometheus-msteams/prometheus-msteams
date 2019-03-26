@@ -29,6 +29,7 @@ import (
 	"strconv"
 
 	"github.com/bzon/prometheus-msteams/alert"
+	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -60,6 +61,7 @@ var (
 	requestURI          string
 	logLevel            string
 	configFile          string
+	templateFile        string
 	markdownEnabled     bool
 )
 
@@ -85,6 +87,8 @@ func init() {
 		"Log levels: INFO | DEBUG | WARN | ERROR | FATAL | PANIC")
 	serverCmd.Flags().BoolVar(&markdownEnabled, "markdown", true,
 		"Format the prometheus alert in Microsoft Teams with markdown.")
+	serverCmd.Flags().StringVarP(&templateFile, "template-file", "t", "./default-message-card.tmpl",
+		"The Microsoft Teams Message Card template file.")
 	serverCmd.Flags().StringVar(&configFile, "config", "",
 		"The connectors configuration file. "+
 			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
@@ -100,6 +104,9 @@ func init() {
 	}
 	if v, ok := os.LookupEnv("CONFIG_FILE"); ok {
 		configFile = v
+	}
+	if v, ok := os.LookupEnv("TEMPLATE_FILE"); ok {
+		templateFile = v
 	}
 }
 
@@ -139,6 +146,27 @@ func server(cmd *cobra.Command, args []string) {
 	setLogLevel(logLevel)
 	log.Infof(getVersion())
 
+	funcs := template.DefaultFuncs
+	funcs["counter"] = func() func() int {
+		i := -1
+		return func() int {
+			i++
+			return i
+		}
+	}
+	template.DefaultFuncs = funcs
+
+	log.Infof("Parsing the message card template file: %s", templateFile)
+	if _, err := os.Stat(templateFile); os.IsNotExist(err) {
+		log.Errorf("Template File %v does not exist", templateFile)
+		os.Exit(1)
+	}
+	tmpl, err := template.FromGlobs(templateFile)
+	if err != nil {
+		log.Errorf("Failed to parse template: %v", err)
+		os.Exit(1)
+	}
+
 	teamsCfg := &TeamsConfig{}
 	if configFile != "" {
 		log.Warn("If the 'config' flag is used, the" +
@@ -160,7 +188,7 @@ func server(cmd *cobra.Command, args []string) {
 	mux := http.NewServeMux()
 	for _, teamMap := range teamsCfg.Connectors {
 		for uri, webhook := range teamMap {
-			addPrometheusHandler(uri, webhook, mux)
+			addPrometheusHandler(uri, webhook, tmpl, mux)
 		}
 	}
 	mux.HandleFunc("/config", teamsCfg.configHandler)
@@ -170,11 +198,12 @@ func server(cmd *cobra.Command, args []string) {
 	log.Fatal(http.ListenAndServe(server, mux))
 }
 
-func addPrometheusHandler(uri string, webhook string, mux *http.ServeMux) {
+func addPrometheusHandler(uri string, webhook string, template *template.Template, mux *http.ServeMux) {
 	promWebhook := alert.PrometheusWebhook{
 		RequestURI:      "/" + uri,
 		TeamsWebhookURL: webhook,
 		MarkdownEnabled: markdownEnabled,
+		Template:        template,
 	}
 	log.Infof("Creating the server request path %q with webhook %q",
 		promWebhook.RequestURI, promWebhook.TeamsWebhookURL)

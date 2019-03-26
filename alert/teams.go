@@ -28,67 +28,166 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/buger/jsonparser"
+	"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/template"
 	log "github.com/sirupsen/logrus"
 )
 
-// Constants for Sending a Card
+// Constants for creating a Card
 const (
-	messageType   = "MessageCard"
-	context       = "http://schema.org/extensions"
-	colorResolved = "2DC72D"
-	colorFiring   = "8C1A1A"
-	colorUnknown  = "CCCCCC"
+	maxSize         = 14336 // maximum message size of 14336 Bytes (14KB)
+	maxCardSections = 10    // maximum number of sections: https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#notes-on-the-office-365-connector-card
 )
 
-// TeamsMessageCard is for the Card Fields to send in Teams
-// The Documentation is in https://docs.microsoft.com/en-us/outlook/actionable-messages/card-reference#card-fields
-type TeamsMessageCard struct {
-	Type       string                    `json:"@type"`
-	Context    string                    `json:"@context"`
-	ThemeColor string                    `json:"themeColor"`
-	Summary    string                    `json:"summary"`
-	Title      string                    `json:"title"`
-	Text       string                    `json:"text,omitempty"`
-	Sections   []TeamsMessageCardSection `json:"sections"`
-}
-
-func (card *TeamsMessageCard) String() string {
-	b, err := json.Marshal(card)
-	if err != nil {
-		log.Errorf("failed marshalling TeamsMessageCard: %v", err)
+func counter() func() int {
+	i := 0
+	return func() int {
+		i++
+		return i
 	}
-	return string(b)
 }
 
-// TeamsMessageCardSection is placed under TeamsMessageCard.Sections
-// Each element of AlertWebHook.Alerts will the number of elements of TeamsMessageCard.Sections to create
-type TeamsMessageCardSection struct {
-	ActivityTitle string                         `json:"activityTitle"`
-	Facts         []TeamsMessageCardSectionFacts `json:"facts"`
-	Markdown      bool                           `json:"markdown"`
-}
-
-func (section *TeamsMessageCardSection) String() string {
-	b, err := json.Marshal(section)
-	if err != nil {
-		log.Errorf("failed marshalling TeamsMessageCardSection: %v", err)
-	}
-	return string(b)
-}
-
-// TeamsMessageCardSectionFacts is placed under TeamsMessageCardSection.Facts
-type TeamsMessageCardSectionFacts struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-// SendCard sends the JSON Encoded TeamsMessageCard
-func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
+func compact(data []byte) string {
 	buffer := new(bytes.Buffer)
-	if err := json.NewEncoder(buffer).Encode(card); err != nil {
-		return nil, fmt.Errorf("Failed encoding message card: %v", err)
+	json.Compact(buffer, data)
+	return buffer.String()
+}
+
+func concatKeyValue(key string, val string) string {
+	if strings.HasPrefix(val, "[") {
+		return "\"" + key + "\":" + val
 	}
-	res, err := http.Post(webhook, "application/json", buffer)
+	return "\"" + key + "\":\"" + val + "\""
+}
+
+func messageWithoutSections(data []byte) string {
+	messageWithoutSections := "{"
+	c := counter()
+	jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+		if string(key) != "sections" {
+			if c() != 1 {
+				messageWithoutSections += ","
+			}
+			messageWithoutSections += concatKeyValue(string(key), string(value))
+		}
+		return nil
+	})
+	messageWithoutSections += "}"
+	return messageWithoutSections
+}
+
+func splitTooLargeMessage(data []byte) (string, string) {
+	// finalMessage is a valid Teams message card
+	finalMessage := "{"
+	// restOfMessage is used to recursively apply this method and iteratively create valid Teams message cards
+	restOfMessage := "{"
+
+	length := len(messageWithoutSections(data))
+
+	// range over each key-value pair in the original message card
+	c1 := counter()
+	jsonparser.ObjectEach(data, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+		if string(key) != "sections" {
+			if c1() != 1 {
+				finalMessage += ","
+				restOfMessage += ","
+			}
+			finalMessage += concatKeyValue(string(key), string(value))
+			restOfMessage += concatKeyValue(string(key), string(value))
+		}
+		if string(key) == "sections" {
+			if c1() != 1 {
+				finalMessage += ","
+				restOfMessage += ","
+				length++
+			}
+			startSections := "\"" + string(key) + "\":["
+			finalMessage += startSections
+			restOfMessage += startSections
+			length++ // for the "]" at the end of the array
+			length += len(startSections)
+			// counter over section array elements of finalMessage
+			c2 := counter()
+			// counter over section array elements of restOfMessage
+			c3 := counter()
+			var counter int
+			jsonparser.ArrayEach(value, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+				section := compact(value)
+				length += len(section)
+				counter = c2()
+				if counter != 1 {
+					length++ // for the leading comma sign before appending a new array element
+				}
+				if (length <= maxSize) && (counter <= maxCardSections) {
+					if counter != 1 {
+						finalMessage += ","
+					}
+					finalMessage += section
+				} else {
+					if c3() != 1 {
+						restOfMessage += ","
+					}
+					restOfMessage += section
+				}
+			})
+			finalMessage += "]"
+			restOfMessage += "]"
+		}
+		return nil
+	})
+	finalMessage += "}"
+	restOfMessage += "}"
+	return finalMessage, restOfMessage
+}
+
+// CreateCards creates a Teams Message Card based on values gathered from PrometheusWebhook and the structure from the card template
+func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (string, error) {
+
+	data := &template.Data{
+		Receiver:          promAlert.Receiver,
+		Status:            promAlert.Status,
+		Alerts:            promAlert.Alerts,
+		GroupLabels:       promAlert.GroupLabels,
+		CommonLabels:      promAlert.CommonLabels,
+		CommonAnnotations: promAlert.CommonAnnotations,
+		ExternalURL:       promAlert.ExternalURL,
+	}
+
+	totalMessage, err := webhook.Template.ExecuteTextString(`{{ template "teams.card" . }}`, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to template alerts: %v", err)
+	}
+	totalMessage = compact([]byte(totalMessage))
+	var (
+		cardTmp          string
+		restOfMessageTmp string
+	)
+	lengthCard := len(totalMessage)
+	log.Debugf("Size of message is %d Bytes (~%d KB)", lengthCard, (lengthCard)/(1<<(10*1)))
+	cards := "["
+	card, restOfMessage := splitTooLargeMessage([]byte(totalMessage))
+	cards += card
+	missingSections, _, _, err := jsonparser.Get([]byte(restOfMessage), "sections")
+	if err != nil {
+		log.Error("Failed to parse json with key 'sections': ", err)
+	}
+	for string(missingSections) != "[]" {
+		cardTmp, restOfMessageTmp = splitTooLargeMessage([]byte(restOfMessage))
+		cards += "," + cardTmp
+		restOfMessage = restOfMessageTmp
+		missingSections, _, _, err = jsonparser.Get([]byte(restOfMessage), "sections")
+		if err != nil {
+			log.Error("Failed to parse json with key 'sections': ", err)
+		}
+	}
+	cards += "]"
+	return cards, nil
+}
+
+// SendCard sends the Teams message card
+func SendCard(webhook string, card string) (*http.Response, error) {
+	res, err := http.Post(webhook, "application/json", strings.NewReader(card))
 	if err != nil {
 		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
 			webhook, err)
@@ -109,71 +208,4 @@ func SendCard(webhook string, card *TeamsMessageCard) (*http.Response, error) {
 		log.Error(err)
 	}
 	return res, nil
-}
-
-// createCardMetadata creates the metadata for alerts of the same type
-func createCardMetadata(promAlert PrometheusAlertMessage, markdownEnabled bool) *TeamsMessageCard {
-	card := &TeamsMessageCard{
-		Type:    messageType,
-		Context: context,
-		Title:   fmt.Sprintf("Prometheus Alert (%s)", promAlert.Status),
-		// Set a default Summary, this is required for Microsoft Teams
-		Summary: "Prometheus Alert received",
-	}
-	// Override the value of the Summary if the common annotation exists
-	if value, ok := promAlert.CommonAnnotations["summary"]; ok {
-		card.Summary = value
-	}
-	switch promAlert.Status {
-	case "resolved":
-		card.ThemeColor = colorResolved
-	case "firing":
-		card.ThemeColor = colorFiring
-	default:
-		card.ThemeColor = colorUnknown
-	}
-	return card
-}
-
-// CreateCards creates the TeamsMessageCard based on values gathered from PrometheusAlertMessage
-func CreateCards(promAlert PrometheusAlertMessage, markdownEnabled bool) []*TeamsMessageCard {
-	// maximum message size of 14336 Bytes (14KB)
-	const maxSize = 14336
-	cards := []*TeamsMessageCard{}
-	card := createCardMetadata(promAlert, markdownEnabled)
-	cardMetadataJSON := card.String()
-	cardMetadataSize := len(cardMetadataJSON)
-	// append first card to cards
-	cards = append(cards, card)
-
-	for _, alert := range promAlert.Alerts {
-		var s TeamsMessageCardSection
-		s.ActivityTitle = fmt.Sprintf("[%s](%s)",
-			alert.Annotations["description"], promAlert.ExternalURL)
-		s.Markdown = markdownEnabled
-		for key, val := range alert.Annotations {
-			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
-		}
-		for key, val := range alert.Labels {
-			// Auto escape underscores if markdown is enabled
-			if markdownEnabled {
-				if strings.Contains(val, "_") {
-					val = strings.Replace(val, "_", "\\_", -1)
-				}
-			}
-			s.Facts = append(s.Facts, TeamsMessageCardSectionFacts{key, val})
-		}
-		currentCardSize := len(card.String())
-		newSectionSize := len(s.String())
-		newCardSize := cardMetadataSize + currentCardSize + newSectionSize
-		// if total Size of message exceeds maximum message size then split it
-		if (newCardSize) < maxSize {
-			card.Sections = append(card.Sections, s)
-		} else {
-			card = createCardMetadata(promAlert, markdownEnabled)
-			card.Sections = append(card.Sections, s)
-			cards = append(cards, card)
-		}
-	}
-	return cards
 }

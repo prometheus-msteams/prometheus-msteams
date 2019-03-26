@@ -12,7 +12,7 @@ A lightweight Go Web Server that receives __POST__ alert messages from __Prometh
 
 ## Synopsis
 
-Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python. 
+Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python.
 
 ## Why choose Go? Not Python or Ruby or Node?
 
@@ -42,7 +42,6 @@ How it works.
 
 ### Installation
 
-
 __OPTION 1:__ Run using docker.
 
 ```bash
@@ -59,16 +58,16 @@ Download the binary for your platform from [RELEASES](https://github.com/bzon/pr
 
 ```bash
 ./prometheus-msteams server \
-	-l localhost \
-	-p 2000 \
-	-w "https://outlook.office.com/webhook/xxx"
+    -l localhost \
+    -p 2000 \
+    -w "https://outlook.office.com/webhook/xxx"
 ```
 
 __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, checkout the [Kubernetes Deployment Guide](#kubernetes-deployment).
 
 ### Setting up Prometheus Alert Manager
 
-By default, __prometheus-msteams__ creates a request uri handler __/alertmanager__. 
+By default, __prometheus-msteams__ creates a request uri handler __/alertmanager__.
 
 ```yaml
 route:
@@ -170,9 +169,9 @@ When running as a binary, use the __--config__ flag.
 
 ```bash
 ./prometheus-msteams server \
-	-l localhost \
-	-p 2000 \
-	--config /tmp/config.yml
+    -l localhost \
+    -p 2000 \
+    --config /tmp/config.yml
 ```
 
 This will create the request uri handlers __/high_priority_channel__ and __/low_priority_channel__.
@@ -221,6 +220,30 @@ receivers:
   webhook_configs:
     - send_resolved: true
       url: 'http://localhost:2000/low_priority_channel' # request handler 2
+```
+
+## Customise Messages to MS Teams
+
+This application uses a [default Microsoft Teams Message card template](./default-message-card.tmpl) to convert incoming Prometheus alerts to teams message cards. This template can be customised. Simply create a new file that you want to use as your custom template. It uses the [Go Templating Engine](https://golang.org/pkg/text/template/) and especially the [Prometheus Alertmanager Notification Template](https://prometheus.io/docs/alerting/notifications/). Also see the [Office 365 Connector Card Reference](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#office-365-connector-card) and some [examples](./examples) for more information to construct your template. Apart from that, you can use the [Message Crd Playground](https://messagecardplayground.azurewebsites.net/) to form the basic structure of your card.
+
+When running as a docker container, mount the template file in the container and set the __TEMPLATE_FILE__ environment variable.
+
+```bash
+docker run -d -p 2000:2000 \
+    --name="promteams" \
+    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
+    -v /tmp/card.tmpl:/tmp/card.tmpl \
+    -e TEMPLATE_FILE="/tmp/card.tmpl" \
+    docker.io/bzon/prometheus-msteams:v1.1.0
+```
+
+When running as a binary, use the __--template-file__ flag.
+
+```bash
+./prometheus-msteams server \
+    -l localhost \
+    -p 2000 \
+    --template-file /tmp/card.tmpl
 ```
 
 ## Kubernetes Deployment
