@@ -145,7 +145,7 @@ func TestStatusColorFiring(t *testing.T) {
 	}
 }
 
-// TestAlertsSectionsOrdering tests https://github.com/bzon/prometheus-msteams/issues/38 
+// TestAlertsSectionsOrdering tests https://github.com/bzon/prometheus-msteams/issues/38
 func TestAlertsSectionsOrdering(t *testing.T) {
 	testdata := "testdata/prom_post_request.json"
 	cards := createCardsFromPrometheusTestAlert(testdata, t)
