@@ -1,0 +1,9 @@
+---
+replicaCount: 1
+image:
+  repository: bzon/prometheus-msteams 
+  tag: v1.1.0
+service:
+  type: NodePort
+connectors:
+- alertmanager: https://outlook.office.com/webhook/29fe25e9-68af-4de4-b908-da195f55334a@e0793d39-0939-496d-b129-198edd916feb/IncomingWebhook/582cac9ce3d146cdb1559c45e3c8cd5c/171b8062-db2d-4e9c-ab1e-6e9d2354680f 
