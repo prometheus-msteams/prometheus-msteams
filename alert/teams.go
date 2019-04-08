@@ -183,8 +183,6 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 		restOfMessage = restOfMessageTmp
 		missingSections, err = querySections(restOfMessage)
 		if err != nil {
-			log.Error("Failed to parse json with key 'sections': ", err)
-			log.Debug(restOfMessage)
 			return "", fmt.Errorf("Failed to parse json with key 'sections': %v", err)
 		}
 	}
