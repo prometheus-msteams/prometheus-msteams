@@ -141,6 +141,11 @@ func splitTooLargeMessage(data []byte) (string, string) {
 	return finalMessage, restOfMessage
 }
 
+func querySections(message string) ([]byte, error) {
+	sections, _, _, err := jsonparser.Get([]byte(message), "sections")
+	return sections, err
+}
+
 // CreateCards creates a Teams Message Card based on values gathered from PrometheusWebhook and the structure from the card template
 func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (string, error) {
 
@@ -168,17 +173,19 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 	cards := "["
 	card, restOfMessage := splitTooLargeMessage([]byte(totalMessage))
 	cards += card
-	missingSections, _, _, err := jsonparser.Get([]byte(restOfMessage), "sections")
+	missingSections, err := querySections(restOfMessage)
 	if err != nil {
-		log.Error("Failed to parse json with key 'sections': ", err)
+		return "", fmt.Errorf("Failed to parse json with key 'sections': %v", err)
 	}
 	for string(missingSections) != "[]" {
 		cardTmp, restOfMessageTmp = splitTooLargeMessage([]byte(restOfMessage))
 		cards += "," + cardTmp
 		restOfMessage = restOfMessageTmp
-		missingSections, _, _, err = jsonparser.Get([]byte(restOfMessage), "sections")
+		missingSections, err = querySections(restOfMessage)
 		if err != nil {
 			log.Error("Failed to parse json with key 'sections': ", err)
+			log.Debug(restOfMessage)
+			return "", fmt.Errorf("Failed to parse json with key 'sections': %v", err)
 		}
 	}
 	cards += "]"
