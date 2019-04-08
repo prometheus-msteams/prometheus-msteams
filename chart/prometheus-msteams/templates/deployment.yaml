@@ -27,6 +27,9 @@ spec:
         - name: config-volume
           configMap:
             name: prometheus-msteams-config
+        - name: card-template-volume
+          configMap:
+            name: prometheus-msteams-card-template
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -39,8 +42,11 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config
+            - name: card-template-volume
+              mountPath: /etc/template
           args:
             - --config=/etc/config/connectors.yaml
+            - --template-file=/etc/template/card.tmpl
           {{- with .Values.container.additionalArgs }}
 {{ toYaml . | indent 12 }}
           {{- end}}
