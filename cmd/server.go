@@ -98,9 +98,9 @@ func init() {
 	serverCmd.Flags().StringVar(&configFile, "config", "",
 		"The connectors configuration file. "+
 			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
-	serverCmd.Flags().DurationVarP(&idleConnTimeout, "idle-conn-timeout", "i", 90 * time.Second,
+	serverCmd.Flags().DurationVar(&idleConnTimeout, "idle-conn-timeout", 90 * time.Second,
 		"The idle connection timeout (in seconds)")
-	serverCmd.Flags().DurationVarP(&tlsHandshakeTimeout, "tls-handshake-timeout", "a", 30 * time.Second,
+	serverCmd.Flags().DurationVar(&tlsHandshakeTimeout, "tls-handshake-timeout", 30 * time.Second,
 		"The TLS handshake timeout (in seconds)")
 
 	// NOTE: Can we use viper for this?
