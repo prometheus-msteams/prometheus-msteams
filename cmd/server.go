@@ -84,7 +84,7 @@ func init() {
 		"The idle connection timeout (in seconds)")
 	serverCmd.Flags().IntVarP(&maxIdleConns, "max-idle-conns", "m", 100,
 		"The maximum number of idle connections allowed")
-	serverCmd.Flags().IntVarP(&tlsHandshakeTimeout, "tls-handshake-timeout", "t", 30,
+	serverCmd.Flags().IntVarP(&tlsHandshakeTimeout, "tls-handshake-timeout", "a", 30,
 		"The TLS handshake timeout (in seconds)")
 	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l",
 		"0.0.0.0", "The address on which the server will listen to.")
