@@ -188,7 +188,7 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 }
 
 // SendCard sends the Teams message card
-func SendCard(webhook string, card string) (*http.Response, error) {
+func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout int, tlsHandshakeTimeout int) (*http.Response, error) {
 
 	c := &http.Client{
 		Transport: &http.Transport{
@@ -198,14 +198,17 @@ func SendCard(webhook string, card string) (*http.Response, error) {
 				KeepAlive: 30 * time.Second,
 				DualStack: true,
 			}).DialContext,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   30 * time.Second,
+			MaxIdleConns:          maxIdleConns,
+			IdleConnTimeout:       time.Duration(idleConnTimeout) * time.Second,
+			TLSHandshakeTimeout:   time.Duration(tlsHandshakeTimeout) * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
 
 	req, err := http.NewRequest("POST", webhook, strings.NewReader(card))
+	if err != nil {
+		return nil, fmt.Errorf("Failed constructing new http request. Got the error: %v", err)
+	}
 
 	req.Header.Set("Content-Type", "application/json")
 

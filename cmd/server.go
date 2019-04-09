@@ -56,6 +56,9 @@ connectors:
 
 var (
 	serverPort          int
+	idleConnTimeout     int
+	maxIdleConns        int
+	tlsHandshakeTimeout int
 	serverListenAddress string
 	teamsWebhookURL     string
 	requestURI          string
@@ -77,6 +80,12 @@ func init() {
 	RootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().IntVarP(&serverPort, "port", "p", 2000,
 		"The port on which the server will listen to.")
+	serverCmd.Flags().IntVarP(&idleConnTimeout, "idle-conn-timeout", "i", 90,
+		"The idle connection timeout (in seconds)")
+	serverCmd.Flags().IntVarP(&maxIdleConns, "max-idle-conns", "m", 100,
+		"The maximum number of idle connections allowed")
+	serverCmd.Flags().IntVarP(&tlsHandshakeTimeout, "tls-handshake-timeout", "t", 30,
+		"The TLS handshake timeout (in seconds)")
 	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l",
 		"0.0.0.0", "The address on which the server will listen to.")
 	serverCmd.Flags().StringVarP(&requestURI, "request-uri", "r", "alertmanager",
@@ -200,10 +209,13 @@ func server(cmd *cobra.Command, args []string) {
 
 func addPrometheusHandler(uri string, webhook string, template *template.Template, mux *http.ServeMux) {
 	promWebhook := alert.PrometheusWebhook{
-		RequestURI:      "/" + uri,
-		TeamsWebhookURL: webhook,
-		MarkdownEnabled: markdownEnabled,
-		Template:        template,
+		RequestURI:          "/" + uri,
+		TeamsWebhookURL:     webhook,
+		MarkdownEnabled:     markdownEnabled,
+		Template:            template,
+		MaxIdleConns:        maxIdleConns,
+		IdleConnTimeout:     idleConnTimeout,
+		TLSHandshakeTimeout: tlsHandshakeTimeout,
 	}
 	log.Infof("Creating the server request path %q with webhook %q",
 		promWebhook.RequestURI, promWebhook.TeamsWebhookURL)
