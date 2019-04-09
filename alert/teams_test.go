@@ -112,6 +112,18 @@ func TestCreateCardsTemplateWithoutSections(t *testing.T) {
 	}
 }
 
+func TestTemplateWithoutSummaryOrText(t *testing.T) {
+	testdata := "testdata/prom_post_request_without_common_summary.json"
+	cards, _ := createCardsFromPrometheusTestAlert(testdata, "../default-message-card.tmpl", t)
+	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
+		summary := jsonparserGetString(card, "summary")
+		text := jsonparserGetString(card, "text")
+		if (summary == "") && (text == "") {
+			t.Fatalf("Microsoft Teams message requires Summary or Text")
+		}
+	})
+}
+
 func TestLargePostRequest(t *testing.T) {
 	// test larged sized message
 	testdata := "testdata/large_prom_post_request.json"
