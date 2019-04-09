@@ -8,12 +8,20 @@
                     {{- else if eq .CommonLabels.severity "warning" -}}FFA500
                     {{- else -}}808080{{- end -}}
                  {{- else -}}808080{{- end -}}",
-  "summary": "{{ .CommonAnnotations.summary }}",
+  "summary": "{{- if eq .CommonAnnotations.summary "" -}}
+                  {{- if eq .CommonAnnotations.message "" -}}
+                    {{- .CommonLabels.alertname -}}
+                  {{- else -}}
+                    {{- .CommonAnnotations.message -}}
+                  {{- end -}}
+              {{- else -}}
+                  {{- .CommonAnnotations.summary -}}
+              {{- end -}}",
   "title": "Prometheus Alert ({{ .Status }})",
   "sections": [ {{$externalUrl := .ExternalURL}}
   {{- range $index, $alert := .Alerts }}{{- if $index }},{{- end }}
     {
-      "activityTitle": "[{{ $alert.Annotations.description }}]({{ $externalUrl }})", 
+      "activityTitle": "[{{ $alert.Annotations.description }}]({{ $externalUrl }})",
       "facts": [
         {{- range $key, $value := $alert.Annotations }}
         {
