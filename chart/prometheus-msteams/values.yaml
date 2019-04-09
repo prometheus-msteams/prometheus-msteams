@@ -8,11 +8,11 @@ image:
 
 extraEnvs:
   - name: idle-conn-timeout
-    value: 90
+    value: "90s"
   - name: max-idle-conns
-    value: 100
+    value: "100s"
   - name: tls-handshake-timeout
-    value: 30
+    value: "30s"
 
 container:
   port: 2000

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify"
@@ -47,9 +48,9 @@ type PrometheusWebhook struct {
 	// The maximum number of idle connections allowed
 	MaxIdleConns int
 	// The idle connection timeout (in seconds)
-	IdleConnTimeout int
+	IdleConnTimeout time.Duration
 	// The TLS handshake timeout (in seconds)
-	TLSHandshakeTimeout int
+	TLSHandshakeTimeout time.Duration
 }
 
 // String converts the incoming alert to a string

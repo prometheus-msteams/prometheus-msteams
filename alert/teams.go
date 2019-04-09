@@ -188,7 +188,7 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 }
 
 // SendCard sends the Teams message card
-func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout int, tlsHandshakeTimeout int) (*http.Response, error) {
+func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout time.Duration, tlsHandshakeTimeout time.Duration) (*http.Response, error) {
 
 	c := &http.Client{
 		Transport: &http.Transport{
@@ -199,8 +199,8 @@ func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout int
 				DualStack: true,
 			}).DialContext,
 			MaxIdleConns:          maxIdleConns,
-			IdleConnTimeout:       time.Duration(idleConnTimeout) * time.Second,
-			TLSHandshakeTimeout:   time.Duration(tlsHandshakeTimeout) * time.Second,
+			IdleConnTimeout:       idleConnTimeout,
+			TLSHandshakeTimeout:   tlsHandshakeTimeout,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}

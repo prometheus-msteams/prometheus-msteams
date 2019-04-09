@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/bzon/prometheus-msteams/alert"
 	"github.com/prometheus/alertmanager/template"
@@ -56,9 +57,7 @@ connectors:
 
 var (
 	serverPort          int
-	idleConnTimeout     int
 	maxIdleConns        int
-	tlsHandshakeTimeout int
 	serverListenAddress string
 	teamsWebhookURL     string
 	requestURI          string
@@ -66,6 +65,8 @@ var (
 	configFile          string
 	templateFile        string
 	markdownEnabled     bool
+	idleConnTimeout     time.Duration
+	tlsHandshakeTimeout time.Duration
 )
 
 // TeamsConfig is the struct for config files
@@ -80,12 +81,8 @@ func init() {
 	RootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().IntVarP(&serverPort, "port", "p", 2000,
 		"The port on which the server will listen to.")
-	serverCmd.Flags().IntVarP(&idleConnTimeout, "idle-conn-timeout", "i", 90,
-		"The idle connection timeout (in seconds)")
 	serverCmd.Flags().IntVarP(&maxIdleConns, "max-idle-conns", "m", 100,
 		"The maximum number of idle connections allowed")
-	serverCmd.Flags().IntVarP(&tlsHandshakeTimeout, "tls-handshake-timeout", "a", 30,
-		"The TLS handshake timeout (in seconds)")
 	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l",
 		"0.0.0.0", "The address on which the server will listen to.")
 	serverCmd.Flags().StringVarP(&requestURI, "request-uri", "r", "alertmanager",
@@ -101,6 +98,10 @@ func init() {
 	serverCmd.Flags().StringVar(&configFile, "config", "",
 		"The connectors configuration file. "+
 			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
+	serverCmd.Flags().DurationVarP(&idleConnTimeout, "idle-conn-timeout", "i", 90 * time.Second,
+		"The idle connection timeout (in seconds)")
+	serverCmd.Flags().DurationVarP(&tlsHandshakeTimeout, "tls-handshake-timeout", "a", 30 * time.Second,
+		"The TLS handshake timeout (in seconds)")
 
 	// NOTE: Can we use viper for this?
 	// This is placed to support people who still depends
