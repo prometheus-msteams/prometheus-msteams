@@ -20,6 +20,7 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 
 ## Table of Contents
 
+
 <!-- vim-markdown-toc GFM -->
 
 * [Getting Started (Quickstart)](#getting-started-quickstart)
@@ -29,6 +30,7 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 * [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
   * [Creating the Configuration File](#creating-the-configuration-file)
   * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+* [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
 * [Kubernetes Deployment](#kubernetes-deployment)
 * [Developers Build Guide](#developers-build-guide)
 
@@ -224,7 +226,7 @@ receivers:
 
 ## Customise Messages to MS Teams
 
-This application uses a [default Microsoft Teams Message card template](./default-message-card.tmpl) to convert incoming Prometheus alerts to teams message cards. This template can be customised. Simply create a new file that you want to use as your custom template. It uses the [Go Templating Engine](https://golang.org/pkg/text/template/) and especially the [Prometheus Alertmanager Notification Template](https://prometheus.io/docs/alerting/notifications/). Also see the [Office 365 Connector Card Reference](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#office-365-connector-card) and some [examples](./examples) for more information to construct your template. Apart from that, you can use the [Message Crd Playground](https://messagecardplayground.azurewebsites.net/) to form the basic structure of your card.
+This application uses a [default Microsoft Teams Message card template](./default-message-card.tmpl) to convert incoming Prometheus alerts to teams message cards. This template can be customised. Simply create a new file that you want to use as your custom template. It uses the [Go Templating Engine](https://golang.org/pkg/text/template/) and especially the [Prometheus Alertmanager Notification Template](https://prometheus.io/docs/alerting/notifications/). Also see the [Office 365 Connector Card Reference](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#office-365-connector-card) and some [examples](./examples) for more information to construct your template. Apart from that, you can use the [Message Card Playground](https://messagecardplayground.azurewebsites.net/) to form the basic structure of your card.
 
 When running as a docker container, mount the template file in the container and set the __TEMPLATE_FILE__ environment variable.
 
