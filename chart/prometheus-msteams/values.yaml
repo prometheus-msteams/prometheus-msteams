@@ -7,12 +7,6 @@ image:
   pullPolicy: Always
 
 extraEnvs:
-  - name: idle-conn-timeout
-    value: "90s"
-  - name: max-idle-conns
-    value: "100s"
-  - name: tls-handshake-timeout
-    value: "30s"
 
 container:
   port: 2000
