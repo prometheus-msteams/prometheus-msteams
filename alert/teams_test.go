@@ -2,9 +2,9 @@ package alert
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"testing"
@@ -244,7 +244,7 @@ func TestSendCard404Failure(t *testing.T) {
 	defer ts.Close()
 
 	_, errSendCard := SendCard(ts.URL, "somecard", 10, 10, 10)
-    matched, _ := regexp.MatchString("404", errSendCard.Error())
+	matched, _ := regexp.MatchString("404", errSendCard.Error())
 	if matched == false {
 		t.Fatalf("Response status code not 404: want: 404, error string: \"%v\"", errSendCard)
 	}

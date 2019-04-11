@@ -30,7 +30,7 @@ Create a helm values file to configure your Microsoft Teams channel connectors a
 replicaCount: 1
 image:
   repository: bzon/prometheus-msteams 
-  tag: v1.1.1
+  tag: v1.1.2
 connectors:
 - high_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx 
 - low_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx
@@ -38,6 +38,11 @@ connectors:
 extraEnvs:
   HTTP_PROXY: http://corporateproxy:8080
   HTTPS_PROXY: http://corporateproxy:8080
+container:
+  additionalArgs:
+    - --max-idle-conns=100
+    - --idle-conn-timeout=90s
+    - --tls-handshake-timeout=30s
 ```
 
 See [Helm Configuration](#helm-configuration) for reference.
@@ -59,7 +64,7 @@ Please see [Prometheus Operator alerting docs](https://github.com/coreos/prometh
 | Parameter                | Description                                            | Default                                         |
 | ---                      | ---                                                    | ---                                             |
 | image.repository         | Image repository                                       | bzon/prometheus-msteams                         |
-| image.tag                | Image tag                                              | v1.1.1                                          |
+| image.tag                | Image tag                                              | v1.1.2                                          |
 | image.pullPolicy         | Image pull policy                                      | Always                                          |
 | extraEnvs                | Extra environment variables                            | {}                                              |
 | connectors               | **Required.** Add your own Microsoft Teams connectors. | See [default](./prometheus-msteams/values.yaml) |
