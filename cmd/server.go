@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/bzon/prometheus-msteams/alert"
 	"github.com/prometheus/alertmanager/template"
@@ -56,6 +57,7 @@ connectors:
 
 var (
 	serverPort          int
+	maxIdleConns        int
 	serverListenAddress string
 	teamsWebhookURL     string
 	requestURI          string
@@ -63,6 +65,8 @@ var (
 	configFile          string
 	templateFile        string
 	markdownEnabled     bool
+	idleConnTimeout     time.Duration
+	tlsHandshakeTimeout time.Duration
 )
 
 // TeamsConfig is the struct for config files
@@ -77,6 +81,8 @@ func init() {
 	RootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().IntVarP(&serverPort, "port", "p", 2000,
 		"The port on which the server will listen to.")
+	serverCmd.Flags().IntVarP(&maxIdleConns, "max-idle-conns", "m", 100,
+		"The maximum number of idle connections allowed")
 	serverCmd.Flags().StringVarP(&serverListenAddress, "listen-address", "l",
 		"0.0.0.0", "The address on which the server will listen to.")
 	serverCmd.Flags().StringVarP(&requestURI, "request-uri", "r", "alertmanager",
@@ -92,6 +98,10 @@ func init() {
 	serverCmd.Flags().StringVar(&configFile, "config", "",
 		"The connectors configuration file. "+
 			"\nWARNING: 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
+	serverCmd.Flags().DurationVar(&idleConnTimeout, "idle-conn-timeout", 90 * time.Second,
+		"The idle connection timeout (in seconds)")
+	serverCmd.Flags().DurationVar(&tlsHandshakeTimeout, "tls-handshake-timeout", 30 * time.Second,
+		"The TLS handshake timeout (in seconds)")
 
 	// NOTE: Can we use viper for this?
 	// This is placed to support people who still depends
@@ -200,10 +210,13 @@ func server(cmd *cobra.Command, args []string) {
 
 func addPrometheusHandler(uri string, webhook string, template *template.Template, mux *http.ServeMux) {
 	promWebhook := alert.PrometheusWebhook{
-		RequestURI:      "/" + uri,
-		TeamsWebhookURL: webhook,
-		MarkdownEnabled: markdownEnabled,
-		Template:        template,
+		RequestURI:          "/" + uri,
+		TeamsWebhookURL:     webhook,
+		MarkdownEnabled:     markdownEnabled,
+		Template:            template,
+		MaxIdleConns:        maxIdleConns,
+		IdleConnTimeout:     idleConnTimeout,
+		TLSHandshakeTimeout: tlsHandshakeTimeout,
 	}
 	log.Infof("Creating the server request path %q with webhook %q",
 		promWebhook.RequestURI, promWebhook.TeamsWebhookURL)

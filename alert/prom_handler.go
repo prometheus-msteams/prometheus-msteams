@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify"
@@ -33,6 +34,8 @@ import (
 )
 
 // PrometheusWebhook holds the request uri and the incoming webhook
+// Official golang docs (https://golang.org/pkg/net/) contain
+// more information on the timeouts
 type PrometheusWebhook struct {
 	// RequestURI is the request handler for Prometheus to post to
 	RequestURI string
@@ -42,6 +45,12 @@ type PrometheusWebhook struct {
 	MarkdownEnabled bool
 	// template bundles the teams message card based on a template file
 	Template *template.Template
+	// The maximum number of idle connections allowed
+	MaxIdleConns int
+	// The idle connection timeout (in seconds)
+	IdleConnTimeout time.Duration
+	// The TLS handshake timeout (in seconds)
+	TLSHandshakeTimeout time.Duration
 }
 
 // String converts the incoming alert to a string
@@ -90,7 +99,7 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		cardString := string(card)
-		res, err := SendCard(promWebhook.TeamsWebhookURL, cardString)
+		res, err := SendCard(promWebhook.TeamsWebhookURL, cardString, promWebhook.MaxIdleConns, promWebhook.IdleConnTimeout, promWebhook.TLSHandshakeTimeout)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

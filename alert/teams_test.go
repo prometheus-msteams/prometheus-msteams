@@ -2,8 +2,11 @@ package alert
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/buger/jsonparser"
@@ -220,4 +223,37 @@ func TestAlertsSectionsOrdering(t *testing.T) {
 			i++
 		}
 	})
+}
+
+func TestSendCard200Success(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	}))
+	defer ts.Close()
+
+	resp, _ := SendCard(ts.URL, "somecard", 10, 10, 10)
+	if resp.StatusCode != 200 {
+		t.Fatalf("Response status code not 200: got %s, want: 200", string(resp.StatusCode))
+	}
+}
+
+func TestSendCard404Failure(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+	}))
+	defer ts.Close()
+
+	_, errSendCard := SendCard(ts.URL, "somecard", 10, 10, 10)
+    matched, _ := regexp.MatchString("404", errSendCard.Error())
+	if matched == false {
+		t.Fatalf("Response status code not 404: want: 404, error string: \"%v\"", errSendCard)
+	}
+}
+
+func TestSendCardInvalidWebhookProto(t *testing.T) {
+	_, err := SendCard("somewebhook", "somecard", 10, 10, 10)
+	if err == nil {
+		t.Fatal("Error was meant to be thrown for invalid protocol")
+		t.FailNow()
+	}
 }

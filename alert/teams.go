@@ -25,8 +25,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify"
@@ -191,12 +193,34 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 }
 
 // SendCard sends the Teams message card
-func SendCard(webhook string, card string) (*http.Response, error) {
-	res, err := http.Post(webhook, "application/json", strings.NewReader(card))
-	if err != nil {
-		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v",
-			webhook, err)
+func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout time.Duration, tlsHandshakeTimeout time.Duration) (*http.Response, error) {
+
+	c := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          maxIdleConns,
+			IdleConnTimeout:       idleConnTimeout,
+			TLSHandshakeTimeout:   tlsHandshakeTimeout,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
 	}
+
+	req, err := http.NewRequest("POST", webhook, strings.NewReader(card))
+	if err != nil {
+		return nil, fmt.Errorf("Failed constructing new http request. Got the error: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v", webhook, err)
+	}
+
 	rb, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Error(err)
