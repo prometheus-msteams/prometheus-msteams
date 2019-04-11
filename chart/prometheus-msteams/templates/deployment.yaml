@@ -47,9 +47,6 @@ spec:
           args:
             - --config=/etc/config/connectors.yaml
             - --template-file=/etc/template/card.tmpl
-            - --idle-conn-timeout=90s
-            - --max-idle-conns=100
-            - --tls-handshake-timeout=30s
           {{- with .Values.container.additionalArgs }}
 {{ toYaml . | indent 12 }}
           {{- end}}
