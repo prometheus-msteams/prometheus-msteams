@@ -88,14 +88,14 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 		return
 	}
 
-	log.Debug(String(promAlert))
+	log.Debugf("Prometheus Alert: %v", String(promAlert))
 	cards, err := CreateCards(promAlert, promWebhook)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
-	log.Debug(cards)
+	log.Debugf("Teams message cards: %v", cards)
 
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		cardString := string(card)
