@@ -53,11 +53,7 @@ fmt:
 	gofmt -w $(GOFMT_FILES)
 
 lint:
-	@which golint > /dev/null; if [ $$? -ne 0 ]; then \
-		go get -u golang.org/x/lint/golint; \
-	fi
-	 go list ./... | grep -v /vendor/ | xargs golint -set_exit_status
-
+	golint -set_exit_status ./...
 test:
 	go test ./... -v -race
 
