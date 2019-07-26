@@ -165,6 +165,7 @@ func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (s
 	if err != nil {
 		return "", fmt.Errorf("failed to template alerts: %v", err)
 	}
+	log.Debugf("Alert rendered in template file: %v", totalMessage)
 	totalMessage = compact([]byte(totalMessage))
 	var (
 		cardTmp          string
