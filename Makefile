@@ -61,7 +61,7 @@ coverage:
 	go test ./... -v -race -coverprofile=coverage.txt -covermode=atomic
 
 dep:
-	GO111MODULE=on wgo get -v ./...
+	GO111MODULE=on go get -v ./...
 
 
 clean:
