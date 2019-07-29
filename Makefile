@@ -8,6 +8,7 @@ COMMIT=$(shell git rev-parse --short HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 BUILD_DATE=$(shell date +%FT%T%z)
 GOFMT_FILES?=$$(find . -name '*.go')
+GO := GO111MODULE=on go
 
 # Symlink into GOPATH
 GITHUB_USERNAME=bzon
@@ -32,10 +33,10 @@ github_release:
 	github-release release -u bzon -r prometheus-msteams -t $(VERSION) -n $(VERSION)
 	
 linux: 
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) go build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) . 
+	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) . 
 
 darwin:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) go build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) .
+	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) .
 
 docker: clean dep linux
 	docker build -t $(GITHUB_USERNAME)/$(BINARY):$(VERSION) .
@@ -53,19 +54,15 @@ fmt:
 	gofmt -w $(GOFMT_FILES)
 
 lint:
-	@which golint > /dev/null; if [ $$? -ne 0 ]; then \
-		go get -u golang.org/x/lint/golint; \
-	fi
-	 go list ./... | grep -v /vendor/ | xargs golint -set_exit_status
-
+	golint -set_exit_status ./...
 test:
-	go test ./... -v -race
+	$(GO) test ./... -v -race
 
 coverage:
-	go test ./... -v -race -coverprofile=coverage.txt -covermode=atomic
+	$(GO) test ./... -v -race -coverprofile=coverage.txt -covermode=atomic
 
 dep:
-	go get -v ./...
+	$(GO) get -v ./...
 
 
 clean:

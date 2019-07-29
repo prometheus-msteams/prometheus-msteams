@@ -6,6 +6,7 @@ bin/
 *.dylib
 /prometheus-msteams-*
 /prometheus-msteams
+vendor/
 
 # Test binary, build with `go test -c`
 *.test
