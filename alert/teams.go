@@ -57,7 +57,7 @@ func compact(data []byte) string {
 }
 
 func concatKeyValue(key string, val string) string {
-	if strings.HasPrefix(val, "[") {
+	if strings.HasPrefix(val, "[{") {
 		return "\"" + key + "\":" + val
 	}
 	return "\"" + key + "\":\"" + val + "\""
