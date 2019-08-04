@@ -57,7 +57,7 @@ func compact(data []byte) string {
 }
 
 func concatKeyValue(key string, val string) string {
-	if strings.HasPrefix(val, "[") {
+	if strings.HasPrefix(val, "[{") {
 		return "\"" + key + "\":" + val
 	}
 	return "\"" + key + "\":\"" + val + "\""
@@ -219,7 +219,7 @@ func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout tim
 
 	res, err := c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v", webhook, err)
+		return res, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v", webhook, err)
 	}
 
 	rb, err := ioutil.ReadAll(res.Body)
@@ -229,9 +229,9 @@ func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout tim
 	log.Infof("Microsoft Teams response text: %s", string(rb))
 	if res.StatusCode != http.StatusOK {
 		if err != nil {
-			return nil, fmt.Errorf("Failed reading Teams http response: %v", err)
+			return res, fmt.Errorf("Failed reading Teams http response: %v", err)
 		}
-		return nil, fmt.Errorf("Failed sending to the Teams Channel. Teams http response: %s",
+		return res, fmt.Errorf("Failed sending to the Teams Channel. Teams http response: %s",
 			res.Status)
 	}
 	if err := res.Body.Close(); err != nil {

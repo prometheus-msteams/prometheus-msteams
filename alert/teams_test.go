@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"regexp"
 	"testing"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify"
@@ -59,6 +59,23 @@ func createCardsFromPrometheusTestAlert(testdata string, templateFile string, t 
 	return createTestCards(p, templateFile)
 }
 
+func TestConcatinatingKeyValue(t *testing.T) {
+	tt := []struct {
+		key  string
+		val string
+		want string
+	}{
+		{"key", "val", "\"key\":\"val\""},
+		{"key", "[val]", "\"key\":\"[val]\""},
+		{"key", "[{\"key2\":\"val2\"}]", "\"key\":[{\"key2\":\"val2\"}]"},
+	}
+
+	for _, tc := range tt {
+		got := concatKeyValue(tc.key, tc.val)
+		assert.Equal(t, tc.want, got)
+	}
+}
+
 func TestQuerySections(t *testing.T) {
 	validMessage := "{\"@type\":\"MessageCard\",\"@context\":\"http://schema.org/extensions\",\"themeColor\":\"FFA500\",\"summary\":\"Server High Memory usage\",\"title\":\"Prometheus Alert (firing)\",\"sections\":[{\"activityTitle\":\"[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)\",\"facts\":[{\"name\":\"description\",\"value\":\"10.80.40.11 reported high memory usage with 23.28%.\"},{\"name\":\"summary\",\"value\":\"Server High Memory usage\"},{\"name\":\"alertname\",\"value\":\"high\\_memory\\_load\"},{\"name\":\"instance\",\"value\":\"instance-with-hyphen\\_and\\_underscore\"},{\"name\":\"job\",\"value\":\"docker\\_nodes\"},{\"name\":\"monitor\",\"value\":\"master\"},{\"name\":\"severity\",\"value\":\"warning\"}],\"markdown\":true}]}"
 	_, err := querySections(validMessage)
@@ -75,22 +92,16 @@ func TestCreateCards(t *testing.T) {
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		length++
 	})
-	if length != 1 {
-		t.Fatalf("CreateCards error: should create 1 card, got %d cards", length)
-	}
+	assert.Equal(t, 1, length, "CreateCards error: should create 1 card")
 
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		want := "FFA500"
 		got := jsonparserGetString(card, "themeColor")
-		if got != want {
-			t.Fatalf("CreateCards error: got %s, want %s", got, want)
-		}
+		assert.Equal(t, want, got, "CreateCards error")
 
 		want = "Server High Memory usage"
 		got = jsonparserGetString(card, "summary")
-		if got != want {
-			t.Fatalf("CreateCards error: got %s, want %s", got, want)
-		}
+		assert.Equal(t, want, got, "CreateCards error")
 	})
 
 	// test that 2 alerts get combined to one message
@@ -104,15 +115,15 @@ func TestCreateCards(t *testing.T) {
 	if length != 1 {
 		t.Fatalf("CreateCards error: should create 1 card, got %d cards", length)
 	}
+	assert.Equal(t, 1, length, "CreateCards error: should create 1 card")
 }
 
 func TestCreateCardsTemplateWithoutSections(t *testing.T) {
 	testdata := "testdata/prom_post_request.json"
 	errorMessage := "Failed to parse json with key 'sections': Key path not found"
 	_, err := createCardsFromPrometheusTestAlert(testdata, "testdata/message-card-without-sections.tmpl", t)
-	if (err == nil) || (err.Error() != errorMessage) {
-		t.Fatalf("CreateCards should produce error: '%v', got '%v'", errorMessage, err)
-	}
+	assert.NotNil(t, err, "CreateCards should produce error")
+	assert.Equal(t, errorMessage, err.Error(), "CreateCards should produce correct error message")
 }
 
 func TestTemplateWithoutSummaryOrText(t *testing.T) {
@@ -136,9 +147,7 @@ func TestLargePostRequest(t *testing.T) {
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		length++
 	})
-	if length != 2 {
-		t.Fatalf("Too Large sized Message error: should create 2 cards, got %d cards", length)
-	}
+	assert.Equal(t, 2, length, "Too Large sized Message error: should create 2 cards")
 
 	// test too many alerts which results in too many sections
 	testdata = "testdata/prom_post_request_12_alerts.json"
@@ -148,9 +157,7 @@ func TestLargePostRequest(t *testing.T) {
 	jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 		length++
 	})
-	if length != 2 {
-		t.Fatalf("Too many Sections error: should create 2 cards, got %d cards", length)
-	}
+	assert.Equal(t, 2, length, "Too many Sections error: should create 2 cards")
 }
 
 func TestStatusColorFiring(t *testing.T) {
@@ -169,10 +176,7 @@ func TestStatusColorFiring(t *testing.T) {
 		cards, _ := createTestCards(p, "../default-message-card.tmpl")
 		jsonparser.ArrayEach([]byte(cards), func(card []byte, dataType jsonparser.ValueType, offset int, err error) {
 			got := jsonparserGetString(card, "themeColor")
-			if got != tc.wantColor {
-				t.Fatalf("Failed assigning themes color to card: got %s, want %s",
-					got, tc.wantColor)
-			}
+			assert.Equal(t, tc.wantColor, got, "Failed assigning themes color to card")
 		})
 	}
 }
@@ -187,39 +191,25 @@ func TestAlertsSectionsOrdering(t *testing.T) {
 		key, _, _, _ := jsonparser.Get(fact, "name")
 		switch i {
 		case 0:
-			if string(key) != "description" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "description")
-			}
+			assert.Equal(t, "description", string(key), "Alert out of order")
 			i++
 		case 1:
-			if string(key) != "summary" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "summary")
-			}
+			assert.Equal(t, "summary", string(key), "Alert out of order")
 			i++
 		case 2:
-			if string(key) != "alertname" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "alertname")
-			}
+			assert.Equal(t, "alertname", string(key), "Alert out of order")
 			i++
 		case 3:
-			if string(key) != "instance" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "instance")
-			}
+			assert.Equal(t, "instance", string(key), "Alert out of order")
 			i++
 		case 4:
-			if string(key) != "job" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "job")
-			}
+			assert.Equal(t, "job", string(key), "Alert out of order")
 			i++
 		case 5:
-			if string(key) != "monitor" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "monitor")
-			}
+			assert.Equal(t, "monitor", string(key), "Alert out of order")
 			i++
 		case 6:
-			if string(key) != "severity" {
-				t.Fatalf("Alert out of order: got %s, want %s", string(key), "severity")
-			}
+			assert.Equal(t, "severity", string(key), "Alert out of order")
 			i++
 		}
 	})
@@ -232,9 +222,7 @@ func TestSendCard200Success(t *testing.T) {
 	defer ts.Close()
 
 	resp, _ := SendCard(ts.URL, "somecard", 10, 10, 10)
-	if resp.StatusCode != 200 {
-		t.Fatalf("Response status code not 200: got %s, want: 200", string(resp.StatusCode))
-	}
+	assert.Equal(t, 200, resp.StatusCode, "Response status code not 200")
 }
 
 func TestSendCard404Failure(t *testing.T) {
@@ -243,17 +231,11 @@ func TestSendCard404Failure(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	_, errSendCard := SendCard(ts.URL, "somecard", 10, 10, 10)
-	matched, _ := regexp.MatchString("404", errSendCard.Error())
-	if matched == false {
-		t.Fatalf("Response status code not 404: want: 404, error string: \"%v\"", errSendCard)
-	}
+	resp, _ := SendCard(ts.URL, "somecard", 10, 10, 10)
+	assert.Equal(t, 404, resp.StatusCode, "Response status code not 404")
 }
 
 func TestSendCardInvalidWebhookProto(t *testing.T) {
 	_, err := SendCard("somewebhook", "somecard", 10, 10, 10)
-	if err == nil {
-		t.Fatal("Error was meant to be thrown for invalid protocol")
-		t.FailNow()
-	}
+	assert.NotNil(t, err, "Error was meant to be thrown for invalid protocol")
 }
