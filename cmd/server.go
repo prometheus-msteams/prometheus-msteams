@@ -203,6 +203,7 @@ func server(cmd *cobra.Command, args []string) {
 	}
 	mux.HandleFunc("/config", teamsCfg.configHandler)
 	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/healthz", healthz())
 	server := serverListenAddress + ":" + strconv.Itoa(serverPort)
 	log.Infof("prometheus-msteams server started listening at %s", server)
 	log.Fatal(http.ListenAndServe(server, mux))
@@ -232,4 +233,11 @@ func (teamsCfg *TeamsConfig) configHandler(w http.ResponseWriter, r *http.Reques
 	}
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, string(b))
+}
+
+func healthz() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 }

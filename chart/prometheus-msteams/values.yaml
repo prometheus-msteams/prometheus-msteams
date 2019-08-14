@@ -33,3 +33,9 @@ affinity: {}
 # Replace this!
 connectors:
   - alertmanager: https://outlook.office.com/webhook/xxxxx/IncomingWebhook/xxxx/xxxxx
+
+# Provide your own ConfigMap with a template by creating it separately, and
+# provide the configmap's name here. The ConfigMap should have one key - "card.tmpl"
+# with a card definition as outlined here:
+# https://github.com/bzon/prometheus-msteams/blob/master/README.md#customise-messages-to-ms-teams
+templateConfigMap: ""

@@ -74,3 +74,5 @@ Please see [Prometheus Operator alerting docs](https://github.com/coreos/prometh
 | container.additionalArgs | additional prometheus-msteams flags to use             | None                                            |
 | resources                | CPU/memory resource requests/limits                    | See [default](./prometheus-msteams/values.yaml) |
 | nodeSelector             | Labels for Node selector                               | {}                                              |
+| templateConfigMap      | Name of ConfigMap that contains custom card template. Default is to generate one from card.tmpl   | ""  
+|
