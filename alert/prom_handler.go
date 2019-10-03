@@ -88,12 +88,13 @@ func (promWebhook *PrometheusWebhook) PrometheusAlertManagerHandler(
 		return
 	}
 
-	log.Debugf("Prometheus Alert: %v", String(promAlert))
+	log.WithField("payload", promAlert).Debug("Prometheus alert received")
 	cards, err := CreateCards(promAlert, promWebhook)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+
 	log.Infof("Created a card for Microsoft Teams %s", r.RequestURI)
 	log.Debugf("Teams message cards: %v", cards)
 
