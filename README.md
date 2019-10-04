@@ -56,7 +56,7 @@ docker run -d -p 2000:2000 \
 
 __OPTION 2:__ Run using binary.
 
-Download the binary for your platform from [RELEASES](https://github.com/bzon/prometheus-msteams/releases), and run it like the following:
+Download the binary for your platform and the default card template from [RELEASES](https://github.com/bzon/prometheus-msteams/releases), then run the binary in the same directory as you have stored the `default-message-card.tmpl`  like the following:
 
 ```bash
 ./prometheus-msteams server \
