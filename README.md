@@ -248,6 +248,16 @@ When running as a binary, use the __--template-file__ flag.
     --template-file /tmp/card.tmpl
 ```
 
+### Silence Alerts from MS Teams
+
+A [silence action card template](./card-with-silence-action.tmpl) has been created for those who need acknowledge the alerts from MS Teams. The template works together with [Alertmanger](https://prometheus.io/docs/alerting/alertmanager/)
+
+![silencecard](./docs/silence_card.png)
+
+This template provides an action which opens the **Alertmanager UI** with all the information about your alert and the Silence is created via Alertmanager.
+
+![silencepreview](./docs/alertmanager_silence_preview.png)
+
 ## Kubernetes Deployment
 
 See [Helm Guide](./chart/README.md).
