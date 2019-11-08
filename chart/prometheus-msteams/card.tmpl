@@ -10,7 +10,7 @@
                  {{- else -}}808080{{- end -}}",
   "summary": "{{- if eq .CommonAnnotations.summary "" -}}
                   {{- if eq .CommonAnnotations.message "" -}}
-                    {{- .CommonLabels.alertname -}}
+                    {{- .CommonLabels.cluster -}}-cluster
                   {{- else -}}
                     {{- .CommonAnnotations.message -}}
                   {{- end -}}
@@ -25,14 +25,14 @@
       "facts": [
         {{- range $key, $value := $alert.Annotations }}
         {
-          "name": "{{ reReplaceAll "_" "\\\\_" $key }}",
-          "value": "{{ reReplaceAll "_" "\\\\_" $value }}"
+          "name": "{{ reReplaceAll "_" " " $key }}",
+          "value": "{{ reReplaceAll "_" " " $value }}"
         },
         {{- end -}}
         {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}},{{ end }}
         {
-          "name": "{{ reReplaceAll "_" "\\\\_" $key }}",
-          "value": "{{ reReplaceAll "_" "\\\\_" $value }}"
+          "name": "{{ reReplaceAll "_" " " $key }}",
+          "value": "{{ reReplaceAll "_" " " $value }}"
         }
         {{- end }}
       ],
