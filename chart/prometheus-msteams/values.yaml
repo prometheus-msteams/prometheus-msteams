@@ -33,3 +33,13 @@ affinity: {}
 # Replace this!
 connectors:
   - alertmanager: https://outlook.office.com/webhook/xxxxx/IncomingWebhook/xxxx/xxxxx
+
+
+## Specify the custom message card template for MS teams
+# customCardTemplate: |
+#   {{ define "teams.card" }}
+#   {
+#     
+#   }
+#   {{ end }}
+
