@@ -26,10 +26,10 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: prometheus-msteams-config
+            name: {{ template "app.name" . }}-config
         - name: card-template-volume
           configMap:
-            name: prometheus-msteams-card-template
+            name: {{ template "app.name" . }}-card-template
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
