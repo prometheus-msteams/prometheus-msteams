@@ -219,7 +219,7 @@ func SendCard(webhook string, card string, maxIdleConns int, idleConnTimeout tim
 
 	res, err := c.Do(req)
 	if err != nil {
-		return res, fmt.Errorf("Failed sending to webhook url %s. Got the error: %v", webhook, err)
+		return res, fmt.Errorf("Failed sending to teams webhook url. Got the error: %v", err)
 	}
 
 	rb, err := ioutil.ReadAll(res.Body)

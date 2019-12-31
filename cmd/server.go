@@ -89,7 +89,7 @@ func init() {
 		"The default request uri path where Prometheus will post to.")
 	serverCmd.Flags().StringVarP(&teamsWebhookURL, "webhook-url", "w", "",
 		"The default Microsoft Teams Webhook connector.")
-	serverCmd.Flags().StringVar(&logLevel, "log-level", "DEBUG",
+	serverCmd.Flags().StringVar(&logLevel, "log-level", "INFO",
 		"Log levels: INFO | DEBUG | WARN | ERROR | FATAL | PANIC")
 	serverCmd.Flags().BoolVar(&markdownEnabled, "markdown", true,
 		"Format the prometheus alert in Microsoft Teams with markdown.")
@@ -218,8 +218,7 @@ func addPrometheusHandler(uri string, webhook string, template *template.Templat
 		IdleConnTimeout:     idleConnTimeout,
 		TLSHandshakeTimeout: tlsHandshakeTimeout,
 	}
-	log.Infof("Creating the server request path %q with webhook %q",
-		promWebhook.RequestURI, promWebhook.TeamsWebhookURL)
+	log.Infof("Creating the server request path %q", promWebhook.RequestURI)
 	mux.HandleFunc(promWebhook.RequestURI,
 		promWebhook.PrometheusAlertManagerHandler)
 }
