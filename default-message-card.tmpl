@@ -10,29 +10,29 @@
                  {{- else -}}808080{{- end -}}",
   "summary": "{{- if eq .CommonAnnotations.summary "" -}}
                   {{- if eq .CommonAnnotations.message "" -}}
-                    {{- .CommonLabels.alertname -}}
+                    {{- js .CommonLabels.alertname | reReplaceAll "_" "\\\\_" | reReplaceAll `\\'` "'" -}}
                   {{- else -}}
-                    {{- .CommonAnnotations.message -}}
+                    {{- js .CommonAnnotations.message | reReplaceAll "_" "\\\\_" | reReplaceAll `\\'` "'" -}}
                   {{- end -}}
               {{- else -}}
-                  {{- .CommonAnnotations.summary -}}
+                  {{- js .CommonAnnotations.summary | reReplaceAll "_" "\\\\_" | reReplaceAll `\\'` "'" -}}
               {{- end -}}",
   "title": "Prometheus Alert ({{ .Status }})",
   "sections": [ {{$externalUrl := .ExternalURL}}
   {{- range $index, $alert := .Alerts }}{{- if $index }},{{- end }}
     {
-      "activityTitle": "[{{ $alert.Annotations.description }}]({{ $externalUrl }})",
+      "activityTitle": "[{{ js $alert.Annotations.description |  reReplaceAll "_" "\\\\_" | reReplaceAll `\\'` "'" }}]({{ $externalUrl }})",
       "facts": [
         {{- range $key, $value := $alert.Annotations }}
         {
-          "name": "{{ reReplaceAll "_" "\\\\_" $key }}",
-          "value": "{{ reReplaceAll "_" "\\\\_" $value }}"
+          "name": "{{ $key }}",
+          "value": "{{ js $value | reReplaceAll "_" "\\\\_" | reReplaceAll `\\'` "'" }}"
         },
         {{- end -}}
         {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}},{{ end }}
         {
-          "name": "{{ reReplaceAll "_" "\\\\_" $key }}",
-          "value": "{{ reReplaceAll "_" "\\\\_" $value }}"
+          "name": "{{ $key }}",
+          "value": "{{ js $value | reReplaceAll "_" "\\\\_" | reReplaceAll `\\'` "'" }}"
         }
         {{- end }}
       ],
