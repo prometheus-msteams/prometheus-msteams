@@ -15,7 +15,7 @@ services:
   - docker
 
 install:
-  - go get github.com/golang/lint/golint
+  - GO111MODULE=on go get github.com/golang/lint/golint
   - golint -set_exit_status ./...
   - make dep
 
