@@ -54,7 +54,7 @@ func compact(data []byte) string {
 	buffer := new(bytes.Buffer)
 	err := json.Compact(buffer, data)
 	if err != nil {
-		log.Error("Error calling json.compact: %v", err)
+		log.Errorf("Error calling json.compact: %v", err)
 	}
 	return buffer.String()
 }
