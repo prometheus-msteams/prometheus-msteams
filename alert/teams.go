@@ -151,17 +151,47 @@ func querySections(message string) ([]byte, error) {
 	return sections, err
 }
 
+func jsonEncode(str string) string {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	err := enc.Encode(str)
+	if err != nil {
+		return ""
+	}
+	return string(buf.Bytes()[1:len(buf.Bytes())-2])
+}
+
+// json escape all string values in kvData and also escape
+// '_' char so it does not get processed as markdown italic
+func jsonEncodeAlertmanagerKV( kvData template.KV ) {
+	for k, v := range kvData {
+		kvData[k] = strings.ReplaceAll(jsonEncode(v), `_`, `\\_`)
+	}
+}
+
+func jsonEscapeMessage(promAlert notify.WebhookMessage) notify.WebhookMessage {
+	retPromAlert := promAlert
+	jsonEncodeAlertmanagerKV(retPromAlert.GroupLabels)
+	jsonEncodeAlertmanagerKV(retPromAlert.CommonLabels)
+	jsonEncodeAlertmanagerKV(retPromAlert.CommonAnnotations)
+	for _, alert := range retPromAlert.Alerts {
+		jsonEncodeAlertmanagerKV(alert.Labels)
+		jsonEncodeAlertmanagerKV(alert.Annotations)
+	}
+	return retPromAlert
+}
+
 // CreateCards creates a Teams Message Card based on values gathered from PrometheusWebhook and the structure from the card template
 func CreateCards(promAlert notify.WebhookMessage, webhook *PrometheusWebhook) (string, error) {
-
+	promAlertEscaped := jsonEscapeMessage(promAlert)
 	data := &template.Data{
-		Receiver:          promAlert.Receiver,
-		Status:            promAlert.Status,
-		Alerts:            promAlert.Alerts,
-		GroupLabels:       promAlert.GroupLabels,
-		CommonLabels:      promAlert.CommonLabels,
-		CommonAnnotations: promAlert.CommonAnnotations,
-		ExternalURL:       promAlert.ExternalURL,
+		Receiver:          promAlertEscaped.Receiver,
+		Status:            promAlertEscaped.Status,
+		Alerts:            promAlertEscaped.Alerts,
+		GroupLabels:       promAlertEscaped.GroupLabels,
+		CommonLabels:      promAlertEscaped.CommonLabels,
+		CommonAnnotations: promAlertEscaped.CommonAnnotations,
+		ExternalURL:       promAlertEscaped.ExternalURL,
 	}
 
 	totalMessage, err := webhook.Template.ExecuteTextString(`{{ template "teams.card" . }}`, data)
