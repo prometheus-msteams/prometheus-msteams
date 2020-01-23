@@ -50,7 +50,7 @@ This is an example config file content in YAML format.
 
 ---
 label: msteams_endpoint
-fallback: alertmanager
+fallback: channel_1
 connectors:
 - channel_1: https://outlook.office.com/webhook/xxxx/hook/for/channel1
 - channel_2: https://outlook.office.com/webhook/xxxx/hook/for/channel2
