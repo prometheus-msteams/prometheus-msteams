@@ -10,7 +10,7 @@
       "alertname": "high_memory_load",
       "monitor": "master",
       "severity": "warning",
-      "msteams_endpoint": "channel_2"
+      "msteams_connector": "channel_2"
   },
   "commonAnnotations": {
       "summary": "Server High Memory usage",

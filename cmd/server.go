@@ -49,7 +49,7 @@ By using a --config file, you will be able to define multiple prometheus request
 This is an example config file content in YAML format.
 
 ---
-label: msteams_endpoint
+label: msteams_connector
 fallback: channel_1
 connectors:
 - channel_1: https://outlook.office.com/webhook/xxxx/hook/for/channel1
@@ -71,20 +71,20 @@ var (
 	markdownEnabled     bool
 	idleConnTimeout     time.Duration
 	tlsHandshakeTimeout time.Duration
-	endpointLabel      	string
-	fallbackEndpoint	string
+	connectorLabel		string
+	fallbackConnector	string
 	useLabel            bool
 )
 
 // TeamsConfig is the struct for config files
 // The Connectors key is the request path for Prometheus to post
 // The Connectors value is the Teams webhook url
-// The EndpointLabel is the alert's commonLabels key for the connector
-// The FallbackEndpoint is the connector to use if the EndpointLabel is not set
+// The ConnectorLabel is the alert's commonLabels key for the connector
+// The FallbackConnector is the connector to use if the ConnectorLabel is not set
 type TeamsConfig struct {
 	Connectors []map[string]string `yaml:"connectors"`
-	EndpointLabel string `yaml:"label"`
-	FallbackEndpoint string `yaml:"fallback"`
+	ConnectorLabel string `yaml:"label"`
+	FallbackConnector string `yaml:"fallback"`
 }
 
 func init() {
@@ -113,10 +113,10 @@ func init() {
 		"The idle connection timeout (in seconds)")
 	serverCmd.Flags().DurationVar(&tlsHandshakeTimeout, "tls-handshake-timeout", 30*time.Second,
 		"The TLS handshake timeout (in seconds)")
-	serverCmd.Flags().StringVar(&endpointLabel, "endpoint-label", "",
-		"The alert label to use for the endpoint information (e.g. 'msteams_endpoint').")
-	serverCmd.Flags().StringVar(&fallbackEndpoint, "fallback-endpoint", "",
-		"The endpoint to use if an alert contains no endpoint label (e.g 'alertmanager').")
+	serverCmd.Flags().StringVar(&connectorLabel, "connector-label", "",
+		"The alert label to use for the connector information (e.g. 'msteams_connector').")
+	serverCmd.Flags().StringVar(&fallbackConnector, "fallback-connector", "",
+		"The connector to use if an alert contains no connector label (e.g 'alertmanager').")
 
 	// NOTE: Can we use viper for this?
 	// This is placed to support people who still depends
@@ -133,11 +133,11 @@ func init() {
 	if v, ok := os.LookupEnv("TEMPLATE_FILE"); ok {
 		templateFile = v
 	}
-	if v, ok := os.LookupEnv("ENDPOINT_LABEL"); ok {
-		endpointLabel = v
+	if v, ok := os.LookupEnv("CONNECTOR_LABEL"); ok {
+		connectorLabel = v
 	}
-	if v, ok := os.LookupEnv("FALLBACK_ENDPOINT"); ok {
-		fallbackEndpoint = v
+	if v, ok := os.LookupEnv("FALLBACK_CONNECTOR"); ok {
+		fallbackConnector = v
 	}
 
 	useLabel = false
@@ -218,17 +218,17 @@ func server(cmd *cobra.Command, args []string) {
 		teamsCfg.Connectors = append(teamsCfg.Connectors, cfgFromFlags)
 	}
 
-	// Use endpoint label from config if not set from flags
-	if endpointLabel == "" && len(teamsCfg.EndpointLabel) != 0 {
-		endpointLabel = teamsCfg.EndpointLabel
+	// Use connector label from config if not set from flags
+	if connectorLabel == "" && len(teamsCfg.ConnectorLabel) != 0 {
+		connectorLabel = teamsCfg.ConnectorLabel
 	}
-	// Use fallback endpoint from config if not set from flags
-	if fallbackEndpoint == "" && len(teamsCfg.FallbackEndpoint) != 0 {
-		fallbackEndpoint = teamsCfg.FallbackEndpoint
+	// Use fallback connector from config if not set from flags
+	if fallbackConnector == "" && len(teamsCfg.FallbackConnector) != 0 {
+		fallbackConnector = teamsCfg.FallbackConnector
 	}
-	if endpointLabel != "" && fallbackEndpoint != "" {
-		log.Infof("Using the alert label %q for endpoint selection", endpointLabel)
-		log.Infof("Using the endpoint %q if the endpoint label is missing", fallbackEndpoint)
+	if connectorLabel != "" && fallbackConnector != "" {
+		log.Infof("Using the alert label %q for connector selection", connectorLabel)
+		log.Infof("Using the connector %q if the connector label is missing", fallbackConnector)
 		useLabel = true
 	}
 
@@ -277,15 +277,15 @@ type LabelHandler struct {
 func (l *LabelHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if useLabel && r.RequestURI == "/_by-label" {
 		log.Debug("/_by-label received a request")
-		endpoint := getEndpointFromLabel(w, r)
-		r.RequestURI = "/"+endpoint
-		r.URL.Path = "/"+endpoint
+		connector := getConnectorFromLabel(w, r)
+		r.RequestURI = "/"+connector
+		r.URL.Path = "/"+connector
 		log.Debugf("Changed request path to: %s", r.URL.Path)
 	}
 	l.handler.ServeHTTP(w, r)
 }
 
-func getEndpointFromLabel(w http.ResponseWriter, r *http.Request) string {
+func getConnectorFromLabel(w http.ResponseWriter, r *http.Request) string {
 	if r.Method != http.MethodPost {
 		errMsg := fmt.Sprintf("Invalid request method: %s, this handler only accepts POST requests", r.Method)
 		log.Error(errMsg)
@@ -303,13 +303,13 @@ func getEndpointFromLabel(w http.ResponseWriter, r *http.Request) string {
 		return ""
 	}
 	r.Body = bodyBackup
-	finalEndpoint := fallbackEndpoint
-	if labelEndpoint, err := promAlert.CommonLabels[endpointLabel]; err {
-		log.Debugf("Endpoint Label found, using label value: %s", labelEndpoint)
-		finalEndpoint = labelEndpoint
+	connector := fallbackConnector
+	if labelConnector, err := promAlert.CommonLabels[connectorLabel]; err {
+		log.Debugf("Connector label found, using label value: %s", labelConnector)
+		connector = labelConnector
 	} else {
-		log.Debugf("No Endpoint Label value found, using fallback: %s", fallbackEndpoint)
+		log.Debugf("No Connector label value found, using fallback: %s", fallbackConnector)
 	}
-	log.Debugf("Returning endpoint: %s", finalEndpoint)
-	return finalEndpoint
+	log.Debugf("Returning connector: %s", connector)
+	return connector
 }
