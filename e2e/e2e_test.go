@@ -113,6 +113,11 @@ func TestServer(t *testing.T) {
 				if resp.StatusCode != 200 {
 					t.Fatalf("want '%d', got '%d'", 200, resp.StatusCode)
 				}
+				var prs []service.PostResponse
+				if err := json.NewDecoder(resp.Body).Decode(&prs); err != nil {
+					t.Fatal(err)
+				}
+				testutils.CompareToGoldenFile(t, prs, t.Name()+"/resp.json", *update)
 			}
 		})
 	}

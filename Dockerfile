@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM alpine:3.9.5
 
 RUN apk --no-cache add ca-certificates tini
 
@@ -7,6 +7,6 @@ LABEL description="A lightweight Go Web Server that accepts POST alert message f
 COPY ./default-message-card.tmpl /default-message-card.tmpl
 COPY bin/prometheus-msteams-linux-amd64 /promteams
 
-ENTRYPOINT ["/sbin/tini", "--", "/promteams", "server"]
+ENTRYPOINT ["/sbin/tini", "--", "/promteams"]
 
 EXPOSE 2000
