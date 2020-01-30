@@ -2,6 +2,7 @@ package transport
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -56,8 +57,17 @@ func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 		ctx, span := trace.StartSpan(c.Request().Context(), p)
 		defer span.End()
 
+		b, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			logger.Log("err", err)
+			span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
+			return c.String(500, err.Error())
+		}
+
+		span.AddAttributes(trace.StringAttribute("alert", string(b)))
+
 		var wm webhook.Message
-		if err := json.NewDecoder(c.Request().Body).Decode(&wm); err != nil {
+		if err := json.Unmarshal(b, &wm); err != nil {
 			logger.Log("err", err)
 			span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
 			return c.String(500, err.Error())

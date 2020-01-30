@@ -16,15 +16,15 @@
           },
           {
             "name": "alertname",
-            "value": "high\\\\\\_memory\\\\\\_load"
+            "value": "high\\_memory\\_load"
           },
           {
             "name": "instance",
-            "value": "instance-with-hyphen\\\\\\_and\\\\\\_underscore"
+            "value": "instance-with-hyphen\\_and\\_underscore"
           },
           {
             "name": "job",
-            "value": "docker\\\\\\_nodes"
+            "value": "docker\\_nodes"
           },
           {
             "name": "monitor",

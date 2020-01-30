@@ -1,6 +1,7 @@
 package card
 
 import (
+	"context"
 	"flag"
 	"testing"
 
@@ -35,7 +36,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 				t.Fatal(err)
 			}
 			m := NewTemplatedCardCreator(tmpl)
-			got, err := m.Convert(a)
+			got, err := m.Convert(context.Background(), a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("templatedCard.Convert() error = %v, wantErr %v", err, tt.wantErr)
 				return

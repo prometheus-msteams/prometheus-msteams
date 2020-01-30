@@ -1,6 +1,7 @@
 package card
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -13,7 +14,7 @@ type JSON []map[string]interface{}
 // Converter represents the behavior of a messenger.
 type Converter interface {
 	// Convert converts an alert manager webhook message to JSON.
-	Convert(webhook.Message) (JSON, error)
+	Convert(context.Context, webhook.Message) (JSON, error)
 }
 
 type loggingMiddleware struct {
@@ -26,7 +27,7 @@ func NewCreatorLoggingMiddleware(l log.Logger, n Converter) Converter {
 	return loggingMiddleware{l, n}
 }
 
-func (l loggingMiddleware) Convert(a webhook.Message) (c JSON, err error) {
+func (l loggingMiddleware) Convert(ctx context.Context, a webhook.Message) (c JSON, err error) {
 	defer func(begin time.Time) {
 		l.logger.Log(
 			"alert", a,
@@ -34,5 +35,5 @@ func (l loggingMiddleware) Convert(a webhook.Message) (c JSON, err error) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	return l.next.Convert(a)
+	return l.next.Convert(ctx, a)
 }

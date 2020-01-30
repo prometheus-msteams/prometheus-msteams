@@ -2,6 +2,7 @@ package card
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
+	"go.opencensus.io/trace"
 )
 
 // templatedCard implements Converter using Alert manager templating.
@@ -31,7 +33,10 @@ const (
 	maxCardSections = 10
 )
 
-func (m *templatedCard) Convert(promAlert webhook.Message) (JSON, error) {
+func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) (JSON, error) {
+	_, span := trace.StartSpan(ctx, "templatedCard.Convert")
+	defer span.End()
+
 	promAlert = jsonEscapeMessage(promAlert)
 	data := &template.Data{
 		Receiver:          promAlert.Receiver,
@@ -79,6 +84,13 @@ func (m *templatedCard) Convert(promAlert webhook.Message) (JSON, error) {
 		}
 	}
 	cards += "]"
+
+	span.Annotate(
+		[]trace.Attribute{
+			trace.StringAttribute("card", cards),
+		},
+		"card created",
+	)
 
 	var v JSON
 	if err := json.Unmarshal([]byte(cards), &v); err != nil {
