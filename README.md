@@ -59,10 +59,8 @@ __OPTION 2:__ Run using binary.
 Download the binary for your platform and the default card template from [RELEASES](https://github.com/bzon/prometheus-msteams/releases), then run the binary in the same directory as you have stored the `default-message-card.tmpl`  like the following:
 
 ```bash
-./prometheus-msteams server \
-    -l localhost \
-    -p 2000 \
-    -w "https://outlook.office.com/webhook/xxx"
+./prometheus-msteams -teams-request-uri alertmanager \
+  -teams-webhook-url "https://outlook.office.com/webhook/xxx"
 ```
 
 __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, checkout the [Kubernetes Deployment Guide](#kubernetes-deployment).
@@ -173,7 +171,7 @@ When running as a binary, use the __--config__ flag.
 ./prometheus-msteams server \
     -l localhost \
     -p 2000 \
-    --config /tmp/config.yml
+    -config-file /tmp/config.yml
 ```
 
 This will create the request uri handlers __/high_priority_channel__ and __/low_priority_channel__.

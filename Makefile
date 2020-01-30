@@ -13,10 +13,10 @@ GO := GO111MODULE=on go
 # Symlink into GOPATH
 GITHUB_USERNAME=bzon
 BUILD_DIR=$(GOPATH)/src/github.com/$(GITHUB_USERNAME)/$(BINARY)
-VERSION_PKG=github.com/bzon/prometheus-msteams/cmd
+VERSION_PKG=github.com/bzon/prometheus-msteams/pkg/version
 
 # Setup the -ldflags option for go build here, interpolate the variable values
-LDFLAGS = -ldflags "-X $(VERSION_PKG).version=$(VERSION) -X $(VERSION_PKG).commit=$(COMMIT) -X $(VERSION_PKG).branch=$(BRANCH) -X $(VERSION_PKG).buildDate=$(BUILD_DATE)"
+LDFLAGS = -ldflags "-X $(VERSION_PKG).VERSION=$(VERSION) -X $(VERSION_PKG).COMMIT=$(COMMIT) -X $(VERSION_PKG).BRANCH=$(BRANCH) -X $(VERSION_PKG).BUILDDATE=$(BUILD_DATE)"
 
 DOCKER_RUN_OPTS ?=
 DOCKER_RUN_ARG ?=
@@ -33,10 +33,10 @@ github_release:
 	github-release release -u bzon -r prometheus-msteams -t $(VERSION) -n $(VERSION)
 	
 linux: 
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) . 
+	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) ./cmd/server
 
 darwin:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) .
+	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
 docker: clean dep linux
 	docker build -t $(GITHUB_USERNAME)/$(BINARY):$(VERSION) .
@@ -55,6 +55,7 @@ fmt:
 
 lint:
 	golint -set_exit_status ./...
+
 test:
 	$(GO) test ./... -v -race
 
@@ -62,7 +63,8 @@ coverage:
 	$(GO) test ./... -v -race -coverprofile=coverage.txt -covermode=atomic
 
 dep:
-	$(GO) get -v ./...
+	$(GO) mod tidy
+	$(GO) mod download
 
 
 clean:
