@@ -1,6 +1,7 @@
 module github.com/bzon/prometheus-msteams
 
 require (
+	contrib.go.opencensus.io/exporter/jaeger v0.2.0
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	github.com/armon/go-metrics v0.3.0 // indirect
 	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
