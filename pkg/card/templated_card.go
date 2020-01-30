@@ -110,10 +110,10 @@ func concatKeyValue(key string, val string) string {
 	return "\"" + key + "\":\"" + val + "\""
 }
 
-func messageWithoutSections(data []byte) string {
+func messageWithoutSections(data []byte) (string, error) {
 	messageWithoutSections := "{"
 	c := counter()
-	jsonparser.ObjectEach(
+	if err := jsonparser.ObjectEach(
 		data,
 		func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 			if string(key) != "sections" {
@@ -124,9 +124,11 @@ func messageWithoutSections(data []byte) string {
 			}
 			return nil
 		},
-	)
+	); err != nil {
+		return "", err
+	}
 	messageWithoutSections += "}"
-	return messageWithoutSections
+	return messageWithoutSections, nil
 }
 
 func splitTooLargeMessage(data []byte) (string, string, error) {
@@ -135,7 +137,12 @@ func splitTooLargeMessage(data []byte) (string, string, error) {
 	// restOfMessage is used to recursively apply this method and iteratively create valid Teams message cards
 	restOfMessage := "{"
 
-	length := len(messageWithoutSections(data))
+	msg, err := messageWithoutSections(data)
+	if err != nil {
+		return "", "", nil
+	}
+
+	length := len(msg)
 
 	// range over each key-value pair in the original message card
 	c1 := counter()
@@ -163,17 +170,22 @@ func splitTooLargeMessage(data []byte) (string, string, error) {
 				restOfMessage += startSections
 				length++ // for the "]" at the end of the array
 				length += len(startSections)
-				// counter over section array elements of finalMessage
-				c2 := counter()
-				// counter over section array elements of restOfMessage
-				c3 := counter()
-				var counter int
+
+				var (
+					// counter over section array elements of finalMessage
+					c2 = counter()
+					// counter over section array elements of restOfMessage
+					c3              = counter()
+					counter         int
+					compactionError error
+				)
+
 				_, arrayEachErr := jsonparser.ArrayEach(
 					value,
 					func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 						section, compactErr := compact(value)
 						if compactErr != nil {
-							err = fmt.Errorf("failed using compact within ArrayEach: %w", err)
+							compactionError = fmt.Errorf("failed using compact within ArrayEach: %w", err)
 							return
 						}
 
@@ -196,6 +208,9 @@ func splitTooLargeMessage(data []byte) (string, string, error) {
 						}
 					},
 				)
+				if compactionError != nil {
+					return compactionError
+				}
 				if arrayEachErr != nil {
 					return fmt.Errorf("failed on ArrayEach: %w", arrayEachErr)
 				}
