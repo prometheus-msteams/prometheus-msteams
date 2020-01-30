@@ -252,28 +252,28 @@ func ocviews() []*view.View {
 	}
 	return []*view.View{
 		&view.View{
-			Name:        "opencensus.io/http/client/sent_bytes",
+			Name:        "http/client/sent_bytes",
 			Measure:     ochttp.ClientSentBytes,
-			Aggregation: ochttp.DefaultSizeDistribution,
+			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			Description: "Total bytes sent in request body (not including headers), by HTTP method and response status",
 			TagKeys:     keys,
 		},
 		&view.View{
-			Name:        "opencensus.io/http/client/received_bytes",
+			Name:        "http/client/received_bytes",
 			Measure:     ochttp.ClientReceivedBytes,
-			Aggregation: ochttp.DefaultSizeDistribution,
+			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			Description: "Total bytes received in response bodies (not including headers but including error responses with bodies), by HTTP method and response status",
 			TagKeys:     keys,
 		},
 		&view.View{
-			Name:        "opencensus.io/http/client/roundtrip_latency",
+			Name:        "http/client/roundtrip_latency",
 			Measure:     ochttp.ClientRoundtripLatency,
-			Aggregation: ochttp.DefaultLatencyDistribution,
+			Aggregation: view.Distribution(1, 2, 3, 4, 5, 6, 8, 10),
 			Description: "End-to-end latency, by HTTP method and response status",
 			TagKeys:     keys,
 		},
 		&view.View{
-			Name:        "opencensus.io/http/client/completed_count",
+			Name:        "http/client/completed_count",
 			Measure:     ochttp.ClientRoundtripLatency,
 			Aggregation: view.Count(),
 			Description: "Count of completed requests, by HTTP method and response status",
