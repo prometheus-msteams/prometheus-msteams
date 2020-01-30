@@ -32,6 +32,7 @@ const (
 )
 
 func (m *templatedCard) Convert(promAlert webhook.Message) (JSON, error) {
+	promAlert = jsonEscapeMessage(promAlert)
 	data := &template.Data{
 		Receiver:          promAlert.Receiver,
 		Status:            promAlert.Status,
@@ -259,4 +260,34 @@ func ParseTemplateFile(f string) (*template.Template, error) {
 	}
 
 	return tmpl, nil
+}
+
+func jsonEncode(str string) string {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	err := enc.Encode(str)
+	if err != nil {
+		return ""
+	}
+	return string(buf.Bytes()[1 : len(buf.Bytes())-2])
+}
+
+// json escape all string values in kvData and also escape
+// '_' char so it does not get processed as markdown italic
+func jsonEncodeAlertmanagerKV(kvData template.KV) {
+	for k, v := range kvData {
+		kvData[k] = strings.ReplaceAll(jsonEncode(v), `_`, `\\_`)
+	}
+}
+
+func jsonEscapeMessage(promAlert webhook.Message) webhook.Message {
+	retPromAlert := promAlert
+	jsonEncodeAlertmanagerKV(retPromAlert.GroupLabels)
+	jsonEncodeAlertmanagerKV(retPromAlert.CommonLabels)
+	jsonEncodeAlertmanagerKV(retPromAlert.CommonAnnotations)
+	for _, alert := range retPromAlert.Alerts {
+		jsonEncodeAlertmanagerKV(alert.Labels)
+		jsonEncodeAlertmanagerKV(alert.Annotations)
+	}
+	return retPromAlert
 }
