@@ -49,7 +49,7 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 
 	for _, j := range jj {
 		pr := PostResponse{WebhookURL: s.webhookURL}
-		resp, err := s.post(j)
+		resp, err := s.post(ctx, j)
 		if err != nil {
 			pr.Message = err.Error()
 			prs = append(prs, pr)
@@ -72,14 +72,17 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 	return prs, nil
 }
 
-func (s *simpleService) post(j map[string]interface{}) (*http.Response, error) {
+func (s *simpleService) post(ctx context.Context, j map[string]interface{}) (*http.Response, error) {
+	ctx, span := trace.StartSpan(ctx, "simpleService.post")
+	defer span.End()
+
 	b, err := json.Marshal(j)
 	if err != nil {
 		err = fmt.Errorf("failed to decoding JSON card: %w", err)
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", s.webhookURL, bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, "POST", s.webhookURL, bytes.NewBuffer(b))
 	if err != nil {
 		err = fmt.Errorf("failed to creating a request: %w", err)
 		return nil, err
