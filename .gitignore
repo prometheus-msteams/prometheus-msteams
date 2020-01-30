@@ -7,6 +7,8 @@ bin/
 /prometheus-msteams-*
 /prometheus-msteams
 vendor/
+*.go.orig
+test-connectors.yaml
 
 # Test binary, build with `go test -c`
 *.test

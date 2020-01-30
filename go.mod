@@ -1,16 +1,38 @@
 module github.com/bzon/prometheus-msteams
 
 require (
+	contrib.go.opencensus.io/exporter/prometheus v0.1.0
+	github.com/armon/go-metrics v0.3.0 // indirect
 	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
-	github.com/go-kit/kit v0.8.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/prometheus/alertmanager v0.16.1
-	github.com/prometheus/client_golang v0.9.2
-	github.com/sirupsen/logrus v1.3.0
-	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/stretchr/testify v1.2.2
-	gopkg.in/yaml.v2 v2.2.2
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/go-kit/kit v0.9.1-0.20191018122245-9f5354e50d79
+	github.com/go-logfmt/logfmt v0.5.0 // indirect
+	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
+	github.com/google/btree v1.0.0 // indirect
+	github.com/google/go-cmp v0.4.0 // indirect
+	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
+	github.com/hashicorp/go-msgpack v0.5.5 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/memberlist v0.1.5 // indirect
+	github.com/josephburnett/jd v0.0.0-20191228205456-aa1a7c66b42f
+	github.com/jpillora/backoff v1.0.0 // indirect
+	github.com/labstack/echo/v4 v4.1.14
+	github.com/miekg/dns v1.1.27 // indirect
+	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+	github.com/oklog/run v1.1.0
+	github.com/peterbourgon/ff v1.7.0
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/alertmanager v0.20.0
+	github.com/prometheus/client_golang v1.3.0
+	github.com/prometheus/common v0.9.1 // indirect
+	github.com/satori/go.uuid v1.2.0 // indirect
+	go.opencensus.io v0.22.2
+	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
+	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
+	golang.org/x/sys v0.0.0-20200122134326-e047566fdf82 // indirect
+	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c // indirect
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 go 1.13
