@@ -1,8 +1,9 @@
-package transport
+package e2e
 
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,8 +14,11 @@ import (
 	"github.com/bzon/prometheus-msteams/pkg/card"
 	"github.com/bzon/prometheus-msteams/pkg/service"
 	"github.com/bzon/prometheus-msteams/pkg/testutils"
+	"github.com/bzon/prometheus-msteams/pkg/transport"
 	"github.com/go-kit/kit/log"
 )
+
+var update = flag.Bool("update", false, "update .golden files")
 
 type alert struct {
 	requestPath   string
@@ -22,7 +26,7 @@ type alert struct {
 }
 
 func TestServer(t *testing.T) {
-	tmpl, err := card.ParseTemplateFile("../../default-message-card.tmpl")
+	tmpl, err := card.ParseTemplateFile("../default-message-card.tmpl")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,25 +44,38 @@ func TestServer(t *testing.T) {
 	)
 	defer teamsSrv.Close()
 
+	var testWebhookURL string
+	// For Integration test.
+	if v := os.Getenv("INTEGRATION_TEST_WEBHOOK_URL"); len(v) > 0 {
+		t.Log("Running integration test")
+		testWebhookURL = v
+		// For Unit test.
+	} else {
+		testWebhookURL = teamsSrv.URL
+	}
+
 	tests := []struct {
 		name   string
-		routes []Route
+		routes []transport.Route
 		alerts []alert
 	}{
 		{
 			"templated card service test",
-			[]Route{
-				Route{
+			[]transport.Route{
+				transport.Route{
 					RequestPath: "/alertmanager",
-					Service: service.NewSimpleService(
-						c, http.DefaultClient, teamsSrv.URL,
+					Service: service.NewLoggingService(
+						logger,
+						service.NewSimpleService(
+							c, http.DefaultClient, testWebhookURL,
+						),
 					),
 				},
 			},
 			[]alert{
 				alert{
 					requestPath:   "/alertmanager",
-					promAlertFile: "../card/testdata/prom_post_request.json",
+					promAlertFile: "../pkg/card/testdata/prom_post_request.json",
 				},
 			},
 		},
@@ -67,7 +84,7 @@ func TestServer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create the server and run it using a test http server.
-			srv := NewServer(logger, tt.routes...)
+			srv := transport.NewServer(logger, tt.routes...)
 			testSrv := httptest.NewServer(srv)
 			defer testSrv.Close()
 

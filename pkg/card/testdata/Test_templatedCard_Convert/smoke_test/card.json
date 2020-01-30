@@ -38,7 +38,7 @@
         "markdown": true
       }
     ],
-    "summary": "Server High Memory usage",
+    "summary": "Prometheus Test",
     "themeColor": "FFA500",
     "title": "Prometheus Alert (firing)"
   }
