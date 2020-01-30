@@ -15,12 +15,12 @@ services:
   - docker
 
 install:
-  - go get github.com/golang/lint/golint
-  - golint -set_exit_status ./...
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.1
   - make dep
 
 script:
   # Code coverage and testing
+  - make lint
   - make coverage
   - bash <(curl -s https://codecov.io/bash)
   # Docker build and deployment
