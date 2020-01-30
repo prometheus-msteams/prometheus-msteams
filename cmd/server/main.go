@@ -19,9 +19,11 @@ import (
 	"github.com/labstack/echo/v4"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 
+	"contrib.go.opencensus.io/exporter/jaeger"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 
 	_ "net/http/pprof"
 
@@ -37,6 +39,8 @@ func main() {
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
 		logFormat                     = fs.String("log-format", "json", "json|fmt")
 		debugLogs                     = fs.Bool("debug", true, "Set log level to debug mode.")
+		jaegerTrace                   = fs.Bool("jaeger-trace", false, "Send traces to Jaeger.")
+		jaegerAgentAddr               = fs.String("jaeger-agent", "localhost:6831", "Jaeger agent endpoint")
 		httpAddr                      = fs.String("http-addr", ":2000", "HTTP listen address.")
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
@@ -52,6 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Logger.
 	var logger log.Logger
 	{
 		switch *logFormat {
@@ -69,6 +74,28 @@ func main() {
 			logger = level.NewFilter(logger, level.AllowInfo())
 		}
 		logger = log.With(logger, "ts", log.DefaultTimestamp, "caller", log.DefaultCaller)
+	}
+
+	// Tracer.
+	if *jaegerTrace {
+		logger.Log("message", "jaeger tracing enabled")
+		je, err := jaeger.NewExporter(
+			jaeger.Options{
+				AgentEndpoint: *jaegerAgentAddr,
+				ServiceName:   "prometheus-msteams",
+			},
+		)
+		if err != nil {
+			logger.Log("err", err)
+			os.Exit(1)
+		}
+		trace.RegisterExporter(je)
+		trace.ApplyConfig(
+			trace.Config{
+				DefaultSampler: trace.AlwaysSample(),
+			},
+		)
+
 	}
 
 	// Prepare the Teams config.
