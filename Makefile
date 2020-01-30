@@ -54,7 +54,7 @@ fmt:
 	gofmt -w $(GOFMT_FILES)
 
 lint:
-	golint -set_exit_status ./...
+	golangci-lint run ./...
 
 test:
 	$(GO) test ./... -v -race
