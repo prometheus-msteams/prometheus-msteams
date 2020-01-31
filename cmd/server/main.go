@@ -45,7 +45,7 @@ func main() {
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
 		templateFile                  = fs.String("template-file", "./default-message-card.tmpl", "The Microsoft Teams Message Card template file.")
-		configFile                    = fs.String("config-file", "", "The connectors configuration file. WARNING! 'request-uri' and 'webhook-url' flags will be ignored if this is used.")
+		configFile                    = fs.String("config-file", "", "The connectors configuration file. WARNING! 'teams-request-uri' and 'teams-incoming-webhook-url' flags will be ignored if this is used.")
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
