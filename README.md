@@ -8,7 +8,7 @@
 
 # Overview
 
-A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? The [docker image](https://hub.docker.com/r/bzon/prometheus-msteams/tags/) is just __7 MB__!
+A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://hub.docker.com/r/bzon/prometheus-msteams/tags/)!
 
 ## Synopsis
 
@@ -31,8 +31,9 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
   * [Creating the Configuration File](#creating-the-configuration-file)
   * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
 * [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
+* [Configuration](#configuration)
 * [Kubernetes Deployment](#kubernetes-deployment)
-* [Developers Build Guide](#developers-build-guide)
+* [Developers Guide](#developers-guide)
 
 <!-- vim-markdown-toc -->
 
@@ -44,6 +45,8 @@ How it works.
 
 ### Installation
 
+We always recommend to use the latest stable release!
+
 __OPTION 1:__ Run using docker.
 
 ```bash
@@ -51,7 +54,7 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
     -e TEAMS_REQUEST_URI=alertmanager \
-    docker.io/bzon/prometheus-msteams:v1.1.5
+    docker.io/bzon/prometheus-msteams
 ```
 
 __OPTION 2:__ Run using binary.
@@ -165,7 +168,7 @@ docker run -d -p 2000:2000 \
     docker.io/bzon/prometheus-msteams:v1.1.5
 ```
 
-When running as a binary, use the __--config__ flag.
+When running as a binary, use the __-config-file__ flag.
 
 ```bash
 ./prometheus-msteams server \
@@ -190,7 +193,6 @@ curl localhost:2000/config
   }
 ]
 ```
-
 
 ### Setting up Prometheus Alert Manager
 
@@ -234,47 +236,56 @@ docker run -d -p 2000:2000 \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
     -v /tmp/card.tmpl:/tmp/card.tmpl \
     -e TEMPLATE_FILE="/tmp/card.tmpl" \
-    docker.io/bzon/prometheus-msteams:v1.1.5
+    docker.io/bzon/prometheus-msteams
 ```
 
-When running as a binary, use the __--template-file__ flag.
+When running as a binary, use the __-template-file__ flag.
 
 ```bash
 ./prometheus-msteams server \
     -l localhost \
     -p 2000 \
-    --template-file /tmp/card.tmpl
+    -template-file /tmp/card.tmpl
+```
+
+## Configuration
+
+All configuration from flags can be overwritten using environment variables.
+
+E.g, `-config-file` is `CONFIG_FILE`, `-debug` is `DEBUG`, `-log-format` is `LOG_FORMAT`.
+
+```
+Usage of prometheus-msteams:
+  -config-file string
+    	The connectors configuration file. WARNING! 'teams-request-uri' and 'teams-incoming-webhook-url' flags will be ignored if this is used.
+  -debug
+    	Set log level to debug mode. (default true)
+  -http-addr string
+    	HTTP listen address. (default ":2000")
+  -idle-conn-timeout duration
+    	The HTTP client idle connection timeout duration. (default 1m30s)
+  -jaeger-agent string
+    	Jaeger agent endpoint (default "localhost:6831")
+  -jaeger-trace
+    	Send traces to Jaeger.
+  -log-format string
+    	json|fmt (default "json")
+  -max-idle-conns int
+    	The HTTP client maximum number of idle connections (default 100)
+  -teams-incoming-webhook-url string
+    	The default Microsoft Teams webhook connector.
+  -teams-request-uri string
+    	The default request URI path where Prometheus will post to.
+  -template-file string
+    	The Microsoft Teams Message Card template file. (default "./default-message-card.tmpl")
+  -tls-handshake-timeout duration
+    	The HTTP client TLS handshake timeout. (default 30s)
 ```
 
 ## Kubernetes Deployment
 
 See [Helm Guide](./chart/README.md).
 
-## Developers Build Guide
+## Developers Guide
 
-**Build**
-
-```bash
-make dep
-make darwin # for osx
-make linux # for linux
-```
-
-**Test**
-
-```bash
-make test
-```
-
-**Docker Build**
-
-```bash
-make docker VERSION=v1
-make docker-push VERSION=v1
-```
-
-
-
-
-
-
+See [Dev Guide](./DEV.md)
