@@ -40,7 +40,7 @@ func TestServer(t *testing.T) {
 			b, _ := ioutil.ReadAll(r.Body)
 			logger.Log("request", string(b))
 			w.WriteHeader(200)
-			w.Write([]byte("1"))
+			_, _ = w.Write([]byte("1"))
 		}),
 	)
 	defer teamsSrv.Close()
