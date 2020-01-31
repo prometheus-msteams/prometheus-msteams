@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: bzon/prometheus-msteams
-  tag: v1.1.5
+  tag: v1.2.1
   pullPolicy: Always
 
 extraEnvs:
@@ -29,6 +29,12 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+metrics:
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    scrapeInterval: 30s
 
 # Replace this!
 connectors:

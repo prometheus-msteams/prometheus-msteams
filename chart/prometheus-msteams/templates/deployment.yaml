@@ -45,8 +45,8 @@ spec:
             - name: card-template-volume
               mountPath: /etc/template
           args:
-            - --config=/etc/config/connectors.yaml
-            - --template-file=/etc/template/card.tmpl
+            - -config-file=/etc/config/connectors.yaml
+            - -template-file=/etc/template/card.tmpl
           {{- with .Values.container.additionalArgs }}
 {{ toYaml . | indent 12 }}
           {{- end}}
@@ -55,6 +55,18 @@ spec:
           - name: http
             containerPort: {{ .Values.container.port }}
             protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /config
+              port: http
+            initialDelaySeconds: 1
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /config
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}
