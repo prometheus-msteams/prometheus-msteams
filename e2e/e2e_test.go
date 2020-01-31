@@ -40,15 +40,21 @@ func TestServer(t *testing.T) {
 			b, _ := ioutil.ReadAll(r.Body)
 			logger.Log("request", string(b))
 			w.WriteHeader(200)
+			w.Write([]byte("1"))
 		}),
 	)
 	defer teamsSrv.Close()
 
-	var testWebhookURL string
+	var (
+		testWebhookURL    string
+		isIntegrationTest bool
+	)
+
 	// For Integration test.
 	if v := os.Getenv("INTEGRATION_TEST_WEBHOOK_URL"); len(v) > 0 {
 		t.Log("Running integration test")
 		testWebhookURL = v
+		isIntegrationTest = true
 		// For Unit test.
 	} else {
 		testWebhookURL = teamsSrv.URL
@@ -116,6 +122,17 @@ func TestServer(t *testing.T) {
 				var prs []service.PostResponse
 				if err := json.NewDecoder(resp.Body).Decode(&prs); err != nil {
 					t.Fatal(err)
+				}
+				if isIntegrationTest {
+					testutils.CompareToGoldenFile(t, prs, t.Name()+"/integration_resp.json", *update)
+					return
+				}
+				// because webhook url port dynamically changes
+				for i := range prs {
+					if prs[i].WebhookURL == "" {
+						t.Fatal("webhook url should not be empty")
+					}
+					prs[i].WebhookURL = ""
 				}
 				testutils.CompareToGoldenFile(t, prs, t.Name()+"/resp.json", *update)
 			}
