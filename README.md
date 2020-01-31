@@ -284,7 +284,7 @@ Usage of prometheus-msteams:
 
 ## Kubernetes Deployment
 
-See [Helm Guide](./chart/README.md).
+See [Helm Guide](./chart/prometheus-msteams/README.md).
 
 ## Developers Guide
 

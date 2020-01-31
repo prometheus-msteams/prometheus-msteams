@@ -25,14 +25,14 @@
       "facts": [
         {{- range $key, $value := $alert.Annotations }}
         {
-          "name": "{{ reReplaceAll "_" "\\\\_" $key }}",
-          "value": "{{ reReplaceAll "_" "\\\\_" $value }}"
+          "name": "{{ $key }}",
+          "value": "{{ $value }}"
         },
         {{- end -}}
         {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}},{{ end }}
         {
-          "name": "{{ reReplaceAll "_" "\\\\_" $key }}",
-          "value": "{{ reReplaceAll "_" "\\\\_" $value }}"
+          "name": "{{ $key }}",
+          "value": "{{ $value }}"
         }
         {{- end }}
       ],
