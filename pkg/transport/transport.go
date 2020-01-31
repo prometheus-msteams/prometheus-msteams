@@ -27,7 +27,6 @@ func NewServer(logger log.Logger, routes ...Route) *echo.Echo {
 		level.Debug(logger).Log("request_path_added", r.RequestPath)
 		addRoute(e, r.RequestPath, r.Service, logger)
 	}
-	e.Use(kitLoggerMiddleware(logger))
 	e.HideBanner = true
 	return e
 }
@@ -81,5 +80,7 @@ func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 		}
 
 		return c.JSON(200, prs)
-	})
+	},
+		kitLoggerMiddleware(logger),
+	)
 }
