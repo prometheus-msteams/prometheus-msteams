@@ -45,9 +45,10 @@ type PromTeamsConfig struct {
 
 // ConnectorWithCustomTemplate .
 type ConnectorWithCustomTemplate struct {
-	RequestPath  string `yaml:"request_path"`
-	TemplateFile string `yaml:"template_file"`
-	WebhookURL   string `yaml:"webhook_url"`
+	RequestPath       string `yaml:"request_path"`
+	TemplateFile      string `yaml:"template_file"`
+	WebhookURL        string `yaml:"webhook_url"`
+	EscapeUnderscores bool   `yaml:"escape_underscores"`
 }
 
 func parseTeamsConfigFile(f string, logger log.Logger) (PromTeamsConfig, error) {
@@ -73,7 +74,8 @@ func main() {
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
 		templateFile                  = fs.String("template-file", "./default-message-card.tmpl", "The Microsoft Teams Message Card template file.")
-		configFile                    = fs.String("config-file", "", "The connectors configuration file. WARNING! 'teams-request-uri' and 'teams-incoming-webhook-url' flags will be ignored if this is used.")
+		escapeUnderscores             = fs.Bool("auto-escape-underscores", true, "Automatically replace all '_' with '\\_' from texts in the alert.")
+		configFile                    = fs.String("config-file", "", "The connectors configuration file.")
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
@@ -148,9 +150,13 @@ func main() {
 		if err != nil {
 			logger.Log("err", err)
 		}
-		defaultConverter = card.NewTemplatedCardCreator(tmpl)
+		defaultConverter = card.NewTemplatedCardCreator(tmpl, *escapeUnderscores)
 		defaultConverter = card.NewCreatorLoggingMiddleware(
-			log.With(logger, "template_file", *templateFile),
+			log.With(
+				logger,
+				"template_file", *templateFile,
+				"escaped_underscores", *escapeUnderscores,
+			),
 			defaultConverter,
 		)
 	}
@@ -221,9 +227,13 @@ func main() {
 		if err != nil {
 			logger.Log("err", err)
 		}
-		converter = card.NewTemplatedCardCreator(tmpl)
+		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
 		converter = card.NewCreatorLoggingMiddleware(
-			log.With(logger, "template_file", c.TemplateFile),
+			log.With(
+				logger,
+				"template_file", c.TemplateFile,
+				"escaped_underscores", c.EscapeUnderscores,
+			),
 			converter,
 		)
 

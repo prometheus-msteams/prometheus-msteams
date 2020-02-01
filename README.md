@@ -31,6 +31,7 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
   * [Creating the Configuration File](#creating-the-configuration-file)
   * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
 * [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
+  * [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
 * [Configuration](#configuration)
 * [Kubernetes Deployment](#kubernetes-deployment)
 * [Developers Guide](#developers-guide)
@@ -156,7 +157,7 @@ connectors:
 - low_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/ccc"
 ```
 
-> __NOTE__: high_priority_channel and low_priority_channel are example handler names.  
+> __NOTE__: high_priority_channel and low_priority_channel are example handler or request path names.
 
 When running as a docker container, mount the config file in the container and set the __CONFIG_FILE__ environment variable.
 
@@ -248,6 +249,23 @@ When running as a binary, use the __-template-file__ flag.
     -template-file /tmp/card.tmpl
 ```
 
+### Customise Messages per MS Teams Channel
+
+You can also use a custom template per webhook by using the `connectors_with_custom_templates`.
+
+```yaml
+# alerts in the connectors here will use the default template.
+connectors:
+- alert1: <webhook> 
+
+# alerts in the connectors here will use template_file specified.
+connectors_with_custom_templates:
+- request_path: /alert2
+  template_file: ./default-message-card.tmpl
+  webhook_url: <webhook> 
+  escape_underscores: true # get the effect of -auto-escape-underscores.
+```
+
 ## Configuration
 
 All configuration from flags can be overwritten using environment variables.
@@ -256,8 +274,10 @@ E.g, `-config-file` is `CONFIG_FILE`, `-debug` is `DEBUG`, `-log-format` is `LOG
 
 ```
 Usage of prometheus-msteams:
+  -auto-escape-underscores
+    	Automatically replace all '_' with '\_' from texts in the alert.
   -config-file string
-    	The connectors configuration file. WARNING! 'teams-request-uri' and 'teams-incoming-webhook-url' flags will be ignored if this is used.
+    	The connectors configuration file.
   -debug
     	Set log level to debug mode. (default true)
   -http-addr string
