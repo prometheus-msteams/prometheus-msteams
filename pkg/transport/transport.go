@@ -51,7 +51,6 @@ func kitLoggerMiddleware(logger log.Logger) echo.MiddlewareFunc {
 }
 
 func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
-	logger = log.With(logger, "path", p)
 	e.POST(p, func(c echo.Context) error {
 		ctx, span := trace.StartSpan(c.Request().Context(), p)
 		defer span.End()
