@@ -34,6 +34,34 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// PromTeamsConfig is the struct representation of the config file.
+type PromTeamsConfig struct {
+	// Connectors
+	// The key is the request path for Prometheus to post to.
+	// The value is the Teams webhook url.
+	Connectors                    []map[string]string           `yaml:"connectors"`
+	ConnectorsWithCustomTemplates []ConnectorWithCustomTemplate `yaml:"connectors_with_custom_templates"`
+}
+
+// ConnectorWithCustomTemplate .
+type ConnectorWithCustomTemplate struct {
+	RequestPath  string `yaml:"request_path"`
+	TemplateFile string `yaml:"template_file"`
+	WebhookURL   string `yaml:"webhook_url"`
+}
+
+func parseTeamsConfigFile(f string, logger log.Logger) (PromTeamsConfig, error) {
+	b, err := ioutil.ReadFile(f)
+	if err != nil {
+		return PromTeamsConfig{}, err
+	}
+	var tc PromTeamsConfig
+	if err = yaml.Unmarshal(b, &tc); err != nil {
+		return PromTeamsConfig{}, err
+	}
+	return tc, nil
+}
+
 func main() {
 	var (
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
@@ -100,7 +128,7 @@ func main() {
 
 	// Prepare the Teams config.
 	var (
-		tc  TeamsConfig
+		tc  PromTeamsConfig
 		err error
 	)
 
@@ -113,28 +141,18 @@ func main() {
 		}
 	}
 
-	// If no connectors are found,
-	// use the teams-request-uri and teams-webhook-url from flags.
-	if len(tc.Connectors) == 0 {
-		if *requestURI == "" || *teamsWebhookURL == "" {
-			logger.Log("err", "No valid connector configuration found")
-			os.Exit(1)
-		}
-		cfgFromFlags := map[string]string{
-			*requestURI: *teamsWebhookURL,
-		}
-		tc.Connectors = append(tc.Connectors, cfgFromFlags)
-	}
-
-	// Templated card converter setup.
-	var converter card.Converter
+	// Templated card defaultConverter setup.
+	var defaultConverter card.Converter
 	{
 		tmpl, err := card.ParseTemplateFile(*templateFile)
 		if err != nil {
 			logger.Log("err", err)
 		}
-		converter = card.NewTemplatedCardCreator(tmpl)
-		converter = card.NewCreatorLoggingMiddleware(logger, converter)
+		defaultConverter = card.NewTemplatedCardCreator(tmpl)
+		defaultConverter = card.NewCreatorLoggingMiddleware(
+			log.With(logger, "template_file", *templateFile),
+			defaultConverter,
+		)
 	}
 
 	// Teams HTTP client setup.
@@ -154,16 +172,71 @@ func main() {
 		},
 	}
 
-	// Routes setup.
 	var routes []transport.Route
+
+	// Connectors from flags.
+	if len(*requestURI) > 0 && len(*teamsWebhookURL) > 0 {
+		tc.Connectors = append(
+			tc.Connectors,
+			map[string]string{
+				*requestURI: *teamsWebhookURL,
+			},
+		)
+	}
+
+	// Connectors from config file.
 	for _, c := range tc.Connectors {
 		for uri, webhook := range c {
 			var r transport.Route
 			r.RequestPath = uri
-			r.Service = service.NewSimpleService(converter, httpClient, webhook)
+			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook)
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
 		}
+	}
+
+	// Connectors with custom template files.
+	for _, c := range tc.ConnectorsWithCustomTemplates {
+		if len(c.RequestPath) == 0 {
+			logger.Log("err", "one of the 'templated_connectors' is missing a 'request_path'")
+			os.Exit(1)
+		}
+		if len(c.WebhookURL) == 0 {
+			logger.Log(
+				"err",
+				fmt.Sprintf("The webhook_url is required for request_path '%s'", c.RequestPath),
+			)
+			os.Exit(1)
+		}
+		if len(c.TemplateFile) == 0 {
+			logger.Log(
+				"err",
+				fmt.Sprintf("The template_file is required for request_path '%s'", c.RequestPath),
+			)
+			os.Exit(1)
+		}
+
+		var converter card.Converter
+		tmpl, err := card.ParseTemplateFile(*templateFile)
+		if err != nil {
+			logger.Log("err", err)
+		}
+		converter = card.NewTemplatedCardCreator(tmpl)
+		converter = card.NewCreatorLoggingMiddleware(
+			log.With(logger, "template_file", c.TemplateFile),
+			converter,
+		)
+
+		var r transport.Route
+		r.RequestPath = c.RequestPath
+		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
+		r.Service = service.NewLoggingService(logger, r.Service)
+		routes = append(routes, r)
+	}
+
+	if err := checkDuplicateRequestPath(routes); err != nil {
+		logger.Log("err", err)
+		os.Exit(1)
 	}
 
 	pe, err := ocprometheus.NewExporter(
@@ -227,25 +300,6 @@ func main() {
 	logger.Log("exit", g.Run())
 }
 
-// TeamsConfig is the struct for config files
-// The Connectors key is the request path for Prometheus to post
-// The Connectors value is the Teams webhook url
-type TeamsConfig struct {
-	Connectors []map[string]string `yaml:"connectors"`
-}
-
-func parseTeamsConfigFile(f string, logger log.Logger) (TeamsConfig, error) {
-	b, err := ioutil.ReadFile(f)
-	if err != nil {
-		return TeamsConfig{}, err
-	}
-	var tc TeamsConfig
-	if err = yaml.Unmarshal(b, &tc); err != nil {
-		return TeamsConfig{}, err
-	}
-	return tc, nil
-}
-
 func ocviews() []*view.View {
 	keys := []tag.Key{
 		ochttp.KeyClientMethod, ochttp.KeyClientStatus, ochttp.KeyClientHost, ochttp.KeyClientPath,
@@ -280,4 +334,15 @@ func ocviews() []*view.View {
 			TagKeys:     keys,
 		},
 	}
+}
+
+func checkDuplicateRequestPath(routes []transport.Route) error {
+	added := map[string]bool{}
+	for _, r := range routes {
+		if _, ok := added[r.RequestPath]; ok {
+			return fmt.Errorf("found duplicate use of request path '%s'", r.RequestPath)
+		}
+		added[r.RequestPath] = true
+	}
+	return nil
 }
