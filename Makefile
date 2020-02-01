@@ -38,7 +38,10 @@ linux:
 darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
-docker: clean dep linux
+docker-tag-latest:
+	docker tag $(GITHUB_USERNAME)/$(BINARY):$(VERSION) $(GITHUB_USERNAME)/$(BINARY):latest
+
+docker:
 	docker build -t $(GITHUB_USERNAME)/$(BINARY):$(VERSION) .
 
 test-docker-run: docker
