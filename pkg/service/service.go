@@ -48,51 +48,50 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 	}
 
 	for _, j := range jj {
-		pr := PostResponse{WebhookURL: s.webhookURL}
-		resp, err := s.post(ctx, j)
+		pr, err := s.post(ctx, j, s.webhookURL)
+		prs = append(prs, pr)
 		if err != nil {
-			pr.Message = err.Error()
-			prs = append(prs, pr)
-			return prs, nil
-		}
-		pr.Status = resp.StatusCode
-
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			err = fmt.Errorf("failed reading http response body: %w", err)
-			pr.Message = err.Error()
-			prs = append(prs, pr)
 			return prs, err
 		}
-		pr.Message = string(b)
-
-		prs = append(prs, pr)
 	}
 
 	return prs, nil
 }
 
-func (s *simpleService) post(ctx context.Context, j map[string]interface{}) (*http.Response, error) {
+func (s *simpleService) post(ctx context.Context, j map[string]interface{}, url string) (PostResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "simpleService.post")
 	defer span.End()
 
-	b, err := json.Marshal(j)
+	pr := PostResponse{WebhookURL: url}
+
+	jb, err := json.Marshal(j)
 	if err != nil {
 		err = fmt.Errorf("failed to decoding JSON card: %w", err)
-		return nil, err
+		return pr, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", s.webhookURL, bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, "POST", s.webhookURL, bytes.NewBuffer(jb))
 	if err != nil {
 		err = fmt.Errorf("failed to creating a request: %w", err)
-		return nil, err
+		return pr, err
 	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {
 		err = fmt.Errorf("http client failed: %w", err)
-		return nil, err
+		return pr, err
 	}
+	defer resp.Body.Close()
 
-	return resp, nil
+	pr.Status = resp.StatusCode
+
+	rb, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		err = fmt.Errorf("failed reading http response body: %w", err)
+		pr.Message = err.Error()
+		return pr, err
+	}
+	pr.Message = string(rb)
+
+	return pr, nil
 }
