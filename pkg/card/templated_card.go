@@ -17,11 +17,13 @@ import (
 // templatedCard implements Converter using Alert manager templating.
 type templatedCard struct {
 	template *template.Template
+	// If true, replace all character `_` with `\\_` in the prometheus alert.
+	escapeUnderscores bool
 }
 
 // NewTemplatedCardCreator creates a templatedCard.
-func NewTemplatedCardCreator(t *template.Template) Converter {
-	return &templatedCard{t}
+func NewTemplatedCardCreator(template *template.Template, escapeUnderscores bool) Converter {
+	return &templatedCard{template, escapeUnderscores}
 }
 
 // Constants for creating a Card
@@ -37,7 +39,10 @@ func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) 
 	_, span := trace.StartSpan(ctx, "templatedCard.Convert")
 	defer span.End()
 
-	promAlert = jsonEscapeMessage(promAlert)
+	if m.escapeUnderscores {
+		promAlert = jsonEscapeMessage(promAlert)
+	}
+
 	data := &template.Data{
 		Receiver:          promAlert.Receiver,
 		Status:            promAlert.Status,

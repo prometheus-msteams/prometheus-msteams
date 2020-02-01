@@ -12,18 +12,24 @@ var update = flag.Bool("update", false, "update .golden files")
 
 func Test_templatedCard_Convert(t *testing.T) {
 	tests := []struct {
-		name          string
-		promAlertFile string
-		templateFile  string
-		want          map[string]interface{}
-		wantErr       bool
+		name              string
+		promAlertFile     string
+		templateFile      string
+		escapeUnderscores bool
+		want              map[string]interface{}
+		wantErr           bool
 	}{
 		{
-			name:          "smoke test",
+			name:          "do not escape underscores",
 			promAlertFile: "./testdata/prom_post_request.json",
 			templateFile:  "../../default-message-card.tmpl",
 		},
-		// TODO: add negative test for errors.
+		{
+			name:              "escape underscores",
+			promAlertFile:     "./testdata/prom_post_request.json",
+			templateFile:      "../../default-message-card.tmpl",
+			escapeUnderscores: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -35,7 +41,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			m := NewTemplatedCardCreator(tmpl)
+			m := NewTemplatedCardCreator(tmpl, tt.escapeUnderscores)
 			got, err := m.Convert(context.Background(), a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("templatedCard.Convert() error = %v, wantErr %v", err, tt.wantErr)
