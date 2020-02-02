@@ -16,11 +16,17 @@ if [[ -n ${TRAVIS_PULL_REQUEST_BRANCH} ]]; then
   exit 0
 fi
 
-echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
-
 if [[ -n ${TRAVIS_TAG} || ${TRAVIS_BRANCH} == "master" ]]; then
   make docker-tag-latest VERSION=${VERSION}
-  make docker-push VERSION=latest
-  make docker-push VERSION=${VERSION}
+
+  # login to dockerhub
+  make docker-hub-login
+  make docker-hub-push VERSION=latest
+  make docker-hub-push VERSION=${VERSION}
+
+  # login to quay.io
+  make docker-quay-login
+  make docker-quay-push VERSION=latest
+  make docker-quay-push VERSION=${VERSION}
 fi
 
