@@ -1,7 +1,6 @@
 ![Docker Hub Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
 [![GitHub tag](https://img.shields.io/github/tag/prometheus-msteams/prometheus-msteams.svg)](https://github.com/prometheus-msteams/prometheus-msteams/releases/)
 [![Build Status](https://travis-ci.org/prometheus-msteams/prometheus-msteams.svg?branch=master)](https://travis-ci.org/prometheus-msteams/prometheus-msteams)
-[![Docker Repository on Quay](https://quay.io/repository/prometheusmsteams/prometheus-msteams/status "Docker Repository on Quay")](https://quay.io/repository/prometheusmsteams/prometheus-msteams)
 [![codecov](https://codecov.io/gh/prometheus-msteams/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/prometheus-msteams/prometheus-msteams)
 [![Go Report Card](https://goreportcard.com/badge/github.com/prometheus-msteams/prometheus-msteams)](https://goreportcard.com/report/github.com/prometheus-msteams/prometheus-msteams)
 
@@ -35,7 +34,7 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
   * [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
 * [Configuration](#configuration)
 * [Kubernetes Deployment](#kubernetes-deployment)
-* [Developers Guide](#developers-guide)
+* [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
@@ -307,6 +306,6 @@ Usage of prometheus-msteams:
 
 See [Helm Guide](./chart/prometheus-msteams/README.md).
 
-## Developers Guide
+## Contributing
 
-See [Dev Guide](./DEV.md)
+See [Contributing Guide](./CONTRIBUTING.md)
