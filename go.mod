@@ -11,7 +11,6 @@ require (
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -25,13 +24,11 @@ require (
 	github.com/peterbourgon/ff v1.7.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/alertmanager v0.20.0
-	github.com/prometheus/client_golang v1.3.0
-	github.com/prometheus/common v0.9.1 // indirect
+	github.com/prometheus/client_golang v1.4.0
 	github.com/satori/go.uuid v1.2.0 // indirect
 	go.opencensus.io v0.22.2
 	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
-	golang.org/x/sys v0.0.0-20200122134326-e047566fdf82 // indirect
 	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )

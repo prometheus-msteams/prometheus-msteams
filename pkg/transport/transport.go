@@ -3,11 +3,13 @@ package transport
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/alertmanager/notify/webhook"
+	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 
 	"github.com/labstack/echo/v4"
@@ -31,6 +33,16 @@ func NewServer(logger log.Logger, routes ...Route) *echo.Echo {
 	return e
 }
 
+func opencensusMiddleware() echo.MiddlewareFunc {
+	return echo.WrapMiddleware(func(h http.Handler) http.Handler {
+		return &ochttp.Handler{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				h.ServeHTTP(w, r)
+			}),
+		}
+	})
+}
+
 func kitLoggerMiddleware(logger log.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -52,7 +64,7 @@ func kitLoggerMiddleware(logger log.Logger) echo.MiddlewareFunc {
 
 func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 	e.POST(p, func(c echo.Context) error {
-		ctx, span := trace.StartSpan(c.Request().Context(), p)
+		ctx, span := trace.StartSpan(c.Request().Context(), "alertmanager-handler")
 		defer span.End()
 
 		b, err := ioutil.ReadAll(c.Request().Body)
@@ -81,5 +93,6 @@ func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 		return c.JSON(200, prs)
 	},
 		kitLoggerMiddleware(logger),
+		opencensusMiddleware(),
 	)
 }

@@ -311,37 +311,70 @@ func main() {
 }
 
 func ocviews() []*view.View {
-	keys := []tag.Key{
+	clientKeys := []tag.Key{
 		ochttp.KeyClientMethod, ochttp.KeyClientStatus, ochttp.KeyClientHost, ochttp.KeyClientPath,
 	}
+	serverKeys := []tag.Key{
+		ochttp.StatusCode, ochttp.Method, ochttp.Path,
+	}
 	return []*view.View{
+		// HTTP client metrics.
 		&view.View{
 			Name:        "http/client/sent_bytes",
 			Measure:     ochttp.ClientSentBytes,
 			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			Description: "Total bytes sent in request body (not including headers), by HTTP method and response status",
-			TagKeys:     keys,
+			TagKeys:     clientKeys,
 		},
 		&view.View{
 			Name:        "http/client/received_bytes",
 			Measure:     ochttp.ClientReceivedBytes,
 			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			Description: "Total bytes received in response bodies (not including headers but including error responses with bodies), by HTTP method and response status",
-			TagKeys:     keys,
+			TagKeys:     clientKeys,
 		},
 		&view.View{
 			Name:        "http/client/roundtrip_latency",
 			Measure:     ochttp.ClientRoundtripLatency,
-			Aggregation: view.Distribution(1, 2, 3, 4, 5, 6, 8, 10),
+			Aggregation: view.Distribution(1, 2, 3, 4, 5, 6, 8, 10, 13, 16, 20, 25, 30),
 			Description: "End-to-end latency, by HTTP method and response status",
-			TagKeys:     keys,
+			TagKeys:     clientKeys,
 		},
 		&view.View{
 			Name:        "http/client/completed_count",
 			Measure:     ochttp.ClientRoundtripLatency,
 			Aggregation: view.Count(),
 			Description: "Count of completed requests, by HTTP method and response status",
-			TagKeys:     keys,
+			TagKeys:     clientKeys,
+		},
+		// HTTP server metrics.
+		&view.View{
+			Name:        "http/server/request_count",
+			Description: "Count of HTTP requests started",
+			Measure:     ochttp.ServerRequestCount,
+			Aggregation: view.Count(),
+			TagKeys:     serverKeys,
+		},
+		&view.View{
+			Name:        "http/server/request_bytes",
+			Description: "Size distribution of HTTP request body",
+			Measure:     ochttp.ServerRequestBytes,
+			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
+			TagKeys:     serverKeys,
+		},
+		&view.View{
+			Name:        "http/server/response_bytes",
+			Description: "Size distribution of HTTP response body",
+			Measure:     ochttp.ServerResponseBytes,
+			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
+			TagKeys:     serverKeys,
+		},
+		&view.View{
+			Name:        "http/server/latency",
+			Description: "Latency distribution of HTTP requests",
+			Measure:     ochttp.ServerLatency,
+			Aggregation: view.Distribution(1, 2, 3, 4, 5, 6, 8, 10, 13, 16, 20, 25, 30),
+			TagKeys:     serverKeys,
 		},
 	}
 }
