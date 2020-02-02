@@ -3,7 +3,7 @@ VET_REPORT = vet.report
 TEST_REPORT = tests.xml
 GOARCH = amd64
 BINDIR = bin
-VERSION?=latest
+VERSION:=$(shell git describe --tags --always --dirty)
 COMMIT=$(shell git rev-parse --short HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 BUILD_DATE=$(shell date +%FT%T%z)
@@ -11,15 +11,20 @@ GOFMT_FILES?=$$(find . -name '*.go')
 GO := GO111MODULE=on go
 
 # Symlink into GOPATH
-GITHUB_USERNAME=bzon
+GITHUB_USERNAME=prometheus-msteams
 BUILD_DIR=$(GOPATH)/src/github.com/$(GITHUB_USERNAME)/$(BINARY)
-VERSION_PKG=github.com/bzon/prometheus-msteams/pkg/version
+VERSION_PKG=github.com/$(GITHUB_USERNAME)/prometheus-msteams/pkg/version
 
 # Setup the -ldflags option for go build here, interpolate the variable values
 LDFLAGS = -ldflags "-X $(VERSION_PKG).VERSION=$(VERSION) -X $(VERSION_PKG).COMMIT=$(COMMIT) -X $(VERSION_PKG).BRANCH=$(BRANCH) -X $(VERSION_PKG).BUILDDATE=$(BUILD_DATE)"
 
 DOCKER_RUN_OPTS ?=
 DOCKER_RUN_ARG ?=
+
+# docker
+DOCKER_QUAY_REPO=quay.io/prometheusmsteams/prometheus-msteams
+DOCKER_QUAY_USER=prometheusmsteams+ci
+DOCKER_HUB_REPO=prometheusmsteams/prometheus-msteams
 
 # Build the project
 all: clean dep create_bin_dir linux darwin
@@ -38,17 +43,25 @@ linux:
 darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
-docker-tag-latest:
-	docker tag $(GITHUB_USERNAME)/$(BINARY):$(VERSION) $(GITHUB_USERNAME)/$(BINARY):latest
-
 docker:
-	docker build -t $(GITHUB_USERNAME)/$(BINARY):$(VERSION) .
+	docker build -t $(DOCKER_HUB_REPO):$(VERSION) .
+	docker tag $(DOCKER_HUB_REPO):$(VERSION) $(DOCKER_QUAY_REPO):$(VERSION)
 
-test-docker-run: docker
-	docker run --rm $(DOCKER_RUN_OPTS) -p 2000:2000 $(GITHUB_USERNAME)/$(BINARY):$(VERSION) $(DOCKER_RUN_ARG)
+docker-hub-login:
+	echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
 
-docker-push: docker
-	docker push $(GITHUB_USERNAME)/$(BINARY):$(VERSION)
+docker-quay-login:
+	docker login -u="${DOCKER_QUAY_USER}" -p="${DOCKER_QUAY_TOKEN}" quay.io
+
+docker-quay-push:
+	docker push $(DOCKER_QUAY_REPO):$(VERSION)
+
+docker-tag-latest:
+	docker tag $(DOCKER_HUB_REPO):$(VERSION) $(DOCKER_HUB_REPO):latest
+	docker tag $(DOCKER_QUAY_REPO):$(VERSION) $(DOCKER_QUAY_REPO):latest
+
+docker-hub-push: docker
+	docker push $(DOCKER_HUB_REPO):$(VERSION)
 
 run-osx: dep darwin
 	bin/prometheus-msteams-darwin-amd64 server $(RUN_ARGS)

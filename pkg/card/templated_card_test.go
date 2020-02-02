@@ -5,7 +5,7 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/bzon/prometheus-msteams/pkg/testutils"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/testutils"
 )
 
 var update = flag.Bool("update", false, "update .golden files")

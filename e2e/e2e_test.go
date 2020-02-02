@@ -11,10 +11,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bzon/prometheus-msteams/pkg/card"
-	"github.com/bzon/prometheus-msteams/pkg/service"
-	"github.com/bzon/prometheus-msteams/pkg/testutils"
-	"github.com/bzon/prometheus-msteams/pkg/transport"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/service"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/testutils"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/transport"
 	"github.com/go-kit/kit/log"
 )
 

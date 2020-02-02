@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/bzon/prometheus-msteams/pkg/card"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"go.opencensus.io/trace"
 )

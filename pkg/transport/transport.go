@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"go.opencensus.io/trace"
 
-	"github.com/bzon/prometheus-msteams/pkg/service"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/service"
 	"github.com/labstack/echo/v4"
 )
 

@@ -1,14 +1,15 @@
-![Docker Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
-[![GitHub tag](https://img.shields.io/github/tag/bzon/prometheus-msteams.svg)](https://github.com/bzon/prometheus-msteams/releases/)
-[![Build Status](https://travis-ci.org/bzon/prometheus-msteams.svg?branch=master)](https://travis-ci.org/bzon/prometheus-msteams)
-[![codecov](https://codecov.io/gh/bzon/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/bzon/prometheus-msteams)
-[![Go Report Card](https://goreportcard.com/badge/github.com/bzon/prometheus-msteams)](https://goreportcard.com/report/github.com/bzon/prometheus-msteams)
+![Docker Hub Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
+[![GitHub tag](https://img.shields.io/github/tag/prometheus-msteams/prometheus-msteams.svg)](https://github.com/prometheus-msteams/prometheus-msteams/releases/)
+[![Build Status](https://travis-ci.org/prometheus-msteams/prometheus-msteams.svg?branch=master)](https://travis-ci.org/prometheus-msteams/prometheus-msteams)
+[![Docker Repository on Quay](https://quay.io/repository/prometheusmsteams/prometheus-msteams/status "Docker Repository on Quay")](https://quay.io/repository/prometheusmsteams/prometheus-msteams)
+[![codecov](https://codecov.io/gh/prometheus-msteams/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/prometheus-msteams/prometheus-msteams)
+[![Go Report Card](https://goreportcard.com/badge/github.com/prometheus-msteams/prometheus-msteams)](https://goreportcard.com/report/github.com/prometheus-msteams/prometheus-msteams)
 
 ![](./docs/teams_screenshot.png)
 
 # Overview
 
-A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://hub.docker.com/r/bzon/prometheus-msteams/tags/)!
+A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://hub.docker.com/r/prometheus-msteams/prometheus-msteams/tags/)!
 
 ## Synopsis
 
@@ -55,12 +56,12 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
     -e TEAMS_REQUEST_URI=alertmanager \
-    docker.io/bzon/prometheus-msteams
+    quay.io/prometheusmsteams/prometheus-msteams
 ```
 
 __OPTION 2:__ Run using binary.
 
-Download the binary for your platform and the default card template from [RELEASES](https://github.com/bzon/prometheus-msteams/releases), then run the binary in the same directory as you have stored the `default-message-card.tmpl`  like the following:
+Download the binary for your platform and the default card template from [RELEASES](https://github.com/prometheus-msteams/prometheus-msteams/releases), then run the binary in the same directory as you have stored the `default-message-card.tmpl`  like the following:
 
 ```bash
 ./prometheus-msteams -teams-request-uri alertmanager \
@@ -166,7 +167,7 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -v /tmp/config.yml:/tmp/config.yml \
     -e CONFIG_FILE="/tmp/config.yml" \
-    docker.io/bzon/prometheus-msteams:v1.1.5
+    docker.io/prometheus-msteams/prometheus-msteams:v1.1.5
 ```
 
 When running as a binary, use the __-config-file__ flag.
@@ -237,7 +238,7 @@ docker run -d -p 2000:2000 \
     -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
     -v /tmp/card.tmpl:/tmp/card.tmpl \
     -e TEMPLATE_FILE="/tmp/card.tmpl" \
-    docker.io/bzon/prometheus-msteams
+    quay.io/prometheusmsteams/prometheus-msteams
 ```
 
 When running as a binary, use the __-template-file__ flag.

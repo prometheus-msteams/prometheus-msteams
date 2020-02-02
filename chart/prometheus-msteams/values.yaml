@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: bzon/prometheus-msteams
+  repository: quay.io/prometheusmsteams/prometheus-msteams
   tag: v1.3.0
   pullPolicy: Always
 
