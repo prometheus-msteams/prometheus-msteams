@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: bzon/prometheus-msteams
-  tag: v1.2.1
+  tag: v1.3.0
   pullPolicy: Always
 
 extraEnvs:
@@ -36,9 +36,8 @@ metrics:
     additionalLabels: {}
     scrapeInterval: 30s
 
-# Replace this!
-connectors:
-  - alertmanager: https://outlook.office.com/webhook/xxxxx/IncomingWebhook/xxxx/xxxxx
+connectors: {}
+connectors_with_custom_templates: {}
 
 
 ## Specify the custom message card template for MS teams

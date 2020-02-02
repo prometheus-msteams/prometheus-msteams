@@ -17,8 +17,7 @@
 Clone this repository.
 
 ```bash
-git clone https://github.com/bzon/prometheus-msteams
-cd prometheus-msteams/chart
+helm repo add prometheus-msteams https://prometheus-msteams.github.io/helm-chart/
 ```
 
 ### Prepare the Deployment configuration
@@ -31,10 +30,11 @@ Create a helm values file to configure your Microsoft Teams channel connectors a
 replicaCount: 1
 image:
   repository: bzon/prometheus-msteams
-  tag: v1.2.1
+  tag: v1.3.0
 connectors:
 - high_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx 
 - low_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx
+
 # extraEnvs is useful for adding extra environment variables such as proxy settings
 extraEnvs:
   HTTP_PROXY: http://corporateproxy:8080
@@ -58,13 +58,14 @@ See [Helm Configuration](#helm-configuration) and [App Configuration](https://gi
 ### Deploy to Kubernetes cluster
 
 ```bash
-helm install --name prometheus-msteams ./prometheus-msteams --namespace monitoring -f config.yaml
+helm upgrade --install prometheus-msteams \
+  --namespace default -f config.yaml
+  charts/prometheus-msteams
 ```
 
 ### When using with Prometheus Operator
 
 Please see [Prometheus Operator alerting docs](https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/alerting.md).
-
 
 ### Customise messages to MS Teams
 
@@ -88,10 +89,11 @@ Otherwise you can also set the value by specifying the template data directly vi
 | Parameter                                  | Description                                                                                                                                                   | Default                                         |
 | ---                                        | ---                                                                                                                                                           | ---                                             |
 | `image.repository`                         | Image repository                                                                                                                                              | `bzon/prometheus-msteams`                       |
-| `image.tag`                                | Image tag                                                                                                                                                     | `v1.2.1`                                        |
+| `image.tag`                                | Image tag                                                                                                                                                     | `v1.3.0`                                        |
 | `image.pullPolicy`                         | Image pull policy                                                                                                                                             | `Always`                                        |
 | `extraEnvs`                                | Extra environment variables                                                                                                                                   | `{}`                                            |
-| `connectors`                               | **Required.** Add your own Microsoft Teams connectors.                                                                                                        | See [default](./prometheus-msteams/values.yaml) |
+| `connectors`                               | Add your own Microsoft Teams connectors.                                                                                                                      | `{}`                                            |
+| `connectors_with_custom_templates`         | Add your own Microsoft Teams connectors with custom template file.                                                                                            | `{}`                                            |
 | `service.port`                             | Service port                                                                                                                                                  | `2000`                                          |
 | `service.type`                             | Service type                                                                                                                                                  | `ClusterIP`                                     |
 | `container.port`                           | Container port                                                                                                                                                | `2000`                                          |
@@ -101,7 +103,7 @@ Otherwise you can also set the value by specifying the template data directly vi
 | `affinity`                                 | Pod affinity                                                                                                                                                  | `{}`                                            |
 | `tolerations`                              | Pod tolerations                                                                                                                                               | `{}`                                            |
 | `podAnnotations`                           | Pod annotations                                                                                                                                               | `{}`                                            |
-| `customCardTemplate`                       | Custom message card template for MS teams                                                                                                                     | `""`                                              |
+| `customCardTemplate`                       | Custom message card template for MS teams                                                                                                                     | `""`                                            |
 | `metrics.serviceMonitor.enabled`           | Set this to `true` to create ServiceMonitor for Prometheus operator                                                                                           | `false`                                         |
 | `metrics.serviceMonitor.additionalLabels`  | Additional labels that can be used so ServiceMonitor will be discovered by Prometheus                                                                         | `{}`                                            |
 | `metrics.serviceMonitor.honorLabels`       | honorLabels chooses the metric's labels on collisions with target labels.                                                                                     | `false`                                         |
