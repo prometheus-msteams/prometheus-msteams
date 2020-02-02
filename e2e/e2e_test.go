@@ -11,11 +11,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-kit/kit/log"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/service"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/testutils"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/transport"
-	"github.com/go-kit/kit/log"
 )
 
 var update = flag.Bool("update", false, "update .golden files")
@@ -112,13 +112,17 @@ func TestServer(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				resp, err := http.DefaultClient.Do(req)
 				if err != nil {
 					t.Fatal(err)
 				}
+				defer resp.Body.Close()
+
 				if resp.StatusCode != 200 {
 					t.Fatalf("want '%d', got '%d'", 200, resp.StatusCode)
 				}
+
 				var prs []service.PostResponse
 				if err := json.NewDecoder(resp.Body).Decode(&prs); err != nil {
 					t.Fatal(err)
@@ -127,6 +131,7 @@ func TestServer(t *testing.T) {
 					testutils.CompareToGoldenFile(t, prs, t.Name()+"/integration_resp.json", *update)
 					return
 				}
+
 				// because webhook url port dynamically changes
 				for i := range prs {
 					if prs[i].WebhookURL == "" {

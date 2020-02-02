@@ -1,6 +1,15 @@
+linters:
+  enable:
+    - gosec
+    - bodyclose
+    - gocyclo
+    - golint
+issues:
+  exclude-rules:
+  - linters:
+    - gosec
+    text: "G108"
 linters-settings:
-  issues:
-    exclude:
   errcheck:
     # path to a file containing a list of functions to exclude from checking
     # see https://github.com/kisielk/errcheck#excluding-functions for details
