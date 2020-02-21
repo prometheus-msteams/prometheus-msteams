@@ -64,7 +64,7 @@ Download the binary for your platform and the default card template from [RELEAS
 
 ```bash
 ./prometheus-msteams -teams-request-uri alertmanager \
-  -teams-webhook-url "https://outlook.office.com/webhook/xxx"
+  -teams-incoming-webhook-url "https://outlook.office.com/webhook/xxx"
 ```
 
 __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, checkout the [Kubernetes Deployment Guide](#kubernetes-deployment).
