@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: quay.io/prometheusmsteams/prometheus-msteams
-  tag: v1.3.2
+  tag: v1.3.3
   pullPolicy: Always
 
 extraEnvs:

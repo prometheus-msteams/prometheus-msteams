@@ -30,7 +30,7 @@ Create a helm values file to configure your Microsoft Teams channel connectors a
 replicaCount: 1
 image:
   repository: quay.io/prometheusmsteams/prometheus-msteams
-  tag: v1.3.2
+  tag: v1.3.3
 connectors:
 - high_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx 
 - low_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx
@@ -89,7 +89,7 @@ Otherwise you can also set the value by specifying the template data directly vi
 | Parameter                                  | Description                                                                                                                                                   | Default                                         |
 | ---                                        | ---                                                                                                                                                           | ---                                             |
 | `image.repository`                         | Image repository                                                                                                                                              | `quay.io/prometheusmsteams/prometheus-msteams`                       |
-| `image.tag`                                | Image tag                                                                                                                                                     | `v1.3.2`                                        |
+| `image.tag`                                | Image tag                                                                                                                                                     | `v1.3.3`                                        |
 | `image.pullPolicy`                         | Image pull policy                                                                                                                                             | `Always`                                        |
 | `extraEnvs`                                | Extra environment variables                                                                                                                                   | `{}`                                            |
 | `connectors`                               | Add your own Microsoft Teams connectors.                                                                                                                      | `{}`                                            |
