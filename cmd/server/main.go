@@ -223,10 +223,12 @@ func main() {
 		}
 
 		var converter card.Converter
-		tmpl, err := card.ParseTemplateFile(*templateFile)
+		tmpl, err := card.ParseTemplateFile(c.TemplateFile)
 		if err != nil {
 			logger.Log("err", err)
+			os.Exit(1)
 		}
+
 		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
 		converter = card.NewCreatorLoggingMiddleware(
 			log.With(
