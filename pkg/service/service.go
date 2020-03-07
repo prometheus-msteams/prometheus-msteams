@@ -58,7 +58,7 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 	return prs, nil
 }
 
-func (s *simpleService) post(ctx context.Context, j map[string]interface{}, url string) (PostResponse, error) {
+func (s simpleService) post(ctx context.Context, j map[string]interface{}, url string) (PostResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "simpleService.post")
 	defer span.End()
 
