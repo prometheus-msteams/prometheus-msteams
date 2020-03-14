@@ -60,7 +60,7 @@ See [Helm Configuration](#helm-configuration) and [App Configuration](https://gi
 ```bash
 helm upgrade --install prometheus-msteams \
   --namespace default -f config.yaml
-  charts/prometheus-msteams
+  prometheus-msteams/prometheus-msteams
 ```
 
 ### When using with Prometheus Operator
@@ -75,10 +75,10 @@ Simply create a new file that you want to use as your custom template (for examp
 You can use the `--set-file` flag to set the value from this file:
 
 ```bash
-helm install --name prometheus-msteams \
-  ./prometheus-msteams --namespace monitoring \
+helm upgrade --install prometheus-msteams \
+  --namespace default -f config.yaml \
   --set-file customCardTemplate=custom-card.tmpl \
-  -f config.yaml
+  prometheus-msteams/prometheus-msteams
 ```
 
 Otherwise you can also set the value by specifying the template data directly via values file.
