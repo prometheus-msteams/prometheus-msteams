@@ -41,6 +41,7 @@
     {{- end }}
   ],
   "potentialAction": [
+  {{- if .CommonAnnotations.runbook -}}
     {
         "@context": "http://schema.org",
         "@type": "ViewAction",
@@ -49,6 +50,7 @@
             "{{ reReplaceAll "_" "\\\\_" .CommonAnnotations.runbook }}"
         ]
     }
+  {{- end -}}
   ]
 }
 {{ end }}
