@@ -35,6 +35,7 @@
   {{- if eq .Status "firing" -}}
   ,
   "potentialAction": [
+  {{- if .Alerts -}}
     {
         "@context": "http://schema.org",
         "@type": "ViewAction",
@@ -47,6 +48,7 @@
           {{- end }}
         {{- end }}
     }
+  {{- end -}}
   ]
   {{- end }}
 }
