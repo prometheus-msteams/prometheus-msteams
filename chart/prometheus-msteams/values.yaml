@@ -36,8 +36,8 @@ metrics:
     additionalLabels: {}
     scrapeInterval: 30s
 
-connectors: {}
-connectors_with_custom_templates: {}
+connectors: []
+connectors_with_custom_templates: []
 
 
 ## Specify the custom message card template for MS teams
