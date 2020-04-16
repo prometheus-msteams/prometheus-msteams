@@ -43,7 +43,7 @@
         {{- range $index, $alert := .Alerts }}
           {{- if eq $index 0}}
             "target": [
-                "http://localhost:9093/#/silences/new?filter=%7B{{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
+                "{{ $externalUrl }}/#/silences/new?filter=%7B{{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
             ]
           {{- end }}
         {{- end }}
