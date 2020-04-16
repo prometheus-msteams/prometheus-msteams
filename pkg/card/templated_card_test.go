@@ -30,6 +30,12 @@ func Test_templatedCard_Convert(t *testing.T) {
 			templateFile:      "../../default-message-card.tmpl",
 			escapeUnderscores: true,
 		},
+		{
+			name:              "action card",
+			promAlertFile:     "./testdata/prom_post_request.json",
+			templateFile:      "./testdata/Test_templatedCard_Convert/action_card/message-card.tmpl",
+			escapeUnderscores: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
