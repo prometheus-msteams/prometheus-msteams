@@ -166,7 +166,7 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -v /tmp/config.yml:/tmp/config.yml \
     -e CONFIG_FILE="/tmp/config.yml" \
-    docker.io/prometheus-msteams/prometheus-msteams:v1.1.5
+    docker.io/prometheusmsteams/prometheus-msteams:v1.1.5
 ```
 
 When running as a binary, use the __-config-file__ flag.
