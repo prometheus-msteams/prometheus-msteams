@@ -70,7 +70,7 @@ func main() {
 		debugLogs                     = fs.Bool("debug", true, "Set log level to debug mode.")
 		jaegerTrace                   = fs.Bool("jaeger-trace", false, "Send traces to Jaeger.")
 		jaegerAgentAddr               = fs.String("jaeger-agent", "localhost:6831", "Jaeger agent endpoint")
-		httpAddr                      = fs.String("http-addr", ":2000", "HTTP listen address.")
+		httpAddr                      = fs.String("http-addr", "localhost:2000", "HTTP listen address.")
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
 		templateFile                  = fs.String("template-file", "./default-message-card.tmpl", "The Microsoft Teams Message Card template file.")
