@@ -1,4 +1,4 @@
-![Docker Hub Pulls](https://img.shields.io/docker/pulls/bzon/prometheus-msteams.svg)
+![Docker Hub Pulls](https://img.shields.io/docker/pulls/prometheusmsteams/prometheus-msteams.svg)
 [![GitHub tag](https://img.shields.io/github/tag/prometheus-msteams/prometheus-msteams.svg)](https://github.com/prometheus-msteams/prometheus-msteams/releases/)
 [![Build Status](https://travis-ci.org/prometheus-msteams/prometheus-msteams.svg?branch=master)](https://travis-ci.org/prometheus-msteams/prometheus-msteams)
 [![codecov](https://codecov.io/gh/prometheus-msteams/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/prometheus-msteams/prometheus-msteams)
@@ -8,7 +8,7 @@
 
 # Overview
 
-A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://hub.docker.com/r/prometheus-msteams/prometheus-msteams/tags/)!
+A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://hub.docker.com/r/prometheusmsteams/prometheus-msteams/tags/)!
 
 ## Synopsis
 
