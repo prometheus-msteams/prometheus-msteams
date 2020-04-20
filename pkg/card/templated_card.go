@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
 	"go.opencensus.io/trace"
+	"k8s.io/helm/pkg/engine"
 )
 
 // templatedCard implements Converter using Alert manager templating.
@@ -255,9 +256,20 @@ func querySections(message string) ([]byte, error) {
 	return sections, nil
 }
 
-// ParseTemplateFile creates an alertmanager template from the given file.
+/* ParseTemplateFile creates an alertmanager template from the given file.
+The functions include all functions (except 'env' and 'expandenv' ) from sprig (http://masterminds.github.io/sprig/)
+and the following functions from HELM templating:
+  - toToml
+  - toYaml
+  - fromYaml
+  - toJson
+  - fromJson
+*/
 func ParseTemplateFile(f string) (*template.Template, error) {
 	funcs := template.DefaultFuncs
+	for k, v := range engine.FuncMap() {
+		funcs[k] = v
+	}
 	funcs["counter"] = func() func() int {
 		i := -1
 		return func() int {
