@@ -31,9 +31,12 @@ replicaCount: 1
 image:
   repository: quay.io/prometheusmsteams/prometheus-msteams
   tag: v1.3.3
+
 connectors:
-- high_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx 
-- low_priority_channel: https://outlook.office.com/webhook/xxxx/xxxx
+# in alertmanager, this will be used as http://prometheus-msteams:2000/bar
+- bar: https://outlook.office.com/webhook/xxxx/xxxx 
+# in alertmanager, this will be used as http://prometheus-msteams:2000/foo
+- foo: https://outlook.office.com/webhook/xxxx/xxxx
 
 # extraEnvs is useful for adding extra environment variables such as proxy settings
 extraEnvs:
