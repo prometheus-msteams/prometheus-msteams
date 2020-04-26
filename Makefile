@@ -64,7 +64,7 @@ docker-hub-push: docker
 	docker push $(DOCKER_HUB_REPO):$(VERSION)
 
 run-osx: dep darwin
-	bin/prometheus-msteams-darwin-amd6 -http-addr localhost:2000 $(RUN_ARGS)
+	bin/prometheus-msteams-darwin-amd64 -http-addr localhost:2000 $(RUN_ARGS)
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
