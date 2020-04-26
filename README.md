@@ -1,4 +1,3 @@
-![Docker Hub Pulls](https://img.shields.io/docker/pulls/prometheusmsteams/prometheus-msteams.svg)
 [![GitHub tag](https://img.shields.io/github/tag/prometheus-msteams/prometheus-msteams.svg)](https://github.com/prometheus-msteams/prometheus-msteams/releases/)
 [![Build Status](https://travis-ci.org/prometheus-msteams/prometheus-msteams.svg?branch=master)](https://travis-ci.org/prometheus-msteams/prometheus-msteams)
 [![codecov](https://codecov.io/gh/prometheus-msteams/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/prometheus-msteams/prometheus-msteams)
