@@ -64,7 +64,7 @@ docker-hub-push: docker
 	docker push $(DOCKER_HUB_REPO):$(VERSION)
 
 run-osx: dep darwin
-	bin/prometheus-msteams-darwin-amd64 server $(RUN_ARGS)
+	bin/prometheus-msteams-darwin-amd64 $(RUN_ARGS)
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
