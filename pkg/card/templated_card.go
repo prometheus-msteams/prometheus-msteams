@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/buger/jsonparser"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
 	"go.opencensus.io/trace"
@@ -26,6 +25,15 @@ func NewTemplatedCardCreator(template *template.Template, escapeUnderscores bool
 	return &templatedCard{template, escapeUnderscores}
 }
 
+// msTeamsCard divides a MS Teams card into two parts:
+// 	* Sections: contains the actual payload - we use sections to divide a too large message/card into multiple cards
+//  * EverythingElse: contains everything else that is required for a valid MS Teams card, like @type, @context, summary etc. 
+// more information see https://docs.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-reference#example-office-365-connector-card
+type msTeamsCard struct {
+	Sections       []map[string]interface{} `json:"sections"`
+	EverythingElse map[string]interface{}   `json:"-"`
+}
+
 // Constants for creating a Card
 const (
 	// Maximum message size of 14336 Bytes (14KB)
@@ -39,6 +47,31 @@ func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) 
 	_, span := trace.StartSpan(ctx, "templatedCard.Convert")
 	defer span.End()
 
+	totalMessage, err := m.executeTemplate(promAlert)
+	if err != nil {
+		return nil, err
+	}
+
+	cards, err := m.createFinalCards(totalMessage)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create final cards: %w", err)
+	}
+
+	cardb, err := json.Marshal(cards)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal final cards: %w", err)
+	}
+	span.Annotate(
+		[]trace.Attribute{
+			trace.StringAttribute("card", string(cardb)),
+		},
+		"card created",
+	)
+
+	return cards, nil
+}
+
+func (m *templatedCard) executeTemplate(promAlert webhook.Message) (string, error) {
 	if m.escapeUnderscores {
 		promAlert = jsonEscapeMessage(promAlert)
 	}
@@ -52,64 +85,96 @@ func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) 
 		CommonAnnotations: promAlert.CommonAnnotations,
 		ExternalURL:       promAlert.ExternalURL,
 	}
+
 	totalMessage, err := m.template.ExecuteTextString(
 		`{{ template "teams.card" . }}`, data,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to template alerts: %w", err)
+		return "", fmt.Errorf("failed to template alerts: %w", err)
 	}
+	return totalMessage, nil
+}
 
-	var (
-		cardTmp          string
-		restOfMessageTmp string
-	)
-
-	cards := "["
-	card, restOfMessage, err := splitTooLargeMessage([]byte(totalMessage))
+func (m *templatedCard) createFinalCards(totalMessage string) (JSON, error) {
+	compactTotalMessage, err := compact([]byte(totalMessage))
 	if err != nil {
-		return nil, fmt.Errorf("create card failed: %w", err)
+		return nil, fmt.Errorf("failed to compact message: %w", err)
 	}
-	cards += card
+	sizeMessage := len(compactTotalMessage)
 
-	missingSections, err := querySections(restOfMessage)
+	card, err := unmarshalMSTeamsCard(totalMessage)
 	if err != nil {
-		return nil, fmt.Errorf("create card failed: %w", err)
+		return nil, err
 	}
 
-	for string(missingSections) != "[]" {
-		cardTmp, restOfMessageTmp, err = splitTooLargeMessage([]byte(restOfMessage))
+	var cards JSON
+	if len(card.Sections) > maxCardSections {
+		cards, err := m.splitSections(card)
 		if err != nil {
-			return nil, fmt.Errorf("create card failed: %w", err)
+			return nil, fmt.Errorf("failed to split message: %w", err)
 		}
-		cards += "," + cardTmp
-		restOfMessage = restOfMessageTmp
-		missingSections, err = querySections(restOfMessage)
-		if err != nil {
-			return nil, fmt.Errorf("create card failed: %w", err)
-		}
+		return cards, nil
 	}
-	cards += "]"
+	if sizeMessage > maxSize {
+		cards, err = m.splitLargeMessage(card)
+		if err != nil {
+			return nil, fmt.Errorf("failed to split message: %w", err)
+		}
+		return cards, nil
+	}
 
-	span.Annotate(
-		[]trace.Attribute{
-			trace.StringAttribute("card", cards),
-		},
-		"card created",
-	)
+	err = json.Unmarshal([]byte("["+totalMessage+"]"), &cards)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal full message: %w", err)
+	}
+	return cards, nil
+}
 
+func (m *templatedCard) splitSections(card msTeamsCard) (JSON, error) {
 	var v JSON
-	if err := json.Unmarshal([]byte(cards), &v); err != nil {
-		return nil, fmt.Errorf("failed encoding JSON string - '%s' got error: %w", cards, err)
+	startIndex := 0
+	allSectionsProcessed := false
+	for !allSectionsProcessed {
+		// get the maximum allowed number of sections
+		endIndex := min(startIndex+maxCardSections, len(card.Sections))
+		tmpSections := card.Sections[startIndex:endIndex]
+
+		// construct a complete MS Teams card with sections and everything else
+		card.EverythingElse["sections"] = tmpSections
+		cardb, err := json.Marshal(card.EverythingElse)
+		if err != nil {
+			panic(err)
+		}
+		var vtmp map[string]interface{}
+		err = json.Unmarshal(cardb, &vtmp)
+		if err != nil {
+			panic(err)
+		}
+		// TODO: verify that vtmp is not too large in size using splitLargeMessage()
+
+		v = append(v, vtmp)
+
+		// reset all values for the next loop
+		delete(card.EverythingElse, "sections")
+		startIndex = endIndex
+		if endIndex >= len(card.Sections) {
+			allSectionsProcessed = true
+		}
 	}
 	return v, nil
 }
 
-func counter() func() int {
-	i := 0
-	return func() int {
-		i++
-		return i
+func (m *templatedCard) splitLargeMessage(card msTeamsCard) (JSON, error) {
+	var v JSON
+	// TODO: implement
+	return v, nil
+}
+
+func min(x, y int) int {
+	if x > y {
+		return y
 	}
+	return x
 }
 
 func compact(data []byte) (string, error) {
@@ -121,162 +186,18 @@ func compact(data []byte) (string, error) {
 	return buffer.String(), nil
 }
 
-func concatKeyValue(key string, val string) string {
-	if strings.HasPrefix(val, "[{") {
-		return "\"" + key + "\":" + val
-	}
-	return "\"" + key + "\":\"" + val + "\""
-}
-
-func messageWithoutSections(data []byte) (string, error) {
-	messageWithoutSections := "{"
-	c := counter()
-	if err := jsonparser.ObjectEach(
-		data,
-		func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-			if string(key) != "sections" {
-				if c() != 1 {
-					messageWithoutSections += ","
-				}
-				messageWithoutSections += concatKeyValue(string(key), string(value))
-			}
-			return nil
-		},
-	); err != nil {
-		return "", err
-	}
-	messageWithoutSections += "}"
-	return messageWithoutSections, nil
-}
-
-func splitTooLargeMessage(data []byte) (string, string, error) {
-	// finalMessage is a valid Teams message card
-	finalMessage := "{"
-	// restOfMessage is used to recursively apply this method and iteratively create valid Teams message cards
-	restOfMessage := "{"
-
-	msg, err := messageWithoutSections(data)
+func unmarshalMSTeamsCard(totalMessage string) (msTeamsCard, error) {
+	var card msTeamsCard
+	err := json.Unmarshal([]byte(totalMessage), &card)
 	if err != nil {
-		return "", "", nil
+		return msTeamsCard{}, fmt.Errorf("failed to unmarshal totalMessage: %w", err)
 	}
-
-	length := len(msg)
-
-	// range over each key-value pair in the original message card
-	c1 := counter()
-
-	objEachErr := jsonparser.ObjectEach(
-		data,
-		func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-			if string(key) != "sections" {
-				if c1() != 1 {
-					finalMessage += ","
-					restOfMessage += ","
-				}
-				finalMessage += concatKeyValue(string(key), string(value))
-				restOfMessage += concatKeyValue(string(key), string(value))
-			}
-
-			if string(key) == "sections" {
-				if c1() != 1 {
-					finalMessage += ","
-					restOfMessage += ","
-					length++
-				}
-				startSections := "\"" + string(key) + "\":["
-				finalMessage += startSections
-				restOfMessage += startSections
-				length++ // for the "]" at the end of the array
-				length += len(startSections)
-
-				var (
-					// counter over section array elements of finalMessage
-					c2 = counter()
-					// counter over section array elements of restOfMessage
-					c3              = counter()
-					counter         int
-					compactionError error
-				)
-
-				_, arrayEachErr := jsonparser.ArrayEach(
-					value,
-					func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-						section, compactErr := compact(value)
-						if compactErr != nil {
-							compactionError = fmt.Errorf("failed using compact within ArrayEach: %w", err)
-							return
-						}
-
-						length += len(section)
-						counter = c2()
-						if counter != 1 {
-							length++ // for the leading comma sign before appending a new array element
-						}
-
-						if (length <= maxSize) && (counter <= maxCardSections) {
-							if counter != 1 {
-								finalMessage += ","
-							}
-							finalMessage += section
-						} else {
-							if c3() != 1 {
-								restOfMessage += ","
-							}
-							restOfMessage += section
-						}
-					},
-				)
-				if compactionError != nil {
-					return compactionError
-				}
-				if arrayEachErr != nil {
-					return fmt.Errorf("failed on ArrayEach: %w", arrayEachErr)
-				}
-				finalMessage += "]"
-				restOfMessage += "]"
-			}
-			return nil
-		},
-	)
-	if objEachErr != nil {
-		return "", "", fmt.Errorf("failed on ObjectEach: %w", objEachErr)
+	if err := json.Unmarshal([]byte(totalMessage), &card.EverythingElse); err != nil {
+		return msTeamsCard{}, fmt.Errorf("failed to unmarshal to card.EverythingElse: %w", err)
 	}
+	delete(card.EverythingElse, "sections")
 
-	finalMessage += "}"
-	restOfMessage += "}"
-	return finalMessage, restOfMessage, nil
-}
-
-func querySections(message string) ([]byte, error) {
-	sections, _, _, err := jsonparser.Get([]byte(message), "sections")
-	if err != nil {
-		return nil, fmt.Errorf("failed getting query sections: %w", err)
-	}
-	return sections, nil
-}
-
-// ParseTemplateFile creates an alertmanager template from the given file.
-func ParseTemplateFile(f string) (*template.Template, error) {
-	funcs := template.DefaultFuncs
-	funcs["counter"] = func() func() int {
-		i := -1
-		return func() int {
-			i++
-			return i
-		}
-	}
-	template.DefaultFuncs = funcs
-
-	if _, err := os.Stat(f); os.IsNotExist(err) {
-		return nil, fmt.Errorf("template file %s does not exist", f)
-	}
-
-	tmpl, err := template.FromGlobs(f)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to parse template: %v: %v", err, err)
-	}
-
-	return tmpl, nil
+	return card, nil
 }
 
 func jsonEncode(str string) string {
@@ -307,4 +228,28 @@ func jsonEscapeMessage(promAlert webhook.Message) webhook.Message {
 		jsonEncodeAlertmanagerKV(alert.Annotations)
 	}
 	return retPromAlert
+}
+
+// ParseTemplateFile creates an alertmanager template from the given file.
+func ParseTemplateFile(f string) (*template.Template, error) {
+	funcs := template.DefaultFuncs
+	funcs["counter"] = func() func() int {
+		i := -1
+		return func() int {
+			i++
+			return i
+		}
+	}
+	template.DefaultFuncs = funcs
+
+	if _, err := os.Stat(f); os.IsNotExist(err) {
+		return nil, fmt.Errorf("template file %s does not exist", f)
+	}
+
+	tmpl, err := template.FromGlobs(f)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse template: %v: %v", err, err)
+	}
+
+	return tmpl, nil
 }
