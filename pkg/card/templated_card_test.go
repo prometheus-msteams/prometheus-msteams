@@ -36,6 +36,12 @@ func Test_templatedCard_Convert(t *testing.T) {
 			templateFile:      "./testdata/Test_templatedCard_Convert/action_card/message-card.tmpl",
 			escapeUnderscores: true,
 		},
+		{
+			name:              "too many sections",
+			promAlertFile:     "./testdata/prom_post_request_too_many_sections.json",
+			templateFile:      "../../default-message-card.tmpl",
+			escapeUnderscores: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
