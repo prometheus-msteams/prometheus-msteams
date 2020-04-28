@@ -18,11 +18,13 @@ type templatedCard struct {
 	template *template.Template
 	// If true, replace all character `_` with `\\_` in the prometheus alert.
 	escapeUnderscores bool
+
+	disableGrouping bool
 }
 
 // NewTemplatedCardCreator creates a templatedCard.
-func NewTemplatedCardCreator(template *template.Template, escapeUnderscores bool) Converter {
-	return &templatedCard{template, escapeUnderscores}
+func NewTemplatedCardCreator(template *template.Template, escapeUnderscores bool, disableGrouping bool) Converter {
+	return &templatedCard{template, escapeUnderscores, disableGrouping}
 }
 
 // msTeamsCard divides a MS Teams card into two parts:
@@ -108,13 +110,20 @@ func (m *templatedCard) createFinalCards(totalMessage string) (JSON, error) {
 
 	var cards JSON
 	if (len(card.Sections) > maxCardSections) || (sizeMessage > maxSize) {
-		cards, err := m.splitCard(card)
+		cards, err := m.splitCard(card, maxCardSections)
 		if err != nil {
 			return nil, fmt.Errorf("failed to split message: %w", err)
 		}
 		return cards, nil
 	}
 
+	if (len(card.Sections) > 0) && m.disableGrouping {
+		cards, err := m.splitCard(card, 1)
+		if err != nil {
+			return nil, fmt.Errorf("failed to split message: %w", err)
+		}
+		return cards, nil
+	}
 	err = json.Unmarshal([]byte("["+totalMessage+"]"), &cards)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal full message: %w", err)
@@ -122,7 +131,7 @@ func (m *templatedCard) createFinalCards(totalMessage string) (JSON, error) {
 	return cards, nil
 }
 
-func (m *templatedCard) splitCard(card msTeamsCard) (JSON, error) {
+func (m *templatedCard) splitCard(card msTeamsCard, numberOfSections int) (JSON, error) {
 	var v JSON
 	sizeEverythingElse, err := sizeMapStringInterface(card.EverythingElse)
 	if err != nil {
@@ -137,7 +146,7 @@ func (m *templatedCard) splitCard(card msTeamsCard) (JSON, error) {
 			return nil, err
 		}
 		sizeTmpSections += sizeSection
-		if (totalSize+sizeTmpSections <= maxSize) && (len(tmpSections)+1 <= maxCardSections) {
+		if (totalSize+sizeTmpSections <= maxSize) && (len(tmpSections)+1 <= numberOfSections) {
 			tmpSections = append(tmpSections, section)
 		} else {
 			v, err = appendToFinalCards(v, card, tmpSections)

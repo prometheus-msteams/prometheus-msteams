@@ -16,6 +16,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 		promAlertFile     string
 		templateFile      string
 		escapeUnderscores bool
+		disableGrouping   bool
 		want              map[string]interface{}
 		wantErr           bool
 	}{
@@ -29,6 +30,13 @@ func Test_templatedCard_Convert(t *testing.T) {
 			promAlertFile:     "./testdata/prom_post_request.json",
 			templateFile:      "../../default-message-card.tmpl",
 			escapeUnderscores: true,
+		},
+		{
+			name:              "disable grouping",
+			promAlertFile:     "./testdata/Test_templatedCard_Convert/disable_grouping/prom_post_request.json",
+			templateFile:      "../../default-message-card.tmpl",
+			escapeUnderscores: true,
+			disableGrouping:   true,
 		},
 		{
 			name:              "action card",
@@ -59,7 +67,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			m := NewTemplatedCardCreator(tmpl, tt.escapeUnderscores)
+			m := NewTemplatedCardCreator(tmpl, tt.escapeUnderscores, tt.disableGrouping)
 			got, err := m.Convert(context.Background(), a)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("templatedCard.Convert() error = %v, wantErr %v", err, tt.wantErr)
