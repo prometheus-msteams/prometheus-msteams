@@ -38,7 +38,13 @@ func Test_templatedCard_Convert(t *testing.T) {
 		},
 		{
 			name:              "too many sections",
-			promAlertFile:     "./testdata/prom_post_request_too_many_sections.json",
+			promAlertFile:     "./testdata/Test_templatedCard_Convert/too_many_sections/prom_post_request_too_many_sections.json",
+			templateFile:      "../../default-message-card.tmpl",
+			escapeUnderscores: true,
+		},
+		{
+			name:              "too large",
+			promAlertFile:     "./testdata/Test_templatedCard_Convert/too_large/prom_post_request_too_large.json",
 			templateFile:      "../../default-message-card.tmpl",
 			escapeUnderscores: true,
 		},
