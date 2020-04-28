@@ -30,7 +30,7 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := card.NewTemplatedCardCreator(tmpl, false)
+	c := card.NewTemplatedCardCreator(tmpl, false, false)
 
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
 

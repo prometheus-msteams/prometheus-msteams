@@ -49,6 +49,7 @@ type ConnectorWithCustomTemplate struct {
 	TemplateFile      string `yaml:"template_file"`
 	WebhookURL        string `yaml:"webhook_url"`
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
+	DisableGrouping   bool   `yaml:"disable_grouping"`
 }
 
 func parseTeamsConfigFile(f string, logger log.Logger) (PromTeamsConfig, error) {
@@ -79,6 +80,7 @@ func main() {
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
+		disableGrouping               = fs.Bool("disable-grouping", false, "Disable grouping of multiple alerts into one teams message cards.")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -150,12 +152,13 @@ func main() {
 		if err != nil {
 			logger.Log("err", err)
 		}
-		defaultConverter = card.NewTemplatedCardCreator(tmpl, *escapeUnderscores)
+		defaultConverter = card.NewTemplatedCardCreator(tmpl, *escapeUnderscores, *disableGrouping)
 		defaultConverter = card.NewCreatorLoggingMiddleware(
 			log.With(
 				logger,
 				"template_file", *templateFile,
 				"escaped_underscores", *escapeUnderscores,
+				"disable_grouping", *disableGrouping,
 			),
 			defaultConverter,
 		)
@@ -229,12 +232,13 @@ func main() {
 			os.Exit(1)
 		}
 
-		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
+		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores, c.DisableGrouping)
 		converter = card.NewCreatorLoggingMiddleware(
 			log.With(
 				logger,
 				"template_file", c.TemplateFile,
 				"escaped_underscores", c.EscapeUnderscores,
+				"disable_grouping", c.DisableGrouping,
 			),
 			converter,
 		)
