@@ -27,7 +27,7 @@ func NewTemplatedCardCreator(template *template.Template, escapeUnderscores bool
 
 // msTeamsCard divides a MS Teams card into two parts:
 // 	* Sections: contains the actual payload - we use sections to divide a too large message/card into multiple cards
-//  * EverythingElse: contains everything else that is required for a valid MS Teams card, like @type, @context, summary etc. 
+//  * EverythingElse: contains everything else that is required for a valid MS Teams card, like @type, @context, summary etc.
 // more information see https://docs.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-reference#example-office-365-connector-card
 type msTeamsCard struct {
 	Sections       []map[string]interface{} `json:"sections"`
@@ -96,11 +96,10 @@ func (m *templatedCard) executeTemplate(promAlert webhook.Message) (string, erro
 }
 
 func (m *templatedCard) createFinalCards(totalMessage string) (JSON, error) {
-	compactTotalMessage, err := compact([]byte(totalMessage))
+	sizeMessage, err := sizeMessage([]byte(totalMessage))
 	if err != nil {
-		return nil, fmt.Errorf("failed to compact message: %w", err)
+		return nil, err
 	}
-	sizeMessage := len(compactTotalMessage)
 
 	card, err := unmarshalMSTeamsCard(totalMessage)
 	if err != nil {
@@ -108,15 +107,8 @@ func (m *templatedCard) createFinalCards(totalMessage string) (JSON, error) {
 	}
 
 	var cards JSON
-	if len(card.Sections) > maxCardSections {
-		cards, err := m.splitSections(card)
-		if err != nil {
-			return nil, fmt.Errorf("failed to split message: %w", err)
-		}
-		return cards, nil
-	}
-	if sizeMessage > maxSize {
-		cards, err = m.splitLargeMessage(card)
+	if (len(card.Sections) > maxCardSections) || (sizeMessage > maxSize) {
+		cards, err := m.splitCard(card)
 		if err != nil {
 			return nil, fmt.Errorf("failed to split message: %w", err)
 		}
@@ -130,43 +122,54 @@ func (m *templatedCard) createFinalCards(totalMessage string) (JSON, error) {
 	return cards, nil
 }
 
-func (m *templatedCard) splitSections(card msTeamsCard) (JSON, error) {
+func (m *templatedCard) splitCard(card msTeamsCard) (JSON, error) {
 	var v JSON
-	startIndex := 0
-	allSectionsProcessed := false
-	for !allSectionsProcessed {
-		// get the maximum allowed number of sections
-		endIndex := min(startIndex+maxCardSections, len(card.Sections))
-		tmpSections := card.Sections[startIndex:endIndex]
-
-		// construct a complete MS Teams card with sections and everything else
-		card.EverythingElse["sections"] = tmpSections
-		cardb, err := json.Marshal(card.EverythingElse)
+	sizeEverythingElse, err := sizeMapStringInterface(card.EverythingElse)
+	if err != nil {
+		return nil, err
+	}
+	totalSize := sizeEverythingElse
+	var tmpSections []map[string]interface{}
+	sizeTmpSections := 0
+	for _, section := range card.Sections {
+		sizeSection, err := sizeMapStringInterface(section)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
-		var vtmp map[string]interface{}
-		err = json.Unmarshal(cardb, &vtmp)
-		if err != nil {
-			panic(err)
+		sizeTmpSections += sizeSection
+		if (totalSize+sizeTmpSections <= maxSize) && (len(tmpSections)+1 <= maxCardSections) {
+			tmpSections = append(tmpSections, section)
+		} else {
+			v, err = appendToFinalCards(v, card, tmpSections)
+			if err != nil {
+				return nil, err
+			}
+			// reset all values for the next loop
+			tmpSections = []map[string]interface{}{}
+			tmpSections = append(tmpSections, section)
+			sizeTmpSections = sizeSection
 		}
-		// TODO: verify that vtmp is not too large in size using splitLargeMessage()
-
-		v = append(v, vtmp)
-
-		// reset all values for the next loop
-		delete(card.EverythingElse, "sections")
-		startIndex = endIndex
-		if endIndex >= len(card.Sections) {
-			allSectionsProcessed = true
-		}
+	}
+	v, err = appendToFinalCards(v, card, tmpSections)
+	if err != nil {
+		return nil, err
 	}
 	return v, nil
 }
 
-func (m *templatedCard) splitLargeMessage(card msTeamsCard) (JSON, error) {
-	var v JSON
-	// TODO: implement
+func appendToFinalCards(v JSON, card msTeamsCard, tmpSections []map[string]interface{}) (JSON, error) {
+	// construct a complete MS Teams card with sections and everything else
+	card.EverythingElse["sections"] = tmpSections
+	cardb, err := json.Marshal(card.EverythingElse)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal everything else: %w", err)
+	}
+	var vtmp map[string]interface{}
+	err = json.Unmarshal(cardb, &vtmp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to vtmp: %w", err)
+	}
+	v = append(v, vtmp)
 	return v, nil
 }
 
@@ -175,6 +178,22 @@ func min(x, y int) int {
 		return y
 	}
 	return x
+}
+
+func sizeMessage(b []byte) (int, error) {
+	bc, err := compact(b)
+	if err != nil {
+		return 0, fmt.Errorf("failed to compact message: %w", err)
+	}
+	return len(bc), nil
+}
+
+func sizeMapStringInterface(m map[string]interface{}) (int, error) {
+	mb, err := json.Marshal(m)
+	if err != nil {
+		return 0, err
+	}
+	return sizeMessage(mb)
 }
 
 func compact(data []byte) (string, error) {
