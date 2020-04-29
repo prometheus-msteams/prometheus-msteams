@@ -30,6 +30,8 @@ tolerations: []
 
 affinity: {}
 
+priorityClassName: ""
+
 metrics:
   serviceMonitor:
     enabled: false
