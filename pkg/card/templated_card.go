@@ -182,13 +182,6 @@ func appendToFinalCards(v JSON, card msTeamsCard, tmpSections []map[string]inter
 	return v, nil
 }
 
-func min(x, y int) int {
-	if x > y {
-		return y
-	}
-	return x
-}
-
 func sizeMessage(b []byte) (int, error) {
 	bc, err := compact(b)
 	if err != nil {
