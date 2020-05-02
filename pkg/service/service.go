@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"unsafe"
 
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus/alertmanager/notify/webhook"
@@ -42,13 +43,17 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 
 	prs := []PostResponse{}
 
-	jj, err := s.converter.Convert(ctx, wm)
+	c, err := s.converter.Convert(ctx, wm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse webhook message: %w", err)
 	}
 
-	for _, j := range jj {
-		pr, err := s.post(ctx, j, s.webhookURL)
+	// Split into multiple messages if necessary.
+	cc := splitOffice365Card(c)
+
+	// TODO(@bzon): post concurrently.
+	for _, c := range cc {
+		pr, err := s.post(ctx, c, s.webhookURL)
 		prs = append(prs, pr)
 		if err != nil {
 			return prs, err
@@ -58,13 +63,13 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 	return prs, nil
 }
 
-func (s simpleService) post(ctx context.Context, j map[string]interface{}, url string) (PostResponse, error) {
+func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, url string) (PostResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "simpleService.post")
 	defer span.End()
 
 	pr := PostResponse{WebhookURL: url}
 
-	jb, err := json.Marshal(j)
+	jb, err := json.Marshal(c)
 	if err != nil {
 		err = fmt.Errorf("failed to decoding JSON card: %w", err)
 		return pr, err
@@ -94,4 +99,51 @@ func (s simpleService) post(ctx context.Context, j map[string]interface{}, url s
 	pr.Message = string(rb)
 
 	return pr, nil
+}
+
+const (
+	// Maximum message size of 14336 Bytes (14KB)
+	maxMessageSize = 14336
+	// Maximum number of sections
+	// ref: https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#notes-on-the-office-365-connector-card
+	maxCardSections = 10
+)
+
+// splitOffice365Card splits a single Office365ConnectorCard into multiple Office365ConnectorCard.
+// The purpose of doing this is to prevent getting limited by Microsoft Teams API when sending a large JSON payload.
+func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365ConnectorCard {
+	var cards []card.Office365ConnectorCard
+
+	// Everything is good.
+	if len(c.Sections) < maxCardSections && unsafe.Sizeof(c) < maxMessageSize {
+		cards = append(cards, c)
+		return cards
+	}
+
+	indexAdded := make(map[int]bool)
+
+	// Here, we keep creating a new card until all sections are transferred into a new card.
+	for len(indexAdded) != len(c.Sections) {
+		newCard := c // take all the attributes
+		newCard.Sections = nil
+
+		for i, s := range c.Sections {
+			if _, ok := indexAdded[i]; ok { // check if the index is already added.
+				continue
+			}
+
+			// If the max length or size has exceeded the limit,
+			// break the loop so we can create a new card again.
+			if len(newCard.Sections) >= maxCardSections || unsafe.Sizeof(newCard) >= maxMessageSize {
+				break
+			}
+
+			newCard.Sections = append(newCard.Sections, s)
+			indexAdded[i] = true
+		}
+
+		cards = append(cards, newCard)
+	}
+
+	return cards
 }
