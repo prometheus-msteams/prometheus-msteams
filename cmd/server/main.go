@@ -71,7 +71,7 @@ func main() {
 		debugLogs                     = fs.Bool("debug", true, "Set log level to debug mode.")
 		jaegerTrace                   = fs.Bool("jaeger-trace", false, "Send traces to Jaeger.")
 		jaegerAgentAddr               = fs.String("jaeger-agent", "localhost:6831", "Jaeger agent endpoint")
-		httpAddr                      = fs.String("http-addr", "localhost:2000", "HTTP listen address.")
+		httpAddr                      = fs.String("http-addr", ":2000", "HTTP listen address.")
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
 		templateFile                  = fs.String("template-file", "./default-message-card.tmpl", "The Microsoft Teams Message Card template file.")
@@ -80,7 +80,8 @@ func main() {
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
-		disableGrouping               = fs.Bool("disable-grouping", false, "Disable grouping of multiple alerts into one teams message cards.")
+		// TODO(bzon)
+		// disableGrouping               = fs.Bool("disable-grouping", false, "Disable grouping of multiple alerts into one teams message cards.")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -152,13 +153,13 @@ func main() {
 		if err != nil {
 			logger.Log("err", err)
 		}
-		defaultConverter = card.NewTemplatedCardCreator(tmpl, *escapeUnderscores, *disableGrouping)
+		defaultConverter = card.NewTemplatedCardCreator(tmpl, *escapeUnderscores)
 		defaultConverter = card.NewCreatorLoggingMiddleware(
 			log.With(
 				logger,
 				"template_file", *templateFile,
 				"escaped_underscores", *escapeUnderscores,
-				"disable_grouping", *disableGrouping,
+				// "disable_grouping", *disableGrouping,
 			),
 			defaultConverter,
 		)
@@ -232,7 +233,8 @@ func main() {
 			os.Exit(1)
 		}
 
-		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores, c.DisableGrouping)
+		// converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores, c.DisableGrouping)
+		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
 		converter = card.NewCreatorLoggingMiddleware(
 			log.With(
 				logger,
