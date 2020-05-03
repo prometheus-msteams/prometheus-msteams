@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"unsafe"
 
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus/alertmanager/notify/webhook"
@@ -69,13 +68,13 @@ func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, 
 
 	pr := PostResponse{WebhookURL: url}
 
-	jb, err := json.Marshal(c)
+	b, err := json.Marshal(c)
 	if err != nil {
 		err = fmt.Errorf("failed to decoding JSON card: %w", err)
 		return pr, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", s.webhookURL, bytes.NewBuffer(jb))
+	req, err := http.NewRequestWithContext(ctx, "POST", s.webhookURL, bytes.NewBuffer(b))
 	if err != nil {
 		err = fmt.Errorf("failed to creating a request: %w", err)
 		return pr, err
@@ -101,21 +100,17 @@ func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, 
 	return pr, nil
 }
 
-const (
-	// Maximum message size of 14336 Bytes (14KB)
-	maxMessageSize = 14336
-	// Maximum number of sections
-	// ref: https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#notes-on-the-office-365-connector-card
-	maxCardSections = 10
-)
-
 // splitOffice365Card splits a single Office365ConnectorCard into multiple Office365ConnectorCard.
 // The purpose of doing this is to prevent getting limited by Microsoft Teams API when sending a large JSON payload.
 func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365ConnectorCard {
+	// Maximum number of sections
+	// ref: https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#notes-on-the-office-365-connector-card
+	const maxCardSections = 10
+
 	var cards []card.Office365ConnectorCard
 
 	// Everything is good.
-	if len(c.Sections) < maxCardSections && unsafe.Sizeof(c) < maxMessageSize {
+	if len(c.Sections) < maxCardSections {
 		cards = append(cards, c)
 		return cards
 	}
@@ -134,7 +129,7 @@ func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365Connector
 
 			// If the max length or size has exceeded the limit,
 			// break the loop so we can create a new card again.
-			if len(newCard.Sections) >= maxCardSections || unsafe.Sizeof(newCard) >= maxMessageSize {
+			if len(newCard.Sections) >= maxCardSections {
 				break
 			}
 
