@@ -13,64 +13,84 @@ A lightweight Go Web Server that receives __POST__ alert messages from __Prometh
 
 Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python.
 
-## Why choose Go? Not Python or Ruby or Node?
-
-Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the other simple language (python, ruby, node). Having a static binary means that there is no need for you to install your program's dependencies and these dependencies takes up a lot of space in your docker image! Try it out DevOps folks!
+`prometheus-msteams` is a proxy server for Teams. You configure AlertManager `webhook_config` to route the alerts
+to prometheus-msteams urls and prometheus-msteams will make the http request to Teams using the webhooks you define.
 
 ## Table of Contents
 
-
 <!-- vim-markdown-toc GFM -->
 
-* [Getting Started (Quickstart)](#getting-started-quickstart)
-  * [Installation](#installation)
-  * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
-  * [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
-* [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
-  * [Creating the Configuration File](#creating-the-configuration-file)
-  * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+* [Getting Started](#getting-started)
+  * [Creating the configuration file](#creating-the-configuration-file)
+  * [Run the server](#run-the-server)
+  * [Setting up Prometheus AlertManager](#setting-up-prometheus-alertmanager)
+  * [Testing Prometheus Alerts to Teams Channel](#testing-prometheus-alerts-to-teams-channel)
 * [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
-  * [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
+  * [Custom Message Template per MS Teams Channel](#custom-message-template-per-ms-teams-channel)
 * [Configuration](#configuration)
-* [Kubernetes Deployment](#kubernetes-deployment)
+* [Kubernetes](#kubernetes)
 * [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
-## Getting Started (Quickstart)
+## Getting Started
 
-How it works.
+![multiChannel](./docs/promteams_multiconfig.png)
 
-![](./docs/promteams.png)
+### Creating the configuration file
 
-### Installation
+Create a yaml file with with the following. 
 
-We always recommend to use the latest stable release!
+```yaml
+connectors:
+- high_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/bbb"
+- low_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/ccc"
+```
 
-__OPTION 1:__ Run using docker.
+`high_priority_channel` and `low_priority_channel` are arbitrary names for the request paths that prometheus-msteams
+will create.
+
+### Run the server
+
+When running as a docker container, mount the config file in the container and set the __CONFIG_FILE__ environment variable.
 
 ```bash
 docker run -d -p 2000:2000 \
     --name="promteams" \
-    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
-    -e TEAMS_REQUEST_URI=alertmanager \
-    quay.io/prometheusmsteams/prometheus-msteams
+    -v /tmp/config.yml:/tmp/config.yml \
+    -e CONFIG_FILE="/tmp/config.yml" \
+    quay.io/prometheusmsteams/prometheus-msteams:v1.4.0
 ```
 
-__OPTION 2:__ Run using binary.
-
-Download the binary for your platform and the default card template from [RELEASES](https://github.com/prometheus-msteams/prometheus-msteams/releases), then run the binary in the same directory as you have stored the `default-message-card.tmpl`  like the following:
+When running as a binary, use the __-config-file__ flag.
 
 ```bash
-./prometheus-msteams -teams-request-uri alertmanager \
-  -teams-incoming-webhook-url "https://outlook.office.com/webhook/xxx"
+./prometheus-msteams server -config-file /tmp/config.yml
 ```
 
-__OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, checkout the [Kubernetes Deployment Guide](#kubernetes-deployment).
+This will create the request uri handlers __/high_priority_channel__ and __/low_priority_channel__.
 
-### Setting up Prometheus Alert Manager
+To validate your configuration, see the __/config__ endpoint of the application.
 
-By default, __prometheus-msteams__ creates a request uri handler __/alertmanager__.
+```bash
+curl localhost:2000/config
+
+[
+  {
+    "high_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/bbb"
+  },
+  {
+    "low_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/ccc"
+  }
+]
+```
+
+### Setting up Prometheus AlertManager
+
+> If you don't have Prometheus running yet and you wan't to try how this works,  
+> try [stefanprodan's](https://github.com/stefanprodan) [Prometheus in Docker](https://github.com/stefanprodan/dockprom) to help you install a local Prometheus setup quickly in a single machine.
+
+Now, your AlertManager must have a configuration like the this:
 
 ```yaml
 route:
@@ -78,21 +98,40 @@ route:
   group_interval: 30s
   repeat_interval: 30s
   group_wait: 30s
-  receiver: 'prometheus-msteams'
+  receiver: 'low_priority_receiver'  # default/fallback request handler
+  routes:
+    - receiver: high_priority_receiver
+      match:
+        severity: critical
+    - receiver: low_priority_receiver
+      match:
+        severity: warning
 
 receivers:
-- name: 'prometheus-msteams'
-  webhook_configs: # https://prometheus.io/docs/alerting/configuration/#webhook_config 
-  - send_resolved: true
-    url: 'http://localhost:2000/alertmanager' # the prometheus-msteams proxy
+- name: 'high_priority_receiver'
+  webhook_configs:
+    - send_resolved: true
+      url: 'http://localhost:2000/high_priority_channel' # request handler 1
+- name: 'low_priority_receiver'
+  webhook_configs:
+    - send_resolved: true
+      url: 'http://localhost:2000/low_priority_channel' # request handler 2
+```
+Your Prometheus alert could be something like this:
+
+```yaml
+alert: SomeAlert
+expr: absent(up{job="foo"} == 1)
+for: 15m
+labels:
+  severity: critical # matches the high_priority_channel route.
 ```
 
-> If you don't have Prometheus running yet and you wan't to try how this works,  
-> try [stefanprodan's](https://github.com/stefanprodan) [Prometheus in Docker](https://github.com/stefanprodan/dockprom) to help you install a local Prometheus setup quickly in a single machine.
+### Testing Prometheus Alerts to Teams Channel
 
-### Simulating a Prometheus Alerts to Teams Channel
+This is just a simple way to test alerts without involving Prometheus AlertManager.
 
-Create the following json data as `prom-alert.json`.
+Create the following AlertManager JSON data as `prom-alert.json` and post it to prometheus-msteams server directly.
 
 ```json
 {
@@ -133,96 +172,10 @@ Create the following json data as `prom-alert.json`.
 ```
 
 ```bash
-curl -X POST -d @prom-alert.json http://localhost:2000/alertmanager
+curl -X POST -d @prom-alert.json http://localhost:2000/low_priority_channel
 ```
 
 The teams channel should received a message.
-
-## Sending Alerts to Multiple Teams Channel
-
-You can configure this application to serve 2 or more request path and each path can use a unique Teams channel webhook url to post.
-
-![multiChannel](./docs/promteams_multiconfig.png)
-
-This can be achieved by supplying the application a configuration file.
-
-### Creating the Configuration File
-
-Create a yaml file with the following format.
-
-```yaml
-connectors:
-- high_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/bbb"
-- low_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/ccc"
-```
-
-> __NOTE__: high_priority_channel and low_priority_channel are example handler or request path names.
-
-When running as a docker container, mount the config file in the container and set the __CONFIG_FILE__ environment variable.
-
-```bash
-docker run -d -p 2000:2000 \
-    --name="promteams" \
-    -v /tmp/config.yml:/tmp/config.yml \
-    -e CONFIG_FILE="/tmp/config.yml" \
-    quay.io/prometheusmsteams/prometheus-msteams:v1.3.3
-```
-
-When running as a binary, use the __-config-file__ flag.
-
-```bash
-./prometheus-msteams server \
-    -l localhost \
-    -p 2000 \
-    -config-file /tmp/config.yml
-```
-
-This will create the request uri handlers __/high_priority_channel__ and __/low_priority_channel__.
-
-To validate your configuration, see the __/config__ endpoint of the application.
-
-```bash
-curl localhost:2000/config
-
-[
-  {
-    "high_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/bbb"
-  },
-  {
-    "low_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/ccc"
-  }
-]
-```
-
-### Setting up Prometheus Alert Manager
-
-Considering the __prometheus-msteams config file__ settings, your Alert Manager would have a configuration like the following.
-
-```yaml
-route:
-  group_by: ['alertname']
-  group_interval: 30s
-  repeat_interval: 30s
-  group_wait: 30s
-  receiver: 'low_priority_receiver'  # default/fallback request handler
-  routes:
-    - receiver: high_priority_receiver
-      match:
-        severity: critical
-    - receiver: low_priority_receiver
-      match:
-        severity: warning
-
-receivers:
-- name: 'high_priority_receiver'
-  webhook_configs:
-    - send_resolved: true
-      url: 'http://localhost:2000/high_priority_channel' # request handler 1
-- name: 'low_priority_receiver'
-  webhook_configs:
-    - send_resolved: true
-      url: 'http://localhost:2000/low_priority_channel' # request handler 2
-```
 
 ## Customise Messages to MS Teams
 
@@ -248,7 +201,7 @@ When running as a binary, use the __-template-file__ flag.
     -template-file /tmp/card.tmpl
 ```
 
-### Customise Messages per MS Teams Channel
+### Custom Message Template per MS Teams Channel
 
 You can also use a custom template per webhook by using the `connectors_with_custom_templates`.
 
@@ -301,7 +254,7 @@ Usage of prometheus-msteams:
     	The HTTP client TLS handshake timeout. (default 30s)
 ```
 
-## Kubernetes Deployment
+## Kubernetes
 
 See [Helm Guide](./chart/prometheus-msteams/README.md).
 
