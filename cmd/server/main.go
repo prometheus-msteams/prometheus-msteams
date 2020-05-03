@@ -25,7 +25,7 @@ import (
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 
-	_ "net/http/pprof"
+	_ "net/http/pprof" //nolint: gosec
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -49,10 +49,9 @@ type ConnectorWithCustomTemplate struct {
 	TemplateFile      string `yaml:"template_file"`
 	WebhookURL        string `yaml:"webhook_url"`
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
-	DisableGrouping   bool   `yaml:"disable_grouping"`
 }
 
-func parseTeamsConfigFile(f string, logger log.Logger) (PromTeamsConfig, error) {
+func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
 		return PromTeamsConfig{}, err
@@ -64,7 +63,7 @@ func parseTeamsConfigFile(f string, logger log.Logger) (PromTeamsConfig, error) 
 	return tc, nil
 }
 
-func main() {
+func main() { //nolint: funlen
 	var (
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
 		logFormat                     = fs.String("log-format", "json", "json|fmt")
@@ -80,8 +79,6 @@ func main() {
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
-		// TODO(bzon)
-		// disableGrouping               = fs.Bool("disable-grouping", false, "Disable grouping of multiple alerts into one teams message cards.")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -112,6 +109,7 @@ func main() {
 	// Tracer.
 	if *jaegerTrace {
 		logger.Log("message", "jaeger tracing enabled")
+
 		je, err := jaeger.NewExporter(
 			jaeger.Options{
 				AgentEndpoint: *jaegerAgentAddr,
@@ -122,13 +120,13 @@ func main() {
 			logger.Log("err", err)
 			os.Exit(1)
 		}
+
 		trace.RegisterExporter(je)
 		trace.ApplyConfig(
 			trace.Config{
 				DefaultSampler: trace.AlwaysSample(),
 			},
 		)
-
 	}
 
 	// Prepare the Teams config.
@@ -139,7 +137,7 @@ func main() {
 
 	// Parse the config file if defined.
 	if *configFile != "" {
-		tc, err = parseTeamsConfigFile(*configFile, logger)
+		tc, err = parseTeamsConfigFile(*configFile)
 		if err != nil {
 			logger.Log("err", err)
 			os.Exit(1)
@@ -159,7 +157,6 @@ func main() {
 				logger,
 				"template_file", *templateFile,
 				"escaped_underscores", *escapeUnderscores,
-				// "disable_grouping", *disableGrouping,
 			),
 			defaultConverter,
 		)
@@ -240,7 +237,6 @@ func main() {
 				logger,
 				"template_file", c.TemplateFile,
 				"escaped_underscores", c.EscapeUnderscores,
-				"disable_grouping", c.DisableGrouping,
 			),
 			converter,
 		)
@@ -327,28 +323,28 @@ func ocviews() []*view.View {
 	}
 	return []*view.View{
 		// HTTP client metrics.
-		&view.View{
+		{
 			Name:        "http/client/sent_bytes",
 			Measure:     ochttp.ClientSentBytes,
 			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			Description: "Total bytes sent in request body (not including headers), by HTTP method and response status",
 			TagKeys:     clientKeys,
 		},
-		&view.View{
+		{
 			Name:        "http/client/received_bytes",
 			Measure:     ochttp.ClientReceivedBytes,
 			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			Description: "Total bytes received in response bodies (not including headers but including error responses with bodies), by HTTP method and response status",
 			TagKeys:     clientKeys,
 		},
-		&view.View{
+		{
 			Name:        "http/client/roundtrip_latency",
 			Measure:     ochttp.ClientRoundtripLatency,
 			Aggregation: view.Distribution(1, 2, 3, 4, 5, 6, 8, 10, 13, 16, 20, 25, 30),
 			Description: "End-to-end latency, by HTTP method and response status",
 			TagKeys:     clientKeys,
 		},
-		&view.View{
+		{
 			Name:        "http/client/completed_count",
 			Measure:     ochttp.ClientRoundtripLatency,
 			Aggregation: view.Count(),
@@ -356,28 +352,28 @@ func ocviews() []*view.View {
 			TagKeys:     clientKeys,
 		},
 		// HTTP server metrics.
-		&view.View{
+		{
 			Name:        "http/server/request_count",
 			Description: "Count of HTTP requests started",
 			Measure:     ochttp.ServerRequestCount,
 			Aggregation: view.Count(),
 			TagKeys:     serverKeys,
 		},
-		&view.View{
+		{
 			Name:        "http/server/request_bytes",
 			Description: "Size distribution of HTTP request body",
 			Measure:     ochttp.ServerRequestBytes,
 			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			TagKeys:     serverKeys,
 		},
-		&view.View{
+		{
 			Name:        "http/server/response_bytes",
 			Description: "Size distribution of HTTP response body",
 			Measure:     ochttp.ServerResponseBytes,
 			Aggregation: view.Distribution(1024, 2048, 4096, 16384, 65536, 262144, 1048576, 4194304),
 			TagKeys:     serverKeys,
 		},
-		&view.View{
+		{
 			Name:        "http/server/latency",
 			Description: "Latency distribution of HTTP requests",
 			Measure:     ochttp.ServerLatency,

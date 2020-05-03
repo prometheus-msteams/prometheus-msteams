@@ -123,7 +123,7 @@ func ParseTemplateFile(f string) (*template.Template, error) {
 
 	tmpl, err := template.FromGlobs(f)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse template: %v: %v", err, err)
+		return nil, fmt.Errorf("failed to parse template: %v: %v", err, err)
 	}
 
 	return tmpl, nil

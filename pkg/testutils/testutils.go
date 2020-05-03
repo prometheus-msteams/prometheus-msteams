@@ -66,7 +66,7 @@ func CompareToGoldenFile(t *testing.T, v interface{}, file string, update bool) 
 			string(want),
 			a.Diff(b).Render(),
 		)
-		
+
 		t.Fatal(result)
 	}
 }

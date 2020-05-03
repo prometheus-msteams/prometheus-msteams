@@ -30,7 +30,7 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// c := card.NewTemplatedCardCreator(tmpl, false, false)
+
 	c := card.NewTemplatedCardCreator(tmpl, false)
 
 	logger := log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
@@ -69,7 +69,7 @@ func TestServer(t *testing.T) {
 		{
 			"templated card service test",
 			[]transport.Route{
-				transport.Route{
+				{
 					RequestPath: "/alertmanager",
 					Service: service.NewLoggingService(
 						logger,
@@ -80,7 +80,7 @@ func TestServer(t *testing.T) {
 				},
 			},
 			[]alert{
-				alert{
+				{
 					requestPath:   "/alertmanager",
 					promAlertFile: "../pkg/card/testdata/prom_post_request.json",
 				},
@@ -89,6 +89,7 @@ func TestServer(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Create the server and run it using a test http server.
 			srv := transport.NewServer(logger, tt.routes...)
