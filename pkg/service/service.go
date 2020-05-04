@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -103,14 +104,18 @@ func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, 
 // splitOffice365Card splits a single Office365ConnectorCard into multiple Office365ConnectorCard.
 // The purpose of doing this is to prevent getting limited by Microsoft Teams API when sending a large JSON payload.
 func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365ConnectorCard {
+	// Maximum message size of 14336 Bytes (14KB)
+	const maxSize = 14336
 	// Maximum number of sections
 	// ref: https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#notes-on-the-office-365-connector-card
 	const maxCardSections = 10
 
 	var cards []card.Office365ConnectorCard
 
+
+
 	// Everything is good.
-	if len(c.Sections) < maxCardSections {
+	if (len(c.Sections) < maxCardSections) && (sizeOfCard(c) < maxSize) {
 		cards = append(cards, c)
 		return cards
 	}
@@ -127,9 +132,13 @@ func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365Connector
 				continue
 			}
 
+			fmt.Println("##############")
+			fmt.Println(sizeOfCard(newCard))
+			fmt.Println("##############")
+
 			// If the max length or size has exceeded the limit,
 			// break the loop so we can create a new card again.
-			if len(newCard.Sections) >= maxCardSections {
+			if (len(newCard.Sections) >= maxCardSections) || (sizeOfCard(newCard) >= maxSize) {
 				break
 			}
 
@@ -141,4 +150,27 @@ func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365Connector
 	}
 
 	return cards
+}
+
+// CounterWr is used to get the size of the Office365ConnectorCard struct
+type CounterWr struct {
+	io.Writer
+	Count int
+}
+
+func (cw *CounterWr) Write(p []byte) (n int, err error) {
+	n, err = cw.Writer.Write(p)
+	cw.Count += n
+	return
+}
+
+func sizeOfCard(c card.Office365ConnectorCard) int {
+	// encode the card to get the byte size of the struct
+	buf := &bytes.Buffer{}
+	var out io.Writer = buf
+	cw := &CounterWr{Writer: out}
+	if err := json.NewEncoder(cw).Encode(c); err != nil {
+		panic(err)
+	}
+	return cw.Count
 }
