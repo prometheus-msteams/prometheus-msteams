@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -49,7 +48,10 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 	}
 
 	// Split into multiple messages if necessary.
-	cc := splitOffice365Card(c)
+	cc, err := splitOffice365Card(c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to split Office 365 Card: %w", err)
+	}
 
 	// TODO(@bzon): post concurrently.
 	for _, c := range cc {
@@ -103,7 +105,7 @@ func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, 
 
 // splitOffice365Card splits a single Office365ConnectorCard into multiple Office365ConnectorCard.
 // The purpose of doing this is to prevent getting limited by Microsoft Teams API when sending a large JSON payload.
-func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365ConnectorCard {
+func splitOffice365Card(c card.Office365ConnectorCard) ([]card.Office365ConnectorCard, error) {
 	// Maximum message size of 14336 Bytes (14KB)
 	const maxSize = 14336
 	// Maximum number of sections
@@ -112,12 +114,16 @@ func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365Connector
 
 	var cards []card.Office365ConnectorCard
 
-
+	// marshal cards in order to get the byte size
+	cb, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
 
 	// Everything is good.
-	if (len(c.Sections) < maxCardSections) && (sizeOfCard(c) < maxSize) {
+	if (len(c.Sections) < maxCardSections) && (len(cb) < maxSize) {
 		cards = append(cards, c)
-		return cards
+		return cards, nil
 	}
 
 	indexAdded := make(map[int]bool)
@@ -132,13 +138,15 @@ func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365Connector
 				continue
 			}
 
-			fmt.Println("##############")
-			fmt.Println(sizeOfCard(newCard))
-			fmt.Println("##############")
+			// marshal cards in order to get the byte size
+			newCardb, err := json.Marshal(newCard)
+			if err != nil {
+				return nil, err
+			}
 
 			// If the max length or size has exceeded the limit,
 			// break the loop so we can create a new card again.
-			if (len(newCard.Sections) >= maxCardSections) || (sizeOfCard(newCard) >= maxSize) {
+			if (len(newCard.Sections) >= maxCardSections) || (len(newCardb) >= maxSize) {
 				break
 			}
 
@@ -149,28 +157,5 @@ func splitOffice365Card(c card.Office365ConnectorCard) []card.Office365Connector
 		cards = append(cards, newCard)
 	}
 
-	return cards
-}
-
-// CounterWr is used to get the size of the Office365ConnectorCard struct
-type CounterWr struct {
-	io.Writer
-	Count int
-}
-
-func (cw *CounterWr) Write(p []byte) (n int, err error) {
-	n, err = cw.Writer.Write(p)
-	cw.Count += n
-	return
-}
-
-func sizeOfCard(c card.Office365ConnectorCard) int {
-	// encode the card to get the byte size of the struct
-	buf := &bytes.Buffer{}
-	var out io.Writer = buf
-	cw := &CounterWr{Writer: out}
-	if err := json.NewEncoder(cw).Encode(c); err != nil {
-		panic(err)
-	}
-	return cw.Count
+	return cards, nil
 }

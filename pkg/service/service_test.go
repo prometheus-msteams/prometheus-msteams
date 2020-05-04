@@ -121,7 +121,10 @@ func Test_splitOffice365Card(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got := splitOffice365Card(tt.c)
+			got, err := splitOffice365Card(tt.c)
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Fatalf("mismatch (-want +got):\n%s", diff)
