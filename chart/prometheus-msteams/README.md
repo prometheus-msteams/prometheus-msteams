@@ -30,7 +30,7 @@ Create a helm values file to configure your Microsoft Teams channel connectors a
 replicaCount: 1
 image:
   repository: quay.io/prometheusmsteams/prometheus-msteams
-  tag: v1.3.3
+  tag: v1.3.4
 
 connectors:
 # in alertmanager, this will be used as http://prometheus-msteams:2000/bar
@@ -92,7 +92,7 @@ Otherwise you can also set the value by specifying the template data directly vi
 | Parameter                                  | Description                                                                                                                                                   | Default                                         |
 | ---                                        | ---                                                                                                                                                           | ---                                             |
 | `image.repository`                         | Image repository                                                                                                                                              | `quay.io/prometheusmsteams/prometheus-msteams`                       |
-| `image.tag`                                | Image tag                                                                                                                                                     | `v1.3.3`                                        |
+| `image.tag`                                | Image tag                                                                                                                                                     | `v1.3.4`                                        |
 | `image.pullPolicy`                         | Image pull policy                                                                                                                                             | `Always`                                        |
 | `extraEnvs`                                | Extra environment variables                                                                                                                                   | `{}`                                            |
 | `connectors`                               | Add your own Microsoft Teams connectors.                                                                                                                      | `[]`                                            |
