@@ -1,15 +1,60 @@
 linters:
   enable:
-    - gosec
     - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
     - gocyclo
+    - gofmt
+    - goimports
     - golint
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - misspell
+    - nakedret
+    - rowserrcheck
+    - scopelint
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
 issues:
   exclude-rules:
-  - linters:
-    - gosec
-    text: "G108"
+    - linters:
+       - golint
+      text: "don't use ALL_CAPS in Go names"
+    - linters:
+       - stylecheck
+      text: "ST1003: should not use ALL_CAPS in Go names"
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
 linters-settings:
+  funlen:
+    lines: 120
+    statements: 50
+  misspell:
+    locale: US
   errcheck:
     # path to a file containing a list of functions to exclude from checking
     # see https://github.com/kisielk/errcheck#excluding-functions for details

@@ -59,12 +59,14 @@ func CompareToGoldenFile(t *testing.T, v interface{}, file string, update bool) 
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		result := fmt.Sprintf(
-			"\ndiff:\n%s\ngot:\n%s\nwant:\n%s",
-			a.Diff(b).Render(),
+			"\ngot:\n%s\nwant:\n%s\ndiff:\n%s",
 			string(gotBytes),
 			string(want),
+			a.Diff(b).Render(),
 		)
+
 		t.Fatal(result)
 	}
 }
