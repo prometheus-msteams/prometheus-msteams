@@ -30,6 +30,10 @@ tolerations: []
 
 affinity: {}
 
+podSecurityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+
 priorityClassName: ""
 
 metrics:
