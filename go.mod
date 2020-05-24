@@ -7,7 +7,6 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
 	github.com/armon/go-metrics v0.3.0 // indirect
-	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -16,6 +15,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
 	github.com/google/btree v1.0.0 // indirect
+	github.com/google/go-cmp v0.4.0
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect

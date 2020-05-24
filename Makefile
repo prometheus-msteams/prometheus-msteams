@@ -20,6 +20,7 @@ LDFLAGS = -ldflags "-X $(VERSION_PKG).VERSION=$(VERSION) -X $(VERSION_PKG).COMMI
 
 DOCKER_RUN_OPTS ?=
 DOCKER_RUN_ARG ?=
+RUN_ARGS ?=
 
 # docker
 DOCKER_QUAY_REPO=quay.io/prometheusmsteams/prometheus-msteams
@@ -63,8 +64,11 @@ docker-tag-latest:
 docker-hub-push: docker
 	docker push $(DOCKER_HUB_REPO):$(VERSION)
 
-run-osx: dep darwin
-	bin/prometheus-msteams-darwin-amd64 server $(RUN_ARGS)
+run:
+	go run cmd/server/main.go -http-addr=localhost:2000 $(RUN_ARGS)
+
+run-test-config:
+	go run cmd/server/main.go -http-addr=localhost:2000 -config-file ./test-connectors.yaml
 
 fmt:
 	gofmt -w $(GOFMT_FILES)
