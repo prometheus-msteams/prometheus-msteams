@@ -10,7 +10,11 @@
                  {{- else -}}808080{{- end -}}",
   "summary": "{{- if eq .CommonAnnotations.summary "" -}}
                   {{- if eq .CommonAnnotations.message "" -}}
-                    {{- .CommonLabels.alertname -}}
+                    {{- if eq .CommonLabels.alertname "" -}}
+                      Prometheus Alert
+                    {{- else -}}
+                      {{- .CommonLabels.alertname -}}
+                    {{- end -}}
                   {{- else -}}
                     {{- .CommonAnnotations.message -}}
                   {{- end -}}
