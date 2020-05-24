@@ -25,7 +25,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 			want: Office365ConnectorCard{
 				Context:    "http://schema.org/extensions",
 				Type:       "MessageCard",
-				Title:      "Prometheus Alert (firing)",
+				Title:      "Prometheus Alert (Firing)",
 				Summary:    "Prometheus Test",
 				ThemeColor: "FFA500",
 				Sections: []Section{
@@ -56,7 +56,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 			want: Office365ConnectorCard{
 				Context:    "http://schema.org/extensions",
 				Type:       "MessageCard",
-				Title:      "Prometheus Alert (firing)",
+				Title:      "Prometheus Alert (Firing)",
 				Summary:    "Prometheus Test",
 				ThemeColor: "FFA500",
 				Sections: []Section{
@@ -87,7 +87,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 			want: Office365ConnectorCard{
 				Context:    "http://schema.org/extensions",
 				Type:       "MessageCard",
-				Title:      "Prometheus Alert (firing)",
+				Title:      "Prometheus Alert (Firing)",
 				Summary:    "Prometheus Test",
 				ThemeColor: "FFA500",
 				Sections: []Section{
