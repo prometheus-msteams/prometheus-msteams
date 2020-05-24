@@ -226,7 +226,7 @@ receivers:
 
 ## Customise Messages to MS Teams
 
-This application uses a [default Microsoft Teams Message card template](./default-message-card.tmpl) to convert incoming Prometheus alerts to teams message cards. This template can be customised. Simply create a new file that you want to use as your custom template. It uses the [Go Templating Engine](https://golang.org/pkg/text/template/) and especially the [Prometheus Alertmanager Notification Template](https://prometheus.io/docs/alerting/notifications/). Also see the [Office 365 Connector Card Reference](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#office-365-connector-card) and some [examples](./examples) for more information to construct your template. Apart from that, you can use the [Message Card Playground](https://messagecardplayground.azurewebsites.net/) to form the basic structure of your card.
+This application uses a [default Microsoft Teams Message card template](./default-message-card.tmpl) to convert incoming Prometheus alerts to teams message cards. This template can be customised. Simply create a new file that you want to use as your custom template. It uses the [Go Templating Engine](https://golang.org/pkg/text/template/) and the [Prometheus Alertmanager Notification Template](https://prometheus.io/docs/alerting/notifications/). Also see the [Office 365 Connector Card Reference](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/cards/cards-reference#office-365-connector-card) and some [examples](./examples) for more information to construct your template. Apart from that, you can use the [Message Card Playground](https://messagecardplayground.azurewebsites.net/) to form the basic structure of your card.
 
 When running as a docker container, mount the template file in the container and set the __TEMPLATE_FILE__ environment variable.
 
@@ -264,6 +264,13 @@ connectors_with_custom_templates:
   webhook_url: <webhook> 
   escape_underscores: true # get the effect of -auto-escape-underscores.
 ```
+
+### Use Template functions to improve your templates
+
+You can use
+
+* all of the existing [sprig template functions](http://masterminds.github.io/sprig/) except the [OS functions env and expandenv](http://masterminds.github.io/sprig/os.html)
+* some well known functions from Helm: `toToml`, `toYaml`, `fromYaml`, `toJson`, `fromJson`
 
 ## Configuration
 
