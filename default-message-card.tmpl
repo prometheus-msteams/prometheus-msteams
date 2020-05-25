@@ -21,7 +21,7 @@
               {{- else -}}
                   {{- .CommonAnnotations.summary -}}
               {{- end -}}",
-  "title": "Prometheus Alert ({{ .Status }})",
+  "title": "Prometheus Alert ({{ .Status | title }})",
   "sections": [ {{$externalUrl := .ExternalURL}}
   {{- range $index, $alert := .Alerts }}{{- if $index }},{{- end }}
     {
