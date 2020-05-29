@@ -6,6 +6,14 @@ image:
   tag: v1.4.1
   pullPolicy: Always
 
+# imageCredentials is a map of registry, username and password
+#   which will be used to pull the image from a private repository
+#   specified with image.repository
+# imageCredentials:
+#   repository: myprivaterepository:5000
+#   username: the_username
+#   password: the_password
+
 extraEnvs:
 
 container:

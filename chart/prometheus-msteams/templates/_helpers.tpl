@@ -41,3 +41,11 @@ Return the appropriate apiVersion for deployment.
 {{- print "apps/v1beta2" -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create the content of a kubernetes.io/dockerconfigjson .dockerconfigjson value.
+See: https://helm.sh/docs/howto/charts_tips_and_tricks/
+*/}}
+{{- define "imagePullSecret" }}
+{{- printf "{\"auths\": {\"%s\": {\"auth\": \"%s\"}}}" .Values.imageCredentials.registry (printf "%s:%s" .Values.imageCredentials.username .Values.imageCredentials.password | b64enc) | b64enc }}
+{{- end }}

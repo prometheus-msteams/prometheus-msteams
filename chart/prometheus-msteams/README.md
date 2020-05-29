@@ -34,7 +34,7 @@ image:
 
 connectors:
 # in alertmanager, this will be used as http://prometheus-msteams:2000/bar
-- bar: https://outlook.office.com/webhook/xxxx/xxxx 
+- bar: https://outlook.office.com/webhook/xxxx/xxxx
 # in alertmanager, this will be used as http://prometheus-msteams:2000/foo
 - foo: https://outlook.office.com/webhook/xxxx/xxxx
 
@@ -72,8 +72,8 @@ Please see [Prometheus Operator alerting docs](https://github.com/coreos/prometh
 
 ### Customise messages to MS Teams
 
-This application uses a [Default Teams Message Card Template](./prometheus-msteams/card.tmpl) to convert incoming Prometheus alerts to teams message cards. 
-This template can be customised by specifying the value of `customCardTemplate` parameter. 
+This application uses a [Default Teams Message Card Template](./prometheus-msteams/card.tmpl) to convert incoming Prometheus alerts to teams message cards.
+This template can be customised by specifying the value of `customCardTemplate` parameter.
 Simply create a new file that you want to use as your custom template (for example, `custom-card.tmpl`).
 You can use the `--set-file` flag to set the value from this file:
 
@@ -89,31 +89,34 @@ Otherwise you can also set the value by specifying the template data directly vi
 
 ### Helm Configuration
 
-| Parameter                                  | Description                                                                                                                                                   | Default                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `image.repository`                         | Image repository                                                                                                                                              | `quay.io/prometheusmsteams/prometheus-msteams` |
-| `image.tag`                                | Image tag                                                                                                                                                     | `v1.4.1`                                       |
-| `image.pullPolicy`                         | Image pull policy                                                                                                                                             | `Always`                                       |
-| `extraEnvs`                                | Extra environment variables                                                                                                                                   | `{}`                                           |
-| `connectors`                               | Add your own Microsoft Teams connectors.                                                                                                                      | `[]`                                           |
-| `connectors_with_custom_templates`         | Add your own Microsoft Teams connectors with custom template file.                                                                                            | `[]`                                           |
-| `service.port`                             | Service port                                                                                                                                                  | `2000`                                         |
-| `service.type`                             | Service type                                                                                                                                                  | `ClusterIP`                                    |
-| `container.port`                           | Container port                                                                                                                                                | `2000`                                         |
-| `container.additionalArgs`                 | additional prometheus-msteams flags to use                                                                                                                    | `{}`                                           |
-| `resources`                                | Pod resources                                                                                                                                                 | See [default](./values.yaml)                   |
-| `nodeSelector`                             | Pod nodeSelector                                                                                                                                              | `{}`                                           |
-| `affinity`                                 | Pod affinity                                                                                                                                                  | `{}`                                           |
-| `tolerations`                              | Pod tolerations                                                                                                                                               | `{}`                                           |
-| `priorityClassName`                        | Pod priority class                                                                                                                                            | `""`                                           |
-| `podAnnotations`                           | Pod annotations                                                                                                                                               | `{}`                                           |
-| `podSecurityContext`                       | Pod securityContext                                                                                                                                           | See [default](./values.yaml)                   |
-| `customCardTemplate`                       | Custom message card template for MS teams                                                                                                                     | `""`                                           |
-| `metrics.serviceMonitor.enabled`           | Set this to `true` to create ServiceMonitor for Prometheus operator                                                                                           | `false`                                        |
-| `metrics.serviceMonitor.additionalLabels`  | Additional labels that can be used so ServiceMonitor will be discovered by Prometheus                                                                         | `{}`                                           |
-| `metrics.serviceMonitor.honorLabels`       | honorLabels chooses the metric's labels on collisions with target labels.                                                                                     | `false`                                        |
-| `metrics.serviceMonitor.namespace`         | namespace where servicemonitor resource should be created                                                                                                     | `release namespace`                            |
-| `metrics.serviceMonitor.namespaceSelector` | [namespaceSelector](https://github.com/coreos/prometheus-operator/blob/v0.34.0/Documentation/api.md#namespaceselector) to configure what namespaces to scrape | `release namespace`                            |
-| `metrics.serviceMonitor.scrapeInterval`    | interval between Prometheus scraping                                                                                                                          | `30s`                                          |
+| Parameter                                  | Description                                                                                                                                                   | Default                                         |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `image.repository`                         | Image repository                                                                                                                                              | `quay.io/prometheusmsteams/prometheus-msteams`  |
+| `image.tag`                                | Image tag                                                                                                                                                     | `v1.4.1`                                        |
+| `image.pullPolicy`                         | Image pull policy                                                                                                                                             | `Always`                                        |
+| `imageCredentials.registry`                | Registry name to create credentials for                                                                                                                       | ``                                              |
+| `imageCredentials.username`                | Registry username to create credentials for                                                                                                                   | ``                                              |
+| `imageCredentials.password`                | Registry password to create credentials for                                                                                                                   | ``                                              |
+| `extraEnvs`                                | Extra environment variables                                                                                                                                   | `{}`                                            |
+| `connectors`                               | Add your own Microsoft Teams connectors.                                                                                                                      | `[]`                                            |
+| `connectors_with_custom_templates`         | Add your own Microsoft Teams connectors with custom template file.                                                                                            | `[]`                                            |
+| `service.port`                             | Service port                                                                                                                                                  | `2000`                                          |
+| `service.type`                             | Service type                                                                                                                                                  | `ClusterIP`                                     |
+| `container.port`                           | Container port                                                                                                                                                | `2000`                                          |
+| `container.additionalArgs`                 | additional prometheus-msteams flags to use                                                                                                                    | `{}`                                            |
+| `resources`                                | Pod resources                                                                                                                                                 | See [default](./values.yaml)                    |
+| `nodeSelector`                             | Pod nodeSelector                                                                                                                                              | `{}`                                            |
+| `affinity`                                 | Pod affinity                                                                                                                                                  | `{}`                                            |
+| `tolerations`                              | Pod tolerations                                                                                                                                               | `{}`                                            |
+| `priorityClassName`                        | Pod priority class                                                                                                                                            | `""`                                            |
+| `podAnnotations`                           | Pod annotations                                                                                                                                               | `{}`                                            |
+| `podSecurityContext`                       | Pod securityContext                                                                                                                                           | See [default](./values.yaml)                    |
+| `customCardTemplate`                       | Custom message card template for MS teams                                                                                                                     | `""`                                            |
+| `metrics.serviceMonitor.enabled`           | Set this to `true` to create ServiceMonitor for Prometheus operator                                                                                           | `false`                                         |
+| `metrics.serviceMonitor.additionalLabels`  | Additional labels that can be used so ServiceMonitor will be discovered by Prometheus                                                                         | `{}`                                            |
+| `metrics.serviceMonitor.honorLabels`       | honorLabels chooses the metric's labels on collisions with target labels.                                                                                     | `false`                                         |
+| `metrics.serviceMonitor.namespace`         | namespace where servicemonitor resource should be created                                                                                                     | `release namespace`                             |
+| `metrics.serviceMonitor.namespaceSelector` | [namespaceSelector](https://github.com/coreos/prometheus-operator/blob/v0.34.0/Documentation/api.md#namespaceselector) to configure what namespaces to scrape | `release namespace`                             |
+| `metrics.serviceMonitor.scrapeInterval`    | interval between Prometheus scraping                                                                                                                          | `30s`                                           |
 
 
