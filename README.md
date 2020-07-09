@@ -5,7 +5,7 @@
 
 ![](./docs/teams_screenshot.png)
 
-## Overview
+# Overview
 
 A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://quay.io/repository/prometheusmsteams/prometheus-msteams?tab=tags)!
 
@@ -19,10 +19,8 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 
 ## Table of Contents
 
-
 <!-- vim-markdown-toc GFM -->
 
-- [Overview](#overview)
 - [Synopsis](#synopsis)
 - [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
 - [Table of Contents](#table-of-contents)
