@@ -23,7 +23,6 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 
 - [Synopsis](#synopsis)
 - [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
-- [Table of Contents](#table-of-contents)
 - [Getting Started (Quickstart)](#getting-started-quickstart)
   - [Installation](#installation)
   - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
