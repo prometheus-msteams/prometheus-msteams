@@ -5,7 +5,7 @@
 
 ![](./docs/teams_screenshot.png)
 
-# Overview
+## Overview
 
 A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://quay.io/repository/prometheusmsteams/prometheus-msteams?tab=tags)!
 
@@ -23,22 +23,22 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 <!-- vim-markdown-toc GFM -->
 
 - [Overview](#overview)
-  - [Synopsis](#synopsis)
-  - [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
-  - [Table of Contents](#table-of-contents)
-  - [Getting Started (Quickstart)](#getting-started-quickstart)
-    - [Installation](#installation)
-    - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
-    - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
-  - [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
-    - [Creating the Configuration File](#creating-the-configuration-file)
-    - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
-  - [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
-    - [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
-    - [Use Template functions to improve your templates](#use-template-functions-to-improve-your-templates)
-  - [Configuration](#configuration)
-  - [Kubernetes Deployment](#kubernetes-deployment)
-  - [Contributing](#contributing)
+- [Synopsis](#synopsis)
+- [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
+- [Table of Contents](#table-of-contents)
+- [Getting Started (Quickstart)](#getting-started-quickstart)
+  - [Installation](#installation)
+  - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
+  - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
+- [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
+  - [Creating the Configuration File](#creating-the-configuration-file)
+  - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+- [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
+  - [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
+  - [Use Template functions to improve your templates](#use-template-functions-to-improve-your-templates)
+- [Configuration](#configuration)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
