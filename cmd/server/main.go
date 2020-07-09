@@ -66,6 +66,7 @@ func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 func main() { //nolint: funlen
 	var (
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
+		promVersion                   = fs.Bool("version", false, "Print the version")
 		logFormat                     = fs.String("log-format", "json", "json|fmt")
 		debugLogs                     = fs.Bool("debug", true, "Set log level to debug mode.")
 		jaegerTrace                   = fs.Bool("jaeger-trace", false, "Send traces to Jaeger.")
@@ -84,6 +85,11 @@ func main() { //nolint: funlen
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
+	}
+
+	if *promVersion {
+		fmt.Println(version.VERSION)
+		os.Exit(0)
 	}
 
 	// Logger.
