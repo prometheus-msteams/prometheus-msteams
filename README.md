@@ -22,18 +22,23 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 
 <!-- vim-markdown-toc GFM -->
 
-* [Getting Started (Quickstart)](#getting-started-quickstart)
-  * [Installation](#installation)
-  * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
-  * [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
-* [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
-  * [Creating the Configuration File](#creating-the-configuration-file)
-  * [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
-* [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
-  * [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
-* [Configuration](#configuration)
-* [Kubernetes Deployment](#kubernetes-deployment)
-* [Contributing](#contributing)
+- [Overview](#overview)
+  - [Synopsis](#synopsis)
+  - [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started (Quickstart)](#getting-started-quickstart)
+    - [Installation](#installation)
+    - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
+    - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
+  - [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
+    - [Creating the Configuration File](#creating-the-configuration-file)
+    - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+  - [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
+    - [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
+    - [Use Template functions to improve your templates](#use-template-functions-to-improve-your-templates)
+  - [Configuration](#configuration)
+  - [Kubernetes Deployment](#kubernetes-deployment)
+  - [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
@@ -165,7 +170,7 @@ docker run -d -p 2000:2000 \
     --name="promteams" \
     -v /tmp/config.yml:/tmp/config.yml \
     -e CONFIG_FILE="/tmp/config.yml" \
-    quay.io/prometheusmsteams/prometheus-msteams:v1.3.5
+    quay.io/prometheusmsteams/prometheus-msteams:v1.4.0
 ```
 
 When running as a binary, use the __-config-file__ flag.

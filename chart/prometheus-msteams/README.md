@@ -2,12 +2,13 @@
 
 <!-- vim-markdown-toc GFM -->
 
-* [Download the chart](#download-the-chart)
-* [Prepare the Deployment configuration](#prepare-the-deployment-configuration)
-* [Deploy to Kubernetes cluster](#deploy-to-kubernetes-cluster)
-* [When using with Prometheus Operator](#when-using-with-prometheus-operator)
-* [Customise messages to MS Teams](#customise-messages-to-ms-teams)
-* [Helm Configuration](#helm-configuration)
+- [Installing the Chart](#installing-the-chart)
+  - [Download the chart](#download-the-chart)
+  - [Prepare the Deployment configuration](#prepare-the-deployment-configuration)
+  - [Deploy to Kubernetes cluster](#deploy-to-kubernetes-cluster)
+  - [When using with Prometheus Operator](#when-using-with-prometheus-operator)
+  - [Customise messages to MS Teams](#customise-messages-to-ms-teams)
+  - [Helm Configuration](#helm-configuration)
 
 <!-- vim-markdown-toc -->
 
@@ -30,7 +31,7 @@ Create a helm values file to configure your Microsoft Teams channel connectors a
 replicaCount: 1
 image:
   repository: quay.io/prometheusmsteams/prometheus-msteams
-  tag: v1.3.5
+  tag: v1.4.0
 
 connectors:
 # in alertmanager, this will be used as http://prometheus-msteams:2000/bar
@@ -92,7 +93,7 @@ Otherwise you can also set the value by specifying the template data directly vi
 | Parameter                                  | Description                                                                                                                                                   | Default                                         |
 | ---                                        | ---                                                                                                                                                           | ---                                             |
 | `image.repository`                         | Image repository                                                                                                                                              | `quay.io/prometheusmsteams/prometheus-msteams`                       |
-| `image.tag`                                | Image tag                                                                                                                                                     | `v1.3.5`                                        |
+| `image.tag`                                | Image tag                                                                                                                                                     | `v1.4.0`                                        |
 | `image.pullPolicy`                         | Image pull policy                                                                                                                                             | `Always`                                        |
 | `extraEnvs`                                | Extra environment variables                                                                                                                                   | `{}`                                            |
 | `connectors`                               | Add your own Microsoft Teams connectors.                                                                                                                      | `[]`                                            |
