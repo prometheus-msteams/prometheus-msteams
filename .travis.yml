@@ -30,6 +30,7 @@ deploy:
   file:
     - ./bin/prometheus-msteams-darwin-amd64
     - ./bin/prometheus-msteams-linux-amd64
+    - /.bin/prometheus-msteams-windows-amd64.exe
     - ./bin/shasum256.txt
     - ./default-message-card.tmpl
   skip_cleanup: true

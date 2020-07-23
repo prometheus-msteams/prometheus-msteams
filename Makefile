@@ -44,6 +44,9 @@ linux:
 darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
+windows:
+	CGO_ENABLED=0 GOOS=windows GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-windows-$(GOARCH).exe ./cmd/server
+
 docker:
 	docker build -t $(DOCKER_HUB_REPO):$(VERSION) .
 	docker tag $(DOCKER_HUB_REPO):$(VERSION) $(DOCKER_QUAY_REPO):$(VERSION)
