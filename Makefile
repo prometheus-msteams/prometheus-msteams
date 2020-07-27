@@ -28,7 +28,7 @@ DOCKER_QUAY_USER=prometheusmsteams+ci
 DOCKER_HUB_REPO=prometheusmsteams/prometheus-msteams
 
 # Build the project
-all: clean dep create_bin_dir linux darwin
+all: clean dep create_bin_dir linux darwin windows
 	cd $(BINDIR) && shasum -a 256 ** > shasum256.txt
 
 create_bin_dir:
