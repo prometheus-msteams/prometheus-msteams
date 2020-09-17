@@ -17,7 +17,7 @@
 Clone this repository.
 
 ```bash
-helm repo add prometheus-msteams https://prometheus-msteams.github.io/helm-chart/
+helm repo add prometheus-msteams https://prometheus-msteams.github.io/prometheus-msteams/
 ```
 
 ### Prepare the Deployment configuration
