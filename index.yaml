@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  prometheus-msteams:
+  - apiVersion: v1
+    appVersion: v1.4.1
+    created: "2020-09-17T06:45:21.403044887Z"
+    description: A Helm chart for Kubernetes
+    digest: 6bce7e86aa2884b203f005a056eacba88ced7be906bfef2dee89b7e0cc911961
+    name: prometheus-msteams
+    urls:
+    - https://github.com/prometheus-msteams/prometheus-msteams/releases/download/prometheus-msteams-0.5.1/prometheus-msteams-0.5.1.tgz
+    version: 0.5.1
+generated: "2020-09-17T06:45:21.203045087Z"
