@@ -3,6 +3,21 @@ entries:
   prometheus-msteams:
   - apiVersion: v1
     appVersion: v1.4.1
+    created: "2020-10-06T13:15:37.718173955Z"
+    description: A Helm chart for Kubernetes
+    digest: ca0d244da35d4964db3f2d001be3da789639fc68bcf07e8284f4d39092f79115
+    home: https://github.com/prometheus-msteams/prometheus-msteams
+    maintainers:
+    - name: bzon
+      url: https://github.com/bzon
+    - name: Knappek
+      url: https://github.com/Knappek
+    name: prometheus-msteams
+    urls:
+    - https://github.com/prometheus-msteams/prometheus-msteams/releases/download/prometheus-msteams-0.5.2/prometheus-msteams-0.5.2.tgz
+    version: 0.5.2
+  - apiVersion: v1
+    appVersion: v1.4.1
     created: "2020-09-17T06:45:21.403044887Z"
     description: A Helm chart for Kubernetes
     digest: 6bce7e86aa2884b203f005a056eacba88ced7be906bfef2dee89b7e0cc911961
