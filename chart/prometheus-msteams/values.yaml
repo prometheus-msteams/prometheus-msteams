@@ -45,12 +45,8 @@ metrics:
 connectors: []
 connectors_with_custom_templates: []
 
-
 ## Specify the custom message card template for MS teams
 # customCardTemplate: |
 #   {{ define "teams.card" }}
-#   {
-#     
-#   }
+#   {...}
 #   {{ end }}
-
