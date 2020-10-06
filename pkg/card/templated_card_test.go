@@ -33,10 +33,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 						ActivityTitle: "[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)",
 						Markdown:      true,
 						Facts: []FactSection{
-							{
-								Name:  "description",
-								Value: "10.80.40.11 reported high memory usage with 23.28%.",
-							},
+							{},
 							{Name: "summary", Value: "Server High Memory usage"},
 							{Name: "alertname", Value: `high_memory_load`},
 							{Name: "instance", Value: `instance-with-hyphen_and_underscore`},
@@ -64,10 +61,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 						ActivityTitle: "[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)",
 						Markdown:      true,
 						Facts: []FactSection{
-							{
-								Name:  "description",
-								Value: "10.80.40.11 reported high memory usage with 23.28%.",
-							},
+							{},
 							{Name: "summary", Value: "Server High Memory usage"},
 							{Name: "alertname", Value: `high\_memory\_load`},
 							{Name: "instance", Value: `instance-with-hyphen\_and\_underscore`},
@@ -95,10 +89,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 						ActivityTitle: "[10.80.40.11 reported high memory usage with 23.28%.](http://docker.for.mac.host.internal:9093)",
 						Markdown:      true,
 						Facts: []FactSection{
-							{
-								Name:  "description",
-								Value: "10.80.40.11 reported high memory usage with 23.28%.",
-							},
+							{},
 							{Name: "summary", Value: "Server High Memory usage"},
 							{Name: "alertname", Value: `high\_memory\_load`},
 							{Name: "instance", Value: `instance-with-hyphen\_and\_underscore`},
