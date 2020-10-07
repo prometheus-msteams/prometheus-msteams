@@ -29,11 +29,10 @@
       "facts": [
         {{- range $key, $value := $alert.Annotations }}
         {
-          {{- if eq $key "description" -}}
-          {{- else -}}
+          {{- if ne $key "description" -}}
             "name": "{{ $key }}",
             "value": "{{ $value }}"
-            {{- end -}}
+          {{- end -}}
         },
         {{- end -}}
         {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}},{{ end }}
