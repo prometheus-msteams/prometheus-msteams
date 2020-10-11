@@ -1,0 +1,90 @@
+{
+  "receiver": "whatever_promstack_with_resolve",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "JustATestAlert\\\\_1",
+        "name": "grafana",
+        "namespace": "whatever/promstack",
+        "severity": "info"
+      },
+      "annotations": {
+        "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
+        "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
+        "key": "grafana | whatever/promstack",
+        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+        "template": "group",
+        "title": "Memory: Relativ memory usage low",
+        "value": "30.10 %"
+      },
+      "startsAt": "2020-10-11T14:34:11.279383004Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "https://domain.com/promstack/prometheus/graph?g0.expr=max+by%28namespace%2C+name%29+%28%28avg_over_time%28container_memory_working_set_bytes%5B5m%5D%29+%3E+avg_over_time%28container_memory_rss%5B5m%5D%29+or+avg_over_time%28container_memory_rss%5B5m%5D%29%29+%2F+on%28namespace%2C+name%2C+id%29+avg_over_time%28container_spec_memory_reservation_limit_bytes%5B5m%5D%29+%21%3D+%2BInf%29+%2A+100+%3C+40&g0.tab=1",
+      "fingerprint": "ff6a7a0f5f1c1309"
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "JustATestAlert\\\\_1",
+        "name": "nginx",
+        "namespace": "whatever/promstack",
+        "severity": "info"
+      },
+      "annotations": {
+        "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
+        "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
+        "key": "nginx | whatever/promstack",
+        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+        "template": "group",
+        "title": "Memory: Relativ memory usage low",
+        "value": "33.79 %"
+      },
+      "startsAt": "2020-10-11T14:34:11.279383004Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "https://domain.com/promstack/prometheus/graph?g0.expr=max+by%28namespace%2C+name%29+%28%28avg_over_time%28container_memory_working_set_bytes%5B5m%5D%29+%3E+avg_over_time%28container_memory_rss%5B5m%5D%29+or+avg_over_time%28container_memory_rss%5B5m%5D%29%29+%2F+on%28namespace%2C+name%2C+id%29+avg_over_time%28container_spec_memory_reservation_limit_bytes%5B5m%5D%29+%21%3D+%2BInf%29+%2A+100+%3C+40&g0.tab=1",
+      "fingerprint": "554664fa753a2b45"
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "JustATestAlert\\\\_1",
+        "name": "prometheus",
+        "namespace": "whatever/promstack",
+        "severity": "info"
+      },
+      "annotations": {
+        "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
+        "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
+        "key": "prometheus | whatever/promstack",
+        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+        "template": "group",
+        "title": "Memory: Relativ memory usage low",
+        "value": "3.65 %"
+      },
+      "startsAt": "2020-10-11T14:34:11.279383004Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "https://domain.com/promstack/prometheus/graph?g0.expr=max+by%28namespace%2C+name%29+%28%28avg_over_time%28container_memory_working_set_bytes%5B5m%5D%29+%3E+avg_over_time%28container_memory_rss%5B5m%5D%29+or+avg_over_time%28container_memory_rss%5B5m%5D%29%29+%2F+on%28namespace%2C+name%2C+id%29+avg_over_time%28container_spec_memory_reservation_limit_bytes%5B5m%5D%29+%21%3D+%2BInf%29+%2A+100+%3C+40&g0.tab=1",
+      "fingerprint": "911c76f0240f015b"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "JustATestAlert\\\\_1"
+  },
+  "commonLabels": {
+    "alertname": "JustATestAlert\\\\_1",
+    "namespace": "whatever/promstack",
+    "severity": "info"
+  },
+  "commonAnnotations": {
+    "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
+    "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
+    "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+    "template": "group",
+    "title": "Memory: Relativ memory usage low"
+  },
+  "externalURL": "https://domain.com/promstack/alertmanager",
+  "version": "4",
+  "groupKey": "{}/{namespace=\"whatever/promstack\"}:{alertname=\"JustATestAlert_1\"}"
+}
