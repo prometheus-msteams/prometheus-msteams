@@ -5,7 +5,7 @@
     {
       "status": "firing",
       "labels": {
-        "alertname": "JustATestAlert\\\\_1",
+        "alertname": "JustATestAlert_1",
         "name": "grafana",
         "namespace": "whatever/promstack",
         "severity": "info"
@@ -14,7 +14,7 @@
         "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
         "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
         "key": "grafana | whatever/promstack",
-        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \u003c 40 %",
         "template": "group",
         "title": "Memory: Relativ memory usage low",
         "value": "30.10 %"
@@ -27,7 +27,7 @@
     {
       "status": "firing",
       "labels": {
-        "alertname": "JustATestAlert\\\\_1",
+        "alertname": "JustATestAlert_1",
         "name": "nginx",
         "namespace": "whatever/promstack",
         "severity": "info"
@@ -36,7 +36,7 @@
         "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
         "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
         "key": "nginx | whatever/promstack",
-        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \u003c 40 %",
         "template": "group",
         "title": "Memory: Relativ memory usage low",
         "value": "33.79 %"
@@ -49,7 +49,7 @@
     {
       "status": "firing",
       "labels": {
-        "alertname": "JustATestAlert\\\\_1",
+        "alertname": "JustATestAlert_1",
         "name": "prometheus",
         "namespace": "whatever/promstack",
         "severity": "info"
@@ -58,7 +58,7 @@
         "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
         "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
         "key": "prometheus | whatever/promstack",
-        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+        "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \u003c 40 %",
         "template": "group",
         "title": "Memory: Relativ memory usage low",
         "value": "3.65 %"
@@ -70,17 +70,17 @@
     }
   ],
   "groupLabels": {
-    "alertname": "JustATestAlert\\\\_1"
+    "alertname": "JustATestAlert_1"
   },
   "commonLabels": {
-    "alertname": "JustATestAlert\\\\_1",
-    "namespace": "whatever/promstack",
+    "alertname": "JustATestAlert_1",
+    "name_space": "wh_ate_ver/promstack",
     "severity": "info"
   },
   "commonAnnotations": {
     "description": "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea.\\n",
     "investigate_link": "https://domain.com/grafana/d/fdwTIxFMz/container-intra",
-    "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \\u003c 40 %",
+    "summary": "Ratio(Max(Working Set, RSS) / Reservation) [5m Avg] \u003c 40 %",
     "template": "group",
     "title": "Memory: Relativ memory usage low"
   },
