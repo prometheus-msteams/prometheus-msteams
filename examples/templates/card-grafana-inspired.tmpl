@@ -1,0 +1,306 @@
+{{/* 
+
+# Template with Grouping
+
+This card template tries to emulate a Grafana like card layout while also 
+  improving it in various aspects. The main characteristic is that the values 
+  of all alerts included in a single alert group are listed as facts.
+
+To leverage this card layout multiple requirements must be fullfilled. In 
+  addition a fallback is included that will be used if the annotation 
+  `template` has not the value `group`.
+
+`escape_underscores` in prometheus-msteams must be activated.
+
+## "group" Card
+
+Multiple requirements. "Common" annotations / labels have the same value for 
+  the whole alert group. This also means you cannot use templating in them.
+  Grouping must be done at least by `alertname` label.
+
+**Mandatory common annotations:**
+
+* `template`: Must be `group`.
+* `title`: Very short human readable title. For example "Memory: Memory Limit 
+  Hits" or "Server Errors Occurred".
+* `summary`: Formula-like explaination of the alert. For example "Ratio 
+  (Working Set Memory / Reservation) [12h] > 90 %".
+* `description`: Long description, description of impact, what to do, etc. For 
+  example "Working set memory of listed servouices has been lower than 10 % 
+  of ..."
+
+**Optional common annotations:**
+
+* `investigate_link`: Not necessary. If set a button will be visible. Set it 
+  to a valid link. Something like a Grafana dashboard is good. You can use 
+  templating, but remember that the annotation must stay common.
+* `generator_url_override`: If set, the link behind the summary text will point 
+  to the given link instead of the already given generator URL. Usually not 
+  necessary.
+
+**Mandatory specific annotations:**
+
+* `key`: Identifier for a specific alert. For example container name. Use 
+  templating to concatenate several labels just like in Grafana. For example 
+  "{{ $labels.name }} | {{ $labels.namespace }}".
+* `value`: Should map to `$value`. Use templating to format it. For example 
+  "{{ $value | printf "%.2f" }} %".
+
+**Common Labels:**
+
+* `severity`
+
+**Specific Labels:**
+
+* You can have specific labels, but they won't be visible in the notififcation.
+
+## Fallback Card
+
+More or less the same as the default template included with prometheus-ms. The 
+`investigate_link` annotation can be specific to every alert. Fallback will be 
+used if common `template` annotation is not `group`.
+
+*/}}
+
+{{ define "teams.card" }}
+
+  {{/* Should 'http:' in the generator url be replaced with 'https:'? */}}
+  {{ $should_enforce_https := true }}
+
+  {{/* Should certain common labels be filtered? */}}
+  {{ $should_filter_labels := true }}
+
+  {{/* Should certain common annotations be filtered? */}}
+  {{ $should_filter_annotations := true }}
+
+  {{/* Should the potential actions field be included? */}}
+  {{ $should_have_potential_actions := true }}
+
+  {{/* For example 'https://www.google.com/alertkarma/?'. Ignored if empty. */}}
+  {{ $alertkarma_prefix := ""}}
+
+  {
+    "@type": "MessageCard",
+    "@context": "http://schema.org/extensions",
+    "themeColor": "
+      {{- if eq .Status "resolved" -}}
+        2DC72D
+      {{- else if eq .Status "firing" -}}
+        {{- if eq .CommonLabels.severity "critical" -}}
+          8C1A1A
+        {{- else if eq .CommonLabels.severity "error" -}}
+          8C1A1A
+        {{- else if eq .CommonLabels.severity "warning" -}}
+          FFA500
+        {{- else if eq .CommonLabels.severity "info" -}}
+          00BFFF
+        {{- else -}}
+          808080
+        {{- end -}}
+      {{- else -}}
+        808080
+      {{- end -}}",
+
+    {{/*====================================================================*/}}
+
+    {{ if eq .CommonAnnotations.template "group" }}
+      "title": "{{ .CommonAnnotations.title }} [{{ .Status | title }}, {{ .CommonLabels.severity | title }}] x {{ len .Alerts }}",
+      "summary": "{{ .CommonAnnotations.title }} [{{ .Status | title }}, {{ .CommonLabels.severity | title }}] x {{ len .Alerts }}",
+      "sections": [
+        {{/* FIRST SECTION: Common annotations and labels */}}
+        {
+          "markdown": true,
+          {{ if gt (len .CommonAnnotations.generator_url_override) 0}}
+            "activityTitle": "[{{ .CommonAnnotations.summary }}]({{ .CommonAnnotations.enerator_url_override }})",
+          {{ else if $should_enforce_https }}
+            "activityTitle": "[{{ .CommonAnnotations.summary }}]({{ (index .Alerts 0).GeneratorURL | replace "http:" "https:" }})",
+          {{ else }}
+            "activityTitle": "[{{ .CommonAnnotations.summary }}]({{ (index .Alerts 0).GeneratorURL }})",
+          {{ end }}
+          "text": "{{ .CommonAnnotations.description }}",
+          "facts": [
+            {{/* Common Annotations (filtered) */}}
+            {{ $foundannotation := false }}
+            {{ $first := true }}
+            {{ range $key, $value := .CommonAnnotations }}
+              {{ if and $should_filter_annotations (ne $key "title") (ne $key "summary") (ne $key "description") (ne $key "key") (ne $key "value") (ne $key "generator_url_override") (ne $key "investigate_link") (ne $key "template") }}
+                {{ if $first }}
+                  {{ $first = false }}
+                  {{ $foundannotation = true }}
+                {{ else }}
+                  ,
+                {{ end }}
+                { 
+                  "name": "{{ $key }}", 
+                  "value": "{{ $value }}"
+                }
+              {{ end }}
+            {{ end }}
+            {{ if $foundannotation }},{{ end }}
+            {{/* Common Labels (filtered) */}}
+            {{$first := true}}
+            {{ range $key, $value := .CommonLabels }}
+              {{ if and $should_filter_labels (ne $key "alert_with_resolve") (ne $key "severity") }}
+                {{ if $first }}{{ $first = false }}{{ else }},{{ end }}
+                {
+                  "name": "{{ $key }}", 
+                  "value": "{{ $value }}" 
+                }
+              {{ end }}
+            {{ end }}
+          ]
+        },
+        {{/* SECOND SECTION: key and value specific annotations */}}
+        {
+          "markdown": true,
+          "facts": [
+            {{ $first := true }}
+            {{ range $index, $alert := .Alerts }}
+              {{ if gt (add (len $alert.Annotations.key) (len $alert.Annotations.value)) 0 }}
+              {{/* Only proceed if key-value found */}}
+                {{ if $first }}{{ $first = false }}{{ else }},{{ end }}
+                {
+                  "name": "{{ $alert.Annotations.value }}", 
+                  "value": "{{ $alert.Annotations.key }}" 
+                }
+              {{ end }}
+            {{ end }}
+          ]
+        }
+      ]
+      {{ if $should_have_potential_actions }}
+        ,
+        "potentialAction": [
+          {
+            "@type": "OpenUri",
+            "name": "View in Alertmanager",
+            "targets": [
+              {
+                "os": "default", 
+                "uri": "{{ .ExternalURL }}/#/alerts/silenced=true&inhibited=true&active=true?filter=%7B{{$c := counter}}{{ range $key, $value := .CommonLabels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
+              }
+            ]
+          }
+          {{ if gt (len $alertkarma_prefix) 0 }}
+            ,
+            {
+              "@type": "OpenUri",
+              "name": "View in Alertkarma",
+              "targets": [
+                { 
+                  "os": "default", 
+                  "uri": "{{ $alertkarma_prefix }}q=alertname%3D{{ .CommonLabels.alertname }}"
+                }
+              ]
+            }
+          {{ end }}
+          {{ if gt (len .CommonAnnotations.investigate_link) 0 }}
+            ,
+            {
+              "@type": "OpenUri",
+              "name": "Investigate",
+              "targets": [
+                { 
+                  "os": "default", 
+                  "uri": "{{- .CommonAnnotations.investigate_link | trim -}}"
+                }
+              ]
+            }
+          {{ end }}
+        ]
+      {{ end }}
+
+    {{/*====================================================================*/}}
+
+    {{ else }}
+      "summary": "
+        {{- if gt (len .CommonAnnotations.title) 0 -}}
+          {{- .CommonAnnotations.title }} [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{- else if gt (len .CommonAnnotations.summary) 0 -}}
+          {{- .CommonAnnotations.summary -}} [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{- else if gt (len .CommonAnnotations.alertname) 0 -}}
+          {{- .CommonAnnotations.alertname -}} [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{ else }}
+          Alert [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{- end -}}"
+      ,
+      "title": "
+        {{- if gt (len .CommonAnnotations.title) 0 -}}
+          {{- .CommonAnnotations.title }} [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{- else if gt (len .CommonAnnotations.summary) 0 -}}
+          {{- .CommonAnnotations.summary -}} [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{- else if gt (len .CommonAnnotations.alertname) 0 -}}
+          {{- .CommonAnnotations.alertname -}} [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{ else }}
+          Alert [{{ .Status | title }}{{ if gt (len .CommonLabels.severity) 0 }}, {{ .CommonLabels.severity | title }}{{ end }}] x {{ len .Alerts -}}
+        {{- end -}}"
+      ,
+      "sections": [ 
+        {{$externalUrl := .ExternalURL}}
+        {{- range $index, $alert := .Alerts }}{{- if $index }},{{- end }}
+          {
+            "markdown": true,
+            "activityTitle": "[{{ $alert.Annotations.description }}]({{ $externalUrl }})",
+            "facts": [
+              {{- range $key, $value := $alert.Annotations }}
+              {
+                {{- if and (ne $key "description") (ne $key "template") (ne $key "title") (ne $key "summary") -}}
+                  "name": "{{ $key }}",
+                  "value": "{{ $value }}"
+                {{- end -}}
+              },
+              {{- end -}}
+              {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{ if call $c }},{{ end }}
+              {
+                "name": "{{ $key }}",
+                "value": "{{ $value }}"
+              }
+              {{- end }}
+            ]
+            {{ if $should_have_potential_actions }}
+              ,
+              "potentialAction": [
+                {
+                  "@type": "OpenUri",
+                  "name": "View in Alertmanager",
+                  "targets": [
+                    {
+                      "os": "default", 
+                      "uri": "{{ $externalUrl }}/#/alerts/silenced=true&inhibited=true&active=true?filter=%7B{{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
+                    }
+                  ]
+                }
+                {{ if gt (len $alertkarma_prefix) 0 }}
+                  ,
+                  {
+                    "@type": "OpenUri",
+                    "name": "View in Alertkarma",
+                    "targets": [
+                      { 
+                        "os": "default", 
+                        "uri": "{{ $alertkarma_prefix }}q=alertname%3D{{ $alert.Labels.alertname }}"
+                      }
+                    ]
+                  }
+                {{ end }}
+                {{ if gt (len $alert.Annotations.investigate_link) 0 }}
+                  ,
+                  {
+                    "@type": "OpenUri",
+                    "name": "Investigate",
+                    "targets": [
+                      { 
+                        "os": "default", 
+                        "uri": "{{- $alert.Annotations.investigate_link | trim -}}"
+                      }
+                    ]
+                  }
+                {{ end }}
+              ]
+            {{ end }}
+          }
+          {{- end }}
+        ]
+    {{ end }}
+  }
+{{ end }}
