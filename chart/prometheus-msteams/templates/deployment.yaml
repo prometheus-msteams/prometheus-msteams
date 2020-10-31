@@ -23,9 +23,9 @@ spec:
     {{ toYaml .Values.podAnnotations | indent 8 }}
     {{- end }}
     spec:
-      {{- if .Values.imageCredentials }}
+      {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-        - name: {{ template "app.name" . }}-registry
+{{ toYaml .Values.imagePullSecrets | ident 8 }}
       {{- end}}
       volumes:
         - name: config-volume
