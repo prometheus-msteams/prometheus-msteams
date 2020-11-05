@@ -25,7 +25,7 @@ spec:
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
-{{ toYaml .Values.imagePullSecrets | ident 8 }}
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
       {{- end}}
       volumes:
         - name: config-volume
