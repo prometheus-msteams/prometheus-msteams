@@ -183,7 +183,7 @@ func main() { //nolint: funlen
 				IdleConnTimeout:       *httpClientIdleConnTimeout,
 				TLSHandshakeTimeout:   *httpClientTLSHandshakeTimeout,
 				ExpectContinueTimeout: 1 * time.Second,
-				TLSClientConfig:       &tls.Config{InsecureSkipVerify: *insecureSkipVerify},
+				TLSClientConfig:       &tls.Config{InsecureSkipVerify: *insecureSkipVerify}, //nolint: gosec
 			},
 		},
 	}
