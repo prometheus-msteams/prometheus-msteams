@@ -6,6 +6,8 @@ image:
   tag: v1.4.1
   pullPolicy: Always
 
+imagePullSecrets: []
+
 extraEnvs:
 
 container:
