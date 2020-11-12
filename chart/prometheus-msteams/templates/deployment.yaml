@@ -7,6 +7,10 @@ metadata:
     chart: {{ template "app.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.deploymentAnnotations }}
+  annotations:
+{{ toYaml .Values.deploymentAnnotations | indent 4 }}
+{{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -20,7 +24,7 @@ spec:
         release: {{ .Release.Name }}
     {{- if .Values.podAnnotations }}
       annotations:
-    {{ toYaml .Values.podAnnotations | indent 8 }}
+{{ toYaml .Values.podAnnotations | indent 8 }}
     {{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
