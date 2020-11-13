@@ -10,3 +10,11 @@ binaryData:
 {{- else }}
 {{ .Files.Get "card.tmpl" | b64enc | indent 4 }}
 {{- end }}
+{{- range $customCardTemplate := .Values.customCardTemplates }}
+{{- if hasKey $customCardTemplate "templateFileName" }}
+{{ $customCardTemplate.templateFileName | indent 2 }}: |-
+{{- end }}
+{{- if hasKey $customCardTemplate "content" }}
+{{ $customCardTemplate.content | b64enc | indent 4 }}
+{{- end }}
+{{- end }}
