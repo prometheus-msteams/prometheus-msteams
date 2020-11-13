@@ -7,6 +7,7 @@
 - [Deploy to Kubernetes cluster](#deploy-to-kubernetes-cluster)
 - [When using with Prometheus Operator](#when-using-with-prometheus-operator)
 - [Customise messages to MS Teams](#customise-messages-to-ms-teams)
+- [Customise messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
 - [Helm Configuration](#helm-configuration)
 
 <!-- vim-markdown-toc -->
@@ -86,6 +87,26 @@ helm upgrade --install prometheus-msteams \
 
 Otherwise you can also set the value by specifying the template data directly via values file.
 
+### Customise Messages per MS Teams Channel
+
+To define a custom message template per MS Teams channel you can use the following configuration.
+Like descibed in [Customise messages to MS Teams](#customise-messages-to-ms-teams) you can use the `--set-file` flag
+to set the value from a file instead of inlining the template.
+
+```yaml
+customCardTemplates:
+  - templateFileName: custom-message-card.tmpl
+    content: |
+      {{ define "teams.card" }}
+      {...}
+      {{ end }}
+
+connectorsWithCustomTemplates:
+  - request_path: /alert2
+    template_file: /etc/template/custom-message-card.tmpl
+    webhook_url: <webhook>
+    escape_underscores: true
+```
 
 ### Helm Configuration
 
