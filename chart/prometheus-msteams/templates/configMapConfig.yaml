@@ -9,7 +9,7 @@ data:
     connectors:
 {{ toYaml . | indent 6 }}
     {{- end}}
-    {{- with $.Values.connectors_with_custom_templates }}
+    {{- with $.Values.connectorsWithCustomTemplates }}
     connectors_with_custom_templates:
 {{ toYaml . | indent 6 }}
     {{- end}}
