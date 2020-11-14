@@ -22,3 +22,7 @@ coverage.txt
 
 # MacOS stuff
 .DS_Store
+
+# IntellIJ
+.idea
+*.iml

@@ -18,8 +18,10 @@ spec:
       labels:
         app: {{ template "app.name" . }}
         release: {{ .Release.Name }}
-    {{- if .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configMapConfig.yaml") . | sha256sum }}
+        checksum/msteams-card-templates: {{ include (print $.Template.BasePath "/configMapTemplate.yaml") . | sha256sum }}
+    {{- if .Values.podAnnotations }}
     {{ toYaml .Values.podAnnotations | indent 8 }}
     {{- end }}
     spec:
