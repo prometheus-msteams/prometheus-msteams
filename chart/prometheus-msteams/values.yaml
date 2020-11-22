@@ -8,7 +8,7 @@ image:
 
 imagePullSecrets: []
 
-extraEnvs:
+extraEnvs: {}
 
 container:
   port: 2000
