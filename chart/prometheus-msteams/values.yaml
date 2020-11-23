@@ -46,24 +46,12 @@ metrics:
 
 connectors: []
 
-# Templates defined here can be used in connectorsWithCustomTemplates and are mounted into /etc/template/
-customCardTemplates: []
-# - templateFileName: custom-message-card.tmpl
-#   content: |
+# ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel
+connectorsWithCustomTemplates: []
+# - request_path: /alert2
+#   template_file: |
 #     {{ define "teams.card" }}
 #     {...}
 #     {{ end }}
-
-# ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel
-# Templates are mounted into /etc/template/
-connectorsWithCustomTemplates: []
-# - request_path: /alert2
-#   template_file: /etc/template/custom-message-card.tmpl
 #   webhook_url: <webhook>
 #   escape_underscores: true
-
-## Specify the custom message card template for MS teams
-# customCardTemplate: |
-#   {{ define "teams.card" }}
-#   {...}
-#   {{ end }}

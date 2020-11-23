@@ -5,16 +5,10 @@ metadata:
  name: {{ template "app.name" . }}-card-template
 binaryData:
   card.tmpl: |-
-{{- if .Values.customCardTemplate }}
-{{ .Values.customCardTemplate | b64enc | indent 4 }}
-{{- else }}
 {{ .Files.Get "card.tmpl" | b64enc | indent 4 }}
-{{- end }}
-{{- range $customCardTemplate := .Values.customCardTemplates }}
-{{- if hasKey $customCardTemplate "templateFileName" }}
-{{ $customCardTemplate.templateFileName | indent 2 }}: |-
-{{- end }}
-{{- if hasKey $customCardTemplate "content" }}
-{{ $customCardTemplate.content | b64enc | indent 4 }}
+{{- range $index, $customCardTemplate := .Values.connectorsWithCustomTemplates }}
+{{- if hasKey $customCardTemplate "template_file" }}
+  custom_card_{{ $index }}.tmpl: |-
+{{ $customCardTemplate.template_file | b64enc | indent 4 }}
 {{- end }}
 {{- end }}
