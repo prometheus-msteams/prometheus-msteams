@@ -44,6 +44,13 @@ metrics:
     additionalLabels: {}
     scrapeInterval: 30s
 
+## Specify the custom message card template for MS teams
+customCardTemplate: ""
+# customCardTemplate: |
+#   {{ define "teams.card" }}
+#   {...}
+#   {{ end }}
+
 connectors: []
 
 # ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel

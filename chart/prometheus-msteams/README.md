@@ -6,6 +6,7 @@
 - [Prepare the Deployment configuration](#prepare-the-deployment-configuration)
 - [Deploy to Kubernetes cluster](#deploy-to-kubernetes-cluster)
 - [When using with Prometheus Operator](#when-using-with-prometheus-operator)
+- [Customise messages to MS Teams](#customise-messages-to-ms-teams)
 - [Customise messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
 - [Helm Configuration](#helm-configuration)
 
@@ -70,6 +71,22 @@ helm upgrade --install prometheus-msteams \
 
 Please see [Prometheus Operator alerting docs](https://github.com/coreos/prometheus-operator/blob/master/Documentation/user-guides/alerting.md).
 
+### Customise messages to MS Teams
+
+This application uses a [Default Teams Message Card Template](./prometheus-msteams/card.tmpl) to convert incoming Prometheus alerts to teams message cards.
+This template can be customised by specifying the value of `customCardTemplate` parameter.
+Simply create a new file that you want to use as your custom template (for example, `custom-card.tmpl`).
+You can use the `--set-file` flag to set the value from this file:
+
+```bash
+helm upgrade --install prometheus-msteams \
+  --namespace default -f config.yaml \
+  --set-file customCardTemplate=custom-card.tmpl \
+  prometheus-msteams/prometheus-msteams
+```
+
+Otherwise you can also set the value by specifying the template data directly via values file.
+
 ### Customise Messages per MS Teams Channel
 
 This application uses a [Default Teams Message Card Template](./prometheus-msteams/card.tmpl) to convert incoming Prometheus alerts to teams message cards.
@@ -127,6 +144,7 @@ connectorsWithCustomTemplates:
 | `priorityClassName`                        | Pod priority class                                                                                                                                            | `""`                                            |
 | `podAnnotations`                           | Pod annotations                                                                                                                                               | `{}`                                            |
 | `podSecurityContext`                       | Pod securityContext                                                                                                                                           | See [default](./values.yaml)                    |
+| `customCardTemplate`                       | Custom message card template for MS teams                                                                                                                     | `""`                                            |
 | `metrics.serviceMonitor.enabled`           | Set this to `true` to create ServiceMonitor for Prometheus operator                                                                                           | `false`                                         |
 | `metrics.serviceMonitor.additionalLabels`  | Additional labels that can be used so ServiceMonitor will be discovered by Prometheus                                                                         | `{}`                                            |
 | `metrics.serviceMonitor.honorLabels`       | honorLabels chooses the metric's labels on collisions with target labels.                                                                                     | `false`                                         |
