@@ -90,7 +90,7 @@ Otherwise you can also set the value by specifying the template data directly vi
 ### Customise Messages per MS Teams Channel
 
 This application uses a [Default Teams Message Card Template](./prometheus-msteams/card.tmpl) to convert incoming Prometheus alerts to teams message cards.
-To define a custom message template per MS Teams channel you can use the following configuration.
+To define a custom message template per MS Teams channel you can use the following configuration:
 
 ```yaml
 connectorsWithCustomTemplates:
@@ -151,4 +151,3 @@ connectorsWithCustomTemplates:
 | `metrics.serviceMonitor.namespace`         | namespace where servicemonitor resource should be created                                                                                                     | `release namespace`                             |
 | `metrics.serviceMonitor.namespaceSelector` | [namespaceSelector](https://github.com/coreos/prometheus-operator/blob/v0.34.0/Documentation/api.md#namespaceselector) to configure what namespaces to scrape | `release namespace`                             |
 | `metrics.serviceMonitor.scrapeInterval`    | interval between Prometheus scraping                                                                                                                          | `30s`                                           |
-
