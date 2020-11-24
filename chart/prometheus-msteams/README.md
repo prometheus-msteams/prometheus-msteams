@@ -95,7 +95,7 @@ To define a custom message template per MS Teams channel you can use the followi
 ```yaml
 connectorsWithCustomTemplates:
   - request_path: /alert2
-    webhook_url: <webhook>
+    webhook_url: https://outlook.office.com/webhook/xxxx/xxxx
     escape_underscores: true
 ```
 
