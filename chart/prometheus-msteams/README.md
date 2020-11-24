@@ -88,7 +88,7 @@ You can use the `--set-file` flag to set the value from this file:
 ```bash
 helm upgrade --install prometheus-msteams \
   --namespace default -f config.yaml \
-  "connectorsWithCustomTemplates[0].template_file=custom-card.tmpl" \
+  --set-file "connectorsWithCustomTemplates[0].template_file=custom-card.tmpl" \
   prometheus-msteams/prometheus-msteams
 ```
 
@@ -133,5 +133,4 @@ connectorsWithCustomTemplates:
 | `metrics.serviceMonitor.namespace`         | namespace where servicemonitor resource should be created                                                                                                     | `release namespace`                             |
 | `metrics.serviceMonitor.namespaceSelector` | [namespaceSelector](https://github.com/coreos/prometheus-operator/blob/v0.34.0/Documentation/api.md#namespaceselector) to configure what namespaces to scrape | `release namespace`                             |
 | `metrics.serviceMonitor.scrapeInterval`    | interval between Prometheus scraping                                                                                                                          | `30s`                                           |
-
 
