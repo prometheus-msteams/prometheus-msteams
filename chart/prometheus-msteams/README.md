@@ -114,7 +114,7 @@ Otherwise you can also set the value by specifying the template data directly vi
 ```yaml
 connectorsWithCustomTemplates:
   - request_path: /alert2
-    webhook_url: <webhook>
+    webhook_url: https://outlook.office.com/webhook/xxxx/xxxx
     escape_underscores: true
     template_file: |
       {{ define "teams.card" }}
