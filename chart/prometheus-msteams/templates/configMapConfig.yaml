@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
- name: {{ template "app.name" . }}-config
+  name: {{ template "app.name" . }}-config
 data:
   connectors.yaml: |
     {{- with $.Values.connectors }}
@@ -17,4 +17,9 @@ data:
 {{- if hasKey $connectorWithCustomTemplate "escape_underscores" }}
         escape_underscores: {{ $connectorWithCustomTemplate.escape_underscores }}
 {{- end }}
+{{- if hasKey $connectorWithCustomTemplate "retry_max" }}
+        retry_max: {{ $connectorWithCustomTemplate.retry_max }}
+{{- else }}
+        retry_max: 3
+{{- end}}
 {{- end }}

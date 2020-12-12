@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	ocprometheus "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
@@ -49,6 +51,7 @@ type ConnectorWithCustomTemplate struct {
 	TemplateFile      string `yaml:"template_file"`
 	WebhookURL        string `yaml:"webhook_url"`
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
+	RetryMax          int    `yaml:"retry_max"`
 }
 
 func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
@@ -169,7 +172,8 @@ func main() { //nolint: funlen
 	}
 
 	// Teams HTTP client setup.
-	httpClient := &http.Client{
+	httpClient := retryablehttp.NewClient()
+	httpClient.HTTPClient = &http.Client{
 		Transport: &ochttp.Transport{
 			Base: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -202,7 +206,7 @@ func main() { //nolint: funlen
 		for uri, webhook := range c {
 			var r transport.Route
 			r.RequestPath = uri
-			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook)
+			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook, 3)
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
 		}
@@ -249,7 +253,7 @@ func main() { //nolint: funlen
 
 		var r transport.Route
 		r.RequestPath = c.RequestPath
-		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
+		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL, c.RetryMax)
 		r.Service = service.NewLoggingService(logger, r.Service)
 		routes = append(routes, r)
 	}

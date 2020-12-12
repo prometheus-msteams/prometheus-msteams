@@ -11,6 +11,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	"github.com/go-kit/kit/log"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/service"
@@ -74,7 +76,7 @@ func TestServer(t *testing.T) {
 					Service: service.NewLoggingService(
 						logger,
 						service.NewSimpleService(
-							c, http.DefaultClient, testWebhookURL,
+							c, retryablehttp.NewClient(), testWebhookURL, 3,
 						),
 					),
 				},

@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus/alertmanager/notify/webhook"
@@ -27,12 +28,13 @@ type Service interface {
 
 type simpleService struct {
 	converter  card.Converter
-	client     *http.Client
+	client     *retryablehttp.Client
 	webhookURL string
 }
 
 // NewSimpleService creates a simpleService.
-func NewSimpleService(converter card.Converter, client *http.Client, webhookURL string) Service {
+func NewSimpleService(converter card.Converter, client *retryablehttp.Client, webhookURL string, retryMax int) Service {
+	client.RetryMax = retryMax
 	return simpleService{converter, client, webhookURL}
 }
 
@@ -77,11 +79,12 @@ func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, 
 		return pr, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", s.webhookURL, bytes.NewBuffer(b))
+	req, err := retryablehttp.NewRequest("POST", s.webhookURL, bytes.NewBuffer(b))
 	if err != nil {
 		err = fmt.Errorf("failed to creating a request: %w", err)
 		return pr, err
 	}
+	req = req.WithContext(ctx)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
