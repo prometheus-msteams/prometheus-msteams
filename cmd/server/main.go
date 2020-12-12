@@ -51,7 +51,6 @@ type ConnectorWithCustomTemplate struct {
 	TemplateFile      string `yaml:"template_file"`
 	WebhookURL        string `yaml:"webhook_url"`
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
-	RetryMax          int    `yaml:"retry_max"`
 }
 
 func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
@@ -83,6 +82,7 @@ func main() { //nolint: funlen
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
+		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -173,6 +173,7 @@ func main() { //nolint: funlen
 
 	// Teams HTTP client setup.
 	httpClient := retryablehttp.NewClient()
+	httpClient.RetryMax = *retryMax
 	httpClient.HTTPClient = &http.Client{
 		Transport: &ochttp.Transport{
 			Base: &http.Transport{
@@ -206,7 +207,7 @@ func main() { //nolint: funlen
 		for uri, webhook := range c {
 			var r transport.Route
 			r.RequestPath = uri
-			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook, 3)
+			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook)
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
 		}
@@ -253,7 +254,7 @@ func main() { //nolint: funlen
 
 		var r transport.Route
 		r.RequestPath = c.RequestPath
-		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL, c.RetryMax)
+		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
 		r.Service = service.NewLoggingService(logger, r.Service)
 		routes = append(routes, r)
 	}

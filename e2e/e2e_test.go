@@ -76,7 +76,7 @@ func TestServer(t *testing.T) {
 					Service: service.NewLoggingService(
 						logger,
 						service.NewSimpleService(
-							c, retryablehttp.NewClient(), testWebhookURL, 3,
+							c, retryablehttp.NewClient(), testWebhookURL,
 						),
 					),
 				},

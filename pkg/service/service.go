@@ -33,8 +33,7 @@ type simpleService struct {
 }
 
 // NewSimpleService creates a simpleService.
-func NewSimpleService(converter card.Converter, client *retryablehttp.Client, webhookURL string, retryMax int) Service {
-	client.RetryMax = retryMax
+func NewSimpleService(converter card.Converter, client *retryablehttp.Client, webhookURL string) Service {
 	return simpleService{converter, client, webhookURL}
 }
 
