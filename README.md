@@ -308,6 +308,8 @@ Usage of prometheus-msteams:
     	The Microsoft Teams Message Card template file. (default "./default-message-card.tmpl")
   -tls-handshake-timeout duration
     	The HTTP client TLS handshake timeout. (default 30s)
+  -max-retry-count int
+      The retry maximum for sending requests to the webhook. (default 3)
 ```
 
 ## Kubernetes Deployment

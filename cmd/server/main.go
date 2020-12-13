@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	ocprometheus "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
@@ -80,6 +82,7 @@ func main() { //nolint: funlen
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
+		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -169,7 +172,9 @@ func main() { //nolint: funlen
 	}
 
 	// Teams HTTP client setup.
-	httpClient := &http.Client{
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = *retryMax
+	retryClient.HTTPClient = &http.Client{
 		Transport: &ochttp.Transport{
 			Base: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -184,6 +189,8 @@ func main() { //nolint: funlen
 			},
 		},
 	}
+
+	httpClient := retryClient.StandardClient()
 
 	var routes []transport.Route
 
