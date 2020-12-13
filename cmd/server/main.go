@@ -172,9 +172,9 @@ func main() { //nolint: funlen
 	}
 
 	// Teams HTTP client setup.
-	httpClient := retryablehttp.NewClient()
-	httpClient.RetryMax = *retryMax
-	httpClient.HTTPClient = &http.Client{
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = *retryMax
+	retryClient.HTTPClient = &http.Client{
 		Transport: &ochttp.Transport{
 			Base: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -189,6 +189,8 @@ func main() { //nolint: funlen
 			},
 		},
 	}
+
+	httpClient := retryClient.StandardClient()
 
 	var routes []transport.Route
 
