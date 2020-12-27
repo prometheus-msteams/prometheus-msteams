@@ -48,6 +48,11 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+          {{- if .Values.existingEnvsSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.existingEnvsSecret }}
+          {{- end }}
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config

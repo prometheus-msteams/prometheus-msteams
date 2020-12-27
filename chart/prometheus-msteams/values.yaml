@@ -65,3 +65,6 @@ connectorsWithCustomTemplates: []
 #     {{ end }}
 #   webhook_url: <webhook>
 #   escape_underscores: true
+
+# Values from an existing secret (in same namespace) - if specified - will be used as 'envFrom.secretRef'
+existingEnvsSecret: ""
