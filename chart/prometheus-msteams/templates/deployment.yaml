@@ -48,10 +48,9 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if .Values.existingEnvsSecret }}
+          {{- if .Values.envFrom }}
           envFrom:
-            - secretRef:
-                name: {{ .Values.existingEnvsSecret }}
+            {{- toYaml .Values.envFrom | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: config-volume
