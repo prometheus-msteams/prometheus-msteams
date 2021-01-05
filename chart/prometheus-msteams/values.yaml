@@ -38,6 +38,9 @@ podSecurityContext:
 
 priorityClassName: ""
 
+# Custom labels for pod assignment
+podLabels: {}
+
 metrics:
   serviceMonitor:
     enabled: false
