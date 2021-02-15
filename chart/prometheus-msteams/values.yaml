@@ -65,3 +65,11 @@ connectorsWithCustomTemplates: []
 #     {{ end }}
 #   webhook_url: <webhook>
 #   escape_underscores: true
+
+# Env from existing secrets or configmaps (in same namespace), will passed through to contains 'envFrom'
+envFrom: {}
+# envFrom:
+#   - secretRef:
+#       name: my-prometheus-msteams-env-secret
+#   - configMapRef:
+#       name: my-prometheus-msteams-env-cm
