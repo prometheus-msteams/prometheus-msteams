@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -193,6 +194,7 @@ func main() { //nolint: funlen
 	httpClient := retryClient.StandardClient()
 
 	var routes []transport.Route
+	var dRoutes []transport.DynamicRoute
 
 	// Connectors from flags.
 	if len(*requestURI) > 0 && len(*teamsWebhookURL) > 0 {
@@ -204,6 +206,21 @@ func main() { //nolint: funlen
 		)
 	}
 
+	{ // webhook handler: webhook uri is retrieved from request.URL
+		var r transport.DynamicRoute
+		r.RequestPath = "/webhook/*"
+		r.ServiceGenerator = func(c echo.Context) service.Service {
+			path := c.Request().URL.Path
+			path = strings.TrimPrefix(path, "/webhook/")
+
+			webhook := fmt.Sprintf("https://%s", path)
+
+			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
+			s = service.NewLoggingService(logger, s)
+			return s
+		}
+		dRoutes = append(dRoutes, r)
+	}
 	// Connectors from config file.
 	for _, c := range tc.Connectors {
 		for uri, webhook := range c {
@@ -284,7 +301,7 @@ func main() { //nolint: funlen
 	var handler *echo.Echo
 	{
 		// Main app.
-		handler = transport.NewServer(logger, routes...)
+		handler = transport.NewServer(logger, routes, dRoutes)
 		// Prometheus metrics.
 		handler.GET("/metrics", echo.WrapHandler(pe))
 		// Pprof.
