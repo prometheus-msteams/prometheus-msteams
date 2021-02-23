@@ -26,8 +26,8 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 - [Getting Started (Quickstart)](#getting-started-quickstart)
   - [Installation](#installation)
   - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
-    - [uri handler /alertmanager](#uri-handler-alertmanager)
-    - [uri handler /webhook/*](#uri-handler-webhook)
+    - [static uri handler (e.g. /alertmanager)](#static-uri-handler-eg-alertmanager)
+    - [dynamic uri handler /webhook/*](#dynamic-uri-handler-webhook)
   - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
 - [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
   - [Creating the Configuration File](#creating-the-configuration-file)
@@ -74,9 +74,9 @@ __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, check
 
 ### Setting up Prometheus Alert Manager
 
-By default, __prometheus-msteams__ creates a request uri handler __/alertmanager__ and a dynamic handler __/webhook/*__.
+By default, __prometheus-msteams__ creates a static uri handler __/alertmanager__ and a dynamic uri handler __/dynamicwebhook/*__.
 
-#### uri handler /alertmanager
+#### static uri handler (e.g. /alertmanager)
 
 ```yaml
 route:
@@ -93,9 +93,9 @@ receivers:
     url: 'http://localhost:2000/alertmanager' # the prometheus-msteams proxy
 ```
 
-#### uri handler /webhook/*
+#### dynamic uri handler /dynamicwebhook/*
 
-The webhook handler allows you to pass the webhook url to prometheus-msteams proxy from alertmanager.
+The dynamic webhook handler allows you to pass the webhook url to prometheus-msteams proxy directly from alertmanager.
 
 ```yaml
 route:
@@ -109,7 +109,7 @@ receivers:
 - name: 'prometheus-msteams'
   webhook_configs: 
   - send_resolved: true
-    url: 'http://localhost:2000/webhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/webhook/" + webhook url (without prefix "https://")
+    url: 'http://localhost:2000/dynamicwebhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/dynamicwebhook/" + webhook url (without prefix "https://")
     # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
 ```
 
