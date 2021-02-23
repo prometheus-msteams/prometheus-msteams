@@ -27,7 +27,7 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
   - [Installation](#installation)
   - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
     - [static uri handler (e.g. /alertmanager)](#static-uri-handler-eg-alertmanager)
-    - [dynamic uri handler /webhook/*](#dynamic-uri-handler-webhook)
+    - [dynamic uri handler /_dynamicwebhook/*](#dynamic-uri-handler-_dynamicwebhook)
   - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
 - [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
   - [Creating the Configuration File](#creating-the-configuration-file)
@@ -74,7 +74,7 @@ __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, check
 
 ### Setting up Prometheus Alert Manager
 
-By default, __prometheus-msteams__ creates a static uri handler __/alertmanager__ and a dynamic uri handler __/dynamicwebhook/*__.
+By default, __prometheus-msteams__ creates a static uri handler __/alertmanager__ and a dynamic uri handler __/_dynamicwebhook/*__.
 
 #### static uri handler (e.g. /alertmanager)
 
@@ -93,7 +93,7 @@ receivers:
     url: 'http://localhost:2000/alertmanager' # the prometheus-msteams proxy
 ```
 
-#### dynamic uri handler /dynamicwebhook/*
+#### dynamic uri handler /_dynamicwebhook/*
 
 The dynamic webhook handler allows you to pass the webhook url to prometheus-msteams proxy directly from alertmanager.
 
@@ -109,7 +109,7 @@ receivers:
 - name: 'prometheus-msteams'
   webhook_configs: 
   - send_resolved: true
-    url: 'http://localhost:2000/dynamicwebhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/dynamicwebhook/" + webhook url (without prefix "https://")
+    url: 'http://localhost:2000/_dynamicwebhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/_dynamicwebhook/" + webhook url (without prefix "https://")
     # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
 ```
 

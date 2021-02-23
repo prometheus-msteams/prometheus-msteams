@@ -208,10 +208,10 @@ func main() { //nolint: funlen
 
 	{ // dynamic uri handler: webhook uri is retrieved from request.URL
 		var r transport.DynamicRoute
-		r.RequestPath = "/dynamicwebhook/*"
+		r.RequestPath = "/_dynamicwebhook/*"
 		r.ServiceGenerator = func(c echo.Context) service.Service {
 			path := c.Request().URL.Path
-			path = strings.TrimPrefix(path, "/dynamicwebhook/")
+			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
 
 			webhook := fmt.Sprintf("https://%s", path)
 
