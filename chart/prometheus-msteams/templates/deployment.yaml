@@ -18,6 +18,9 @@ spec:
       labels:
         app: {{ template "app.name" . }}
         release: {{ .Release.Name }}
+{{- if .Values.podLabels }}
+{{ toYaml .Values.podLabels | indent 8 }}
+{{- end }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configMapConfig.yaml") . | sha256sum }}
         checksum/msteams-card-templates: {{ include (print $.Template.BasePath "/configMapTemplate.yaml") . | sha256sum }}
@@ -45,6 +48,10 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+          {{- if .Values.envFrom }}
+          envFrom:
+            {{- toYaml .Values.envFrom | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config

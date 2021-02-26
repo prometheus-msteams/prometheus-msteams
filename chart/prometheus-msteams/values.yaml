@@ -38,17 +38,38 @@ podSecurityContext:
 
 priorityClassName: ""
 
+# Custom labels for pod assignment
+podLabels: {}
+
 metrics:
   serviceMonitor:
     enabled: false
     additionalLabels: {}
     scrapeInterval: 30s
 
-connectors: []
-connectors_with_custom_templates: []
-
 ## Specify the custom message card template for MS teams
+customCardTemplate: ""
 # customCardTemplate: |
 #   {{ define "teams.card" }}
 #   {...}
 #   {{ end }}
+
+connectors: []
+
+# ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel
+connectorsWithCustomTemplates: []
+# - request_path: /alert2
+#   template_file: |
+#     {{ define "teams.card" }}
+#     {...}
+#     {{ end }}
+#   webhook_url: <webhook>
+#   escape_underscores: true
+
+# Env from existing secrets or configmaps (in same namespace), will passed through to contains 'envFrom'
+envFrom: {}
+# envFrom:
+#   - secretRef:
+#       name: my-prometheus-msteams-env-secret
+#   - configMapRef:
+#       name: my-prometheus-msteams-env-cm

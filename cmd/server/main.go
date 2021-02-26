@@ -8,8 +8,11 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	ocprometheus "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/labstack/echo/v4"
@@ -80,6 +83,7 @@ func main() { //nolint: funlen
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
+		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -169,7 +173,9 @@ func main() { //nolint: funlen
 	}
 
 	// Teams HTTP client setup.
-	httpClient := &http.Client{
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = *retryMax
+	retryClient.HTTPClient = &http.Client{
 		Transport: &ochttp.Transport{
 			Base: &http.Transport{
 				Proxy: http.ProxyFromEnvironment,
@@ -185,7 +191,10 @@ func main() { //nolint: funlen
 		},
 	}
 
+	httpClient := retryClient.StandardClient()
+
 	var routes []transport.Route
+	var dRoutes []transport.DynamicRoute
 
 	// Connectors from flags.
 	if len(*requestURI) > 0 && len(*teamsWebhookURL) > 0 {
@@ -195,6 +204,22 @@ func main() { //nolint: funlen
 				*requestURI: *teamsWebhookURL,
 			},
 		)
+	}
+
+	{ // dynamic uri handler: webhook uri is retrieved from request.URL
+		var r transport.DynamicRoute
+		r.RequestPath = "/_dynamicwebhook/*"
+		r.ServiceGenerator = func(c echo.Context) service.Service {
+			path := c.Request().URL.Path
+			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
+
+			webhook := fmt.Sprintf("https://%s", path)
+
+			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
+			s = service.NewLoggingService(logger, s)
+			return s
+		}
+		dRoutes = append(dRoutes, r)
 	}
 
 	// Connectors from config file.
@@ -277,7 +302,7 @@ func main() { //nolint: funlen
 	var handler *echo.Echo
 	{
 		// Main app.
-		handler = transport.NewServer(logger, routes...)
+		handler = transport.NewServer(logger, routes, dRoutes)
 		// Prometheus metrics.
 		handler.GET("/metrics", echo.WrapHandler(pe))
 		// Pprof.
