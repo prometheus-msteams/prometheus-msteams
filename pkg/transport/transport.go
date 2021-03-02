@@ -84,6 +84,9 @@ func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 func addContextAwareRoute(e *echo.Echo, p string, w func(c echo.Context) service.Service, logger log.Logger) {
 	e.POST(p, func(c echo.Context) error {
 		s := w(c)
+		if s == nil { // error in request -> was already logged
+			return nil
+		}
 		return handleRoute(c, s, logger)
 	},
 		kitLoggerMiddleware(logger),

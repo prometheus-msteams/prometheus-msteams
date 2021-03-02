@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -207,6 +208,8 @@ func main() { //nolint: funlen
 	}
 
 	{ // dynamic uri handler: webhook uri is retrieved from request.URL
+		var validWebhook = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`)
+
 		var r transport.DynamicRoute
 		r.RequestPath = "/_dynamicwebhook/*"
 		r.ServiceGenerator = func(c echo.Context) service.Service {
@@ -214,6 +217,18 @@ func main() { //nolint: funlen
 			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
 
 			webhook := fmt.Sprintf("https://%s", path)
+
+			//https://admin.microsoft.com/AdminPortal/Home#/MessageCenter/:/messages/MC234048
+			if !validWebhook.MatchString(path) ||
+				// old format is only valid until april '21
+				strings.HasPrefix(path, "outlook.office.com/webhook/") {
+
+				logger.Log(
+					"err",
+					fmt.Sprintf("_dynamicwebhook: The webhook_url is invalid '%s'", path),
+				)
+				return nil
+			}
 
 			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
 			s = service.NewLoggingService(logger, s)
