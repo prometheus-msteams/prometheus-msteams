@@ -24,9 +24,9 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configMapConfig.yaml") . | sha256sum }}
         checksum/msteams-card-templates: {{ include (print $.Template.BasePath "/configMapTemplate.yaml") . | sha256sum }}
-    {{- if .Values.podAnnotations }}
-    {{ toYaml .Values.podAnnotations | indent 8 }}
-    {{- end }}
+{{- if .Values.podAnnotations }}
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
