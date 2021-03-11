@@ -222,7 +222,6 @@ func main() { //nolint: funlen
 			if !validWebhook.MatchString(path) ||
 				// old format is only valid until april '21
 				strings.HasPrefix(path, "outlook.office.com/webhook/") {
-
 				logger.Log(
 					"err",
 					fmt.Sprintf("_dynamicwebhook: The webhook_url is invalid '%s'", path),
