@@ -85,6 +85,7 @@ func main() { //nolint: funlen
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
 		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
+		validateDynamicWebhookURL     = fs.Bool("validate-webhook-url", false, "Enforce strict validation of dynamic webhook url")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -208,7 +209,9 @@ func main() { //nolint: funlen
 	}
 
 	{ // dynamic uri handler: webhook uri is retrieved from request.URL
-		var validWebhook = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`)
+		// New Webhook URL announcement: https://admin.microsoft.com/AdminPortal/Home#/MessageCenter/:/messages/MC234048
+		var validWebhookPattern = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`)
+		var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only valid until 11. april '21
 
 		var r transport.DynamicRoute
 		r.RequestPath = "/_dynamicwebhook/*"
@@ -216,12 +219,8 @@ func main() { //nolint: funlen
 			path := c.Request().URL.Path
 			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
 
-			webhook := fmt.Sprintf("https://%s", path)
-
-			//https://admin.microsoft.com/AdminPortal/Home#/MessageCenter/:/messages/MC234048
-			if !validWebhook.MatchString(path) ||
-				// old format is only valid until april '21
-				strings.HasPrefix(path, "outlook.office.com/webhook/") {
+			isValidURL := validWebhookPattern.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
+			if *validateDynamicWebhookURL && !isValidURL {
 				logger.Log(
 					"err",
 					fmt.Sprintf("_dynamicwebhook: The webhook_url is invalid '%s'", path),
@@ -229,6 +228,7 @@ func main() { //nolint: funlen
 				return nil
 			}
 
+			webhook := fmt.Sprintf("https://%s", path)
 			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
 			s = service.NewLoggingService(logger, s)
 			return s

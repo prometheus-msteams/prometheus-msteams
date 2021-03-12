@@ -2,6 +2,7 @@ package transport
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -85,7 +86,7 @@ func addContextAwareRoute(e *echo.Echo, p string, w func(c echo.Context) service
 	e.POST(p, func(c echo.Context) error {
 		s := w(c)
 		if s == nil { // error in request -> was already logged
-			return nil
+			return fmt.Errorf("invalid request")
 		}
 		return handleRoute(c, s, logger)
 	},
