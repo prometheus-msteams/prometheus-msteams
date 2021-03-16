@@ -1,4 +1,4 @@
-FROM alpine:3.9.5
+FROM alpine:3.13
 
 RUN apk --no-cache add ca-certificates tini
 
