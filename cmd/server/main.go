@@ -67,6 +67,22 @@ func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 	return tc, nil
 }
 
+// New Webhook URL announcement: https://admin.microsoft.com/AdminPortal/Home#/MessageCenter/:/messages/MC234048
+var validWebhookPattern = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`)
+var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only valid until 11. april '21
+
+func validateWebhook(u string) error {
+	path := strings.TrimPrefix(u, "https://")
+	if u == path {
+		return fmt.Errorf("The webhook_url must start with 'https://'. url: '%s'", u)
+	}
+	isValidTeamsHook := validWebhookPattern.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
+	if !isValidTeamsHook {
+		return fmt.Errorf("The webhook_url has an unexpected format '%s'", u)
+	}
+	return nil
+}
+
 func main() { //nolint: funlen
 	var (
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
@@ -85,7 +101,7 @@ func main() { //nolint: funlen
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
 		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
-		validateDynamicWebhookURL     = fs.Bool("validate-webhook-url", false, "Enforce strict validation of dynamic webhook url")
+		validateWebhookURL            = fs.Bool("validate-webhook-url", false, "Enforce strict validation of dynamic webhook url")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -209,26 +225,22 @@ func main() { //nolint: funlen
 	}
 
 	{ // dynamic uri handler: webhook uri is retrieved from request.URL
-		// New Webhook URL announcement: https://admin.microsoft.com/AdminPortal/Home#/MessageCenter/:/messages/MC234048
-		var validWebhookPattern = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`)
-		var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only valid until 11. april '21
-
 		var r transport.DynamicRoute
 		r.RequestPath = "/_dynamicwebhook/*"
 		r.ServiceGenerator = func(c echo.Context) service.Service {
 			path := c.Request().URL.Path
 			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
+			webhook := fmt.Sprintf("https://%s", path)
 
-			isValidURL := validWebhookPattern.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
-			if *validateDynamicWebhookURL && !isValidURL {
+			err := validateWebhook(webhook)
+			if *validateWebhookURL && err != nil {
 				logger.Log(
 					"err",
-					fmt.Sprintf("_dynamicwebhook: The webhook_url is invalid '%s'", path),
+					fmt.Sprintf("_dynamicwebhook: %s", err),
 				)
 				return nil
 			}
 
-			webhook := fmt.Sprintf("https://%s", path)
 			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
 			s = service.NewLoggingService(logger, s)
 			return s
@@ -239,6 +251,12 @@ func main() { //nolint: funlen
 	// Connectors from config file.
 	for _, c := range tc.Connectors {
 		for uri, webhook := range c {
+			err := validateWebhook(uri)
+			if *validateWebhookURL && err != nil {
+				logger.Log("err", err)
+				os.Exit(1)
+			}
+
 			var r transport.Route
 			r.RequestPath = uri
 			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook)
@@ -258,6 +276,11 @@ func main() { //nolint: funlen
 				"err",
 				fmt.Sprintf("The webhook_url is required for request_path '%s'", c.RequestPath),
 			)
+			os.Exit(1)
+		}
+		err := validateWebhook(c.WebhookURL)
+		if *validateWebhookURL && err != nil {
+			logger.Log("err", err)
 			os.Exit(1)
 		}
 		if len(c.TemplateFile) == 0 {
