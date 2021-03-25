@@ -235,7 +235,7 @@ func main() { //nolint: funlen
 
 			err := validateWebhook(webhook)
 			if *validateWebhookURL && err != nil {
-				err = errors.Wrapf(err, "webhook validation failed for /_dynamicwebhook/: ", webhook)
+				err = errors.Wrapf(err, "webhook validation failed for /_dynamicwebhook/")
 				logger.Log("err", err)
 				return nil, err
 			}
