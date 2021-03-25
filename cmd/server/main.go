@@ -101,7 +101,7 @@ func main() { //nolint: funlen
 		httpClientTLSHandshakeTimeout = fs.Duration("tls-handshake-timeout", 30*time.Second, "The HTTP client TLS handshake timeout.")
 		httpClientMaxIdleConn         = fs.Int("max-idle-conns", 100, "The HTTP client maximum number of idle connections")
 		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
-		validateWebhookURL            = fs.Bool("validate-webhook-url", false, "Enforce strict validation of dynamic webhook url")
+		validateWebhookURL            = fs.Bool("validate-webhook-url", false, "Enforce strict validation of webhook url")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {

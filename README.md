@@ -97,7 +97,7 @@ receivers:
 
 The dynamic webhook handler allows you to pass the webhook url to prometheus-msteams proxy directly from alertmanager.
 
-By default the passed URL is not validated. If validation is needed. pass flag `-validate-webhook-url` to prometheus-msteams on start.
+By default the passed URL is not validated. If validation is needed, pass flag `-validate-webhook-url` to prometheus-msteams on start.
 A valid url starts with `outlook.office.com/webhook/` or matches the regular expression `^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`.
 
 ```yaml
@@ -338,7 +338,7 @@ Usage of prometheus-msteams:
   -max-retry-count int
       The retry maximum for sending requests to the webhook. (default 3)
   -validate-webhook-url
-      Enforce strict validation of dynamic webhook url. (default false)
+      Enforce strict validation of webhook url. (default false)
 
 ```
 
