@@ -25,9 +25,12 @@ type Route struct {
 
 // DynamicRoute holds the Request path to generate the service based on request (e.g. path)
 type DynamicRoute struct {
-	ServiceGenerator func(c echo.Context) service.Service
+	ServiceGenerator ServiceGenerator
 	RequestPath      string
 }
+
+// ServiceGenerator creates a service on data from request (echo.Context)
+type ServiceGenerator func(echo.Context) (service.Service, error)
 
 // NewServer creates the web server.
 func NewServer(logger log.Logger, routes []Route, dRoutes []DynamicRoute) *echo.Echo {
@@ -82,11 +85,14 @@ func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 	)
 }
 
-func addContextAwareRoute(e *echo.Echo, p string, w func(c echo.Context) service.Service, logger log.Logger) {
+func addContextAwareRoute(e *echo.Echo, p string, w ServiceGenerator, logger log.Logger) {
 	e.POST(p, func(c echo.Context) error {
-		s := w(c)
-		if s == nil { // error in request -> was already logged
-			return fmt.Errorf("invalid request")
+		s, err := w(c)
+		if err != nil {
+			return err
+		}
+		if s == nil {
+			return fmt.Errorf("invalid request. No service was returned.")
 		}
 		return handleRoute(c, s, logger)
 	},

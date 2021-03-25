@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
 
 	ocprometheus "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/labstack/echo/v4"
@@ -227,23 +228,21 @@ func main() { //nolint: funlen
 	{ // dynamic uri handler: webhook uri is retrieved from request.URL
 		var r transport.DynamicRoute
 		r.RequestPath = "/_dynamicwebhook/*"
-		r.ServiceGenerator = func(c echo.Context) service.Service {
+		r.ServiceGenerator = func(c echo.Context) (service.Service, error) {
 			path := c.Request().URL.Path
 			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
 			webhook := fmt.Sprintf("https://%s", path)
 
 			err := validateWebhook(webhook)
 			if *validateWebhookURL && err != nil {
-				logger.Log(
-					"err",
-					fmt.Sprintf("_dynamicwebhook: %s", err),
-				)
-				return nil
+				err = errors.Wrapf(err, "webhook validation failed for /_dynamicwebhook/: ", webhook)
+				logger.Log("err", err)
+				return nil, err
 			}
 
 			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
 			s = service.NewLoggingService(logger, s)
-			return s
+			return s, nil
 		}
 		dRoutes = append(dRoutes, r)
 	}
