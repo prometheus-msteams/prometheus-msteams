@@ -18,6 +18,7 @@ require (
 	github.com/google/go-cmp v0.4.0
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
+	github.com/hashicorp/go-retryablehttp v0.6.8
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/memberlist v0.1.5 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect

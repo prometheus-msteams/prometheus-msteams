@@ -2,6 +2,7 @@ package transport
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -22,12 +23,25 @@ type Route struct {
 	RequestPath string
 }
 
+// DynamicRoute holds the Request path to generate the service based on request (e.g. path)
+type DynamicRoute struct {
+	ServiceGenerator ServiceGenerator
+	RequestPath      string
+}
+
+// ServiceGenerator creates a service on data from request (echo.Context)
+type ServiceGenerator func(echo.Context) (service.Service, error)
+
 // NewServer creates the web server.
-func NewServer(logger log.Logger, routes ...Route) *echo.Echo {
+func NewServer(logger log.Logger, routes []Route, dRoutes []DynamicRoute) *echo.Echo {
 	e := echo.New()
 	for _, r := range routes {
 		level.Debug(logger).Log("request_path_added", r.RequestPath)
 		addRoute(e, r.RequestPath, r.Service, logger)
+	}
+	for _, r := range dRoutes {
+		level.Debug(logger).Log("request_path_added", r.RequestPath)
+		addContextAwareRoute(e, r.RequestPath, r.ServiceGenerator, logger)
 	}
 	e.HideBanner = true
 	return e
@@ -64,35 +78,55 @@ func kitLoggerMiddleware(logger log.Logger) echo.MiddlewareFunc {
 
 func addRoute(e *echo.Echo, p string, s service.Service, logger log.Logger) {
 	e.POST(p, func(c echo.Context) error {
-		ctx, span := trace.StartSpan(c.Request().Context(), "alertmanager-handler")
-		defer span.End()
-
-		b, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			logger.Log("err", err)
-			span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
-			return c.String(500, err.Error())
-		}
-
-		span.AddAttributes(trace.StringAttribute("alert", string(b)))
-
-		var wm webhook.Message
-		if err := json.Unmarshal(b, &wm); err != nil {
-			logger.Log("err", err)
-			span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
-			return c.String(500, err.Error())
-		}
-
-		prs, err := s.Post(ctx, wm)
-		if err != nil {
-			logger.Log("err", err)
-			span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
-			return c.String(500, err.Error())
-		}
-
-		return c.JSON(200, prs)
+		return handleRoute(c, s, logger)
 	},
 		kitLoggerMiddleware(logger),
 		opencensusMiddleware(),
 	)
+}
+
+func addContextAwareRoute(e *echo.Echo, p string, w ServiceGenerator, logger log.Logger) {
+	e.POST(p, func(c echo.Context) error {
+		s, err := w(c)
+		if err != nil {
+			return err
+		}
+		if s == nil {
+			return fmt.Errorf("invalid request. No service was returned.")
+		}
+		return handleRoute(c, s, logger)
+	},
+		kitLoggerMiddleware(logger),
+		opencensusMiddleware(),
+	)
+}
+
+func handleRoute(c echo.Context, s service.Service, logger log.Logger) error {
+	ctx, span := trace.StartSpan(c.Request().Context(), "alertmanager-handler")
+	defer span.End()
+
+	b, err := ioutil.ReadAll(c.Request().Body)
+	if err != nil {
+		logger.Log("err", err)
+		span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
+		return c.String(500, err.Error())
+	}
+
+	span.AddAttributes(trace.StringAttribute("alert", string(b)))
+
+	var wm webhook.Message
+	if err := json.Unmarshal(b, &wm); err != nil {
+		logger.Log("err", err)
+		span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
+		return c.String(500, err.Error())
+	}
+
+	prs, err := s.Post(ctx, wm)
+	if err != nil {
+		logger.Log("err", err)
+		span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
+		return c.String(500, err.Error())
+	}
+
+	return c.JSON(200, prs)
 }

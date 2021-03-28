@@ -92,7 +92,7 @@ func TestServer(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			// Create the server and run it using a test http server.
-			srv := transport.NewServer(logger, tt.routes...)
+			srv := transport.NewServer(logger, tt.routes, []transport.DynamicRoute{})
 			testSrv := httptest.NewServer(srv)
 			defer testSrv.Close()
 

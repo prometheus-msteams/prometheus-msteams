@@ -26,6 +26,8 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 - [Getting Started (Quickstart)](#getting-started-quickstart)
   - [Installation](#installation)
   - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
+    - [static uri handler (e.g. /alertmanager)](#static-uri-handler-eg-alertmanager)
+    - [dynamic uri handler /_dynamicwebhook/*](#dynamic-uri-handler-_dynamicwebhook)
   - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
 - [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
   - [Creating the Configuration File](#creating-the-configuration-file)
@@ -72,7 +74,9 @@ __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, check
 
 ### Setting up Prometheus Alert Manager
 
-By default, __prometheus-msteams__ creates a request uri handler __/alertmanager__.
+By default, __prometheus-msteams__ creates a static uri handler __/alertmanager__ and a dynamic uri handler __/_dynamicwebhook/*__.
+
+#### static uri handler (e.g. /alertmanager)
 
 ```yaml
 route:
@@ -87,6 +91,29 @@ receivers:
   webhook_configs: # https://prometheus.io/docs/alerting/configuration/#webhook_config 
   - send_resolved: true
     url: 'http://localhost:2000/alertmanager' # the prometheus-msteams proxy
+```
+
+#### dynamic uri handler /_dynamicwebhook/*
+
+The dynamic webhook handler allows you to pass the webhook url to prometheus-msteams proxy directly from alertmanager.
+
+By default the passed URL is not validated. If validation is needed, pass flag `-validate-webhook-url` to prometheus-msteams on start.
+A valid url starts with `outlook.office.com/webhook/` or matches the regular expression `^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`.
+
+```yaml
+route:
+  group_by: ['alertname']
+  group_interval: 30s
+  repeat_interval: 30s
+  group_wait: 30s
+  receiver: 'prometheus-msteams'
+
+receivers:
+- name: 'prometheus-msteams'
+  webhook_configs: 
+  - send_resolved: true
+    url: 'http://localhost:2000/_dynamicwebhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/_dynamicwebhook/" + webhook url (without prefix "https://")
+    # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
 ```
 
 > If you don't have Prometheus running yet and you wan't to try how this works,  
@@ -271,8 +298,8 @@ connectors_with_custom_templates:
 
 You can use
 
-* all of the existing [sprig template functions](http://masterminds.github.io/sprig/) except the [OS functions env and expandenv](http://masterminds.github.io/sprig/os.html)
-* some well known functions from Helm: `toToml`, `toYaml`, `fromYaml`, `toJson`, `fromJson`
+- all of the existing [sprig template functions](http://masterminds.github.io/sprig/) except the [OS functions env and expandenv](http://masterminds.github.io/sprig/os.html)
+- some well known functions from Helm: `toToml`, `toYaml`, `fromYaml`, `toJson`, `fromJson`
 
 ## Configuration
 
@@ -283,31 +310,36 @@ E.g, `-config-file` is `CONFIG_FILE`, `-debug` is `DEBUG`, `-log-format` is `LOG
 ```
 Usage of prometheus-msteams:
   -auto-escape-underscores
-    	Automatically replace all '_' with '\_' from texts in the alert.
+     Automatically replace all '_' with '\_' from texts in the alert.
   -config-file string
-    	The connectors configuration file.
+     The connectors configuration file.
   -debug
-    	Set log level to debug mode. (default true)
+     Set log level to debug mode. (default true)
   -http-addr string
-    	HTTP listen address. (default ":2000")
+     HTTP listen address. (default ":2000")
   -idle-conn-timeout duration
-    	The HTTP client idle connection timeout duration. (default 1m30s)
+     The HTTP client idle connection timeout duration. (default 1m30s)
   -jaeger-agent string
-    	Jaeger agent endpoint (default "localhost:6831")
+     Jaeger agent endpoint (default "localhost:6831")
   -jaeger-trace
-    	Send traces to Jaeger.
+     Send traces to Jaeger.
   -log-format string
-    	json|fmt (default "json")
+     json|fmt (default "json")
   -max-idle-conns int
-    	The HTTP client maximum number of idle connections (default 100)
+     The HTTP client maximum number of idle connections (default 100)
   -teams-incoming-webhook-url string
-    	The default Microsoft Teams webhook connector.
+     The default Microsoft Teams webhook connector.
   -teams-request-uri string
-    	The default request URI path where Prometheus will post to.
+     The default request URI path where Prometheus will post to.
   -template-file string
-    	The Microsoft Teams Message Card template file. (default "./default-message-card.tmpl")
+     The Microsoft Teams Message Card template file. (default "./default-message-card.tmpl")
   -tls-handshake-timeout duration
-    	The HTTP client TLS handshake timeout. (default 30s)
+     The HTTP client TLS handshake timeout. (default 30s)
+  -max-retry-count int
+      The retry maximum for sending requests to the webhook. (default 3)
+  -validate-webhook-url
+      Enforce strict validation of webhook url. (default false)
+
 ```
 
 ## Kubernetes Deployment
