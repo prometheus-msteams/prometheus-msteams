@@ -329,7 +329,7 @@ func main() { //nolint: funlen
 
 func ocviews() []*view.View {
 	clientKeys := []tag.Key{
-		ochttp.KeyClientMethod, ochttp.KeyClientStatus, ochttp.KeyClientHost, ochttp.KeyClientPath,
+		ochttp.KeyClientMethod, ochttp.KeyClientStatus, ochttp.KeyClientHost,
 	}
 	serverKeys := []tag.Key{
 		ochttp.StatusCode, ochttp.Method, ochttp.Path,
