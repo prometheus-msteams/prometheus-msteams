@@ -38,11 +38,11 @@ func CompareToGoldenFile(t *testing.T, v interface{}, file string, update bool) 
 		_ = os.MkdirAll(dir, 0755)
 	}
 	if _, err := os.Stat(gp); os.IsNotExist(err) {
-		_ = ioutil.WriteFile(gp, []byte{}, 0644)
+		_ = ioutil.WriteFile(gp, []byte{}, 0600)
 	}
 	if update {
 		t.Log("updating golden file")
-		if err := ioutil.WriteFile(gp, gotBytes, 0644); err != nil {
+		if err := ioutil.WriteFile(gp, gotBytes, 0600); err != nil {
 			t.Fatalf("failed to update golden file: %s", err)
 		}
 	}
