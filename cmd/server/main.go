@@ -76,15 +76,16 @@ var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only va
 func validateWebhook(u string) error {
 	path := strings.TrimPrefix(u, "https://")
 	if u == path {
-		return fmt.Errorf("The webhook_url must start with 'https://'. url: '%s'", u)
+		return fmt.Errorf("the webhook_url must start with 'https://'. url: '%s'", u)
 	}
 	isValidTeamsHook := validWebhookPattern.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
 	if !isValidTeamsHook {
-		return fmt.Errorf("The webhook_url has an unexpected format '%s'", u)
+		return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
 	}
 	return nil
 }
 
+//nolint:gocyclo
 func main() { //nolint: funlen
 	var (
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
