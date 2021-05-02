@@ -92,7 +92,7 @@ func addContextAwareRoute(e *echo.Echo, p string, w ServiceGenerator, logger log
 			return err
 		}
 		if s == nil {
-			return fmt.Errorf("invalid request. No service was returned.")
+			return fmt.Errorf("invalid request. No service was returned")
 		}
 		return handleRoute(c, s, logger)
 	},
