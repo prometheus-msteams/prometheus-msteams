@@ -1,7 +1,8 @@
 BINARY = prometheus-msteams
 VET_REPORT = vet.report
 TEST_REPORT = tests.xml
-GOARCH = amd64
+GOARCHS = amd64 arm64
+GOARCH = $(shell echo $@ | sed 's/[^-]*-//')
 BINDIR = bin
 VERSION:=$(shell git describe --tags --always --dirty)
 COMMIT=$(shell git rev-parse --short HEAD)
@@ -38,13 +39,21 @@ create_bin_dir:
 github_release:
 	github-release release -u bzon -r prometheus-msteams -t $(VERSION) -n $(VERSION)
 	
-linux: 
+linux: $(GOARCHS:%=linux-%)
+
+$(GOARCHS:%=linux-%):
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) ./cmd/server
 
-darwin:
+darwin: darwin-amd64
+
+# Prior to 1.16, golang did not support the darwin/arm64 architecture
+darwin-amd64:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
-windows:
+# Prior to 1.17, golang did not support the darwin/arm64 architecture
+windows: windows-amd64
+
+windows-amd64:
 	CGO_ENABLED=0 GOOS=windows GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-windows-$(GOARCH).exe ./cmd/server
 
 docker:
