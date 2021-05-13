@@ -44,13 +44,12 @@ linux: $(GOARCHS:%=linux-%)
 $(GOARCHS:%=linux-%):
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) ./cmd/server
 
-darwin: darwin-amd64
+darwin: $(GOARCHS:%=darwin-%)
 
-# Prior to 1.16, golang did not support the darwin/arm64 architecture
-darwin-amd64:
+$(GOARCHS:%=darwin-%):
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
-# Prior to 1.17, golang did not support the darwin/arm64 architecture
+# Prior to 1.17, golang did not support the windows/arm64 architecture
 windows: windows-amd64
 
 windows-amd64:
