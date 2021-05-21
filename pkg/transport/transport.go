@@ -121,6 +121,13 @@ func handleRoute(c echo.Context, s service.Service, logger log.Logger) error {
 		return c.String(500, err.Error())
 	}
 
+	if wm.Data == nil || wm.Version == "" || wm.GroupKey == "" {
+		err = fmt.Errorf("validation of webhook message failed. Required fields are missing")
+		logger.Log("err", err)
+		span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
+		return c.String(500, err.Error())
+	}
+
 	prs, err := s.Post(ctx, wm)
 	if err != nil {
 		logger.Log("err", err)
