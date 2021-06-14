@@ -39,6 +39,9 @@ spec:
         - name: card-template-volume
           configMap:
             name: {{ template "app.name" . }}-card-template
+      {{- if .Values.extraConfigmapMounts }}
+      {{ toYaml .Values.extraConfigmapMounts | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -57,9 +60,12 @@ spec:
               mountPath: /etc/config
             - name: card-template-volume
               mountPath: /etc/template
+          {{- if .Values.extraVolumeMounts }}
+          {{ toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
           args:
             - -config-file=/etc/config/connectors.yaml
-            - -template-file=/etc/template/card.tmpl
+            - -template-file={{ .Values.templateFile }}
           {{- with .Values.container.additionalArgs }}
 {{ toYaml . | indent 12 }}
           {{- end}}
