@@ -177,7 +177,7 @@ used if common `template` annotation is not `group`.
             "targets": [
               {
                 "os": "default", 
-                "uri": "{{ .ExternalURL }}/#/alerts/silenced=true&inhibited=true&active=true?filter=%7B{{$c := counter}}{{ range $key, $value := .CommonLabels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
+                "uri": "{{ .ExternalURL }}/#?alerts/silenced=true&inhibited=true&active=true&filter=%7B{{$c := counter}}{{ range $key, $value := .CommonLabels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
               }
             ]
           }
@@ -266,7 +266,7 @@ used if common `template` annotation is not `group`.
                   "targets": [
                     {
                       "os": "default", 
-                      "uri": "{{ $externalUrl }}/#/alerts/silenced=true&inhibited=true&active=true?filter=%7B{{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
+                      "uri": "{{ $externalUrl }}/#?alerts/silenced=true&inhibited=true&active=true&filter=%7B{{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
                     }
                   ]
                 }
