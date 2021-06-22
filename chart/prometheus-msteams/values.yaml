@@ -54,6 +54,20 @@ customCardTemplate: ""
 #   {...}
 #   {{ end }}
 
+templateFile: "/etc/template/card.tmpl"
+
+extraConfigmapMounts: []
+# extraConfigmapMounts:
+#   - name: customConfigMap
+#     configMap:
+#       name: customConfigMapName
+
+## Additional Volume mounts
+extraVolumeMounts: []
+# extraVolumeMounts:
+#   - name: volume-name
+#     mountPath: /etc/custom_path
+
 connectors: []
 
 # ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel
