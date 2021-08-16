@@ -5,6 +5,8 @@ metadata:
   name: {{ template "app.fullname" . }}
   {{- if .Values.metrics.serviceMonitor.namespace }}
   namespace: {{ .Values.metrics.serviceMonitor.namespace }}
+  {{ else }}
+  namespace: {{ .Release.Namespace }}
   {{- end }}
   labels:
     app: {{ template "app.name" . }}
