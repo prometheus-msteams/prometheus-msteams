@@ -351,6 +351,15 @@ func main() { //nolint: funlen
 		handler.GET("/config", func(c echo.Context) error {
 			return c.JSON(200, tc.Connectors)
 		})
+		// Config reload
+		handler.POST("/reload", func(c echo.Context) error {
+			tc, err = parseTeamsConfigFile(*configFile)
+			if err != nil {
+				logger.Log("err", err)
+				return c.JSON(500, err)
+			}
+			return c.JSON(200, tc.Connectors)
+		})
 	}
 
 	var g run.Group
