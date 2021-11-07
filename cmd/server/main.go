@@ -91,7 +91,7 @@ func main() { //nolint: funlen
 		fs                            = flag.NewFlagSet("prometheus-msteams", flag.ExitOnError)
 		promVersion                   = fs.Bool("version", false, "Print the version")
 		logFormat                     = fs.String("log-format", "json", "json|fmt")
-		debugLogs                     = fs.Bool("debug", true, "Set log level to debug mode.")
+		debugLogs                     = fs.Bool("debug", false, "Set log level to debug mode.")
 		jaegerTrace                   = fs.Bool("jaeger-trace", false, "Send traces to Jaeger.")
 		jaegerAgentAddr               = fs.String("jaeger-agent", "localhost:6831", "Jaeger agent endpoint")
 		httpAddr                      = fs.String("http-addr", ":2000", "HTTP listen address.")
@@ -196,6 +196,9 @@ func main() { //nolint: funlen
 
 	// Teams HTTP client setup.
 	retryClient := retryablehttp.NewClient()
+	if !*debugLogs {
+		retryClient.Logger = nil
+	}
 	retryClient.RetryMax = *retryMax
 	retryClient.HTTPClient = &http.Client{
 		Transport: &ochttp.Transport{
