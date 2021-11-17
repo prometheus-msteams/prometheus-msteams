@@ -48,6 +48,15 @@ func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) 
 	return card, nil
 }
 
+// dataWithEnv extends template.Data by adding Env map,
+// this allows to use {{ .Env.NAME }} in card templates,
+// where NAME is a name of environment variable
+type dataWithEnv struct {
+	template.Data
+
+	Env map[string]string
+}
+
 func (m *templatedCard) executeTemplate(promAlert webhook.Message) (string, error) {
 	// TODO(bzon): Maybe we can escape underscores after the office 365 card is finally created?
 	// That approach would be simpler to read and probably a performance gain because
@@ -56,14 +65,17 @@ func (m *templatedCard) executeTemplate(promAlert webhook.Message) (string, erro
 		promAlert = jsonEscapeMessage(promAlert)
 	}
 
-	data := &template.Data{
-		Receiver:          promAlert.Receiver,
-		Status:            promAlert.Status,
-		Alerts:            promAlert.Alerts,
-		GroupLabels:       promAlert.GroupLabels,
-		CommonLabels:      promAlert.CommonLabels,
-		CommonAnnotations: promAlert.CommonAnnotations,
-		ExternalURL:       promAlert.ExternalURL,
+	data := &dataWithEnv{
+		Data: template.Data{
+			Receiver:          promAlert.Receiver,
+			Status:            promAlert.Status,
+			Alerts:            promAlert.Alerts,
+			GroupLabels:       promAlert.GroupLabels,
+			CommonLabels:      promAlert.CommonLabels,
+			CommonAnnotations: promAlert.CommonAnnotations,
+			ExternalURL:       promAlert.ExternalURL,
+		},
+		Env: envToMap(),
 	}
 
 	cardString, err := m.template.ExecuteTextString(
@@ -139,4 +151,16 @@ func ParseTemplateFile(f string) (*template.Template, error) {
 	}
 
 	return tmpl, nil
+}
+
+// envToMap returns map of environment variables
+func envToMap() map[string]string {
+	envMap := make(map[string]string)
+
+	for _, v := range os.Environ() {
+		split_v := strings.Split(v, "=")
+		envMap[split_v[0]] = strings.Join(split_v[1:], "=")
+	}
+
+	return envMap
 }

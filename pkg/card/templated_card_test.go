@@ -2,6 +2,7 @@ package card
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -109,7 +110,18 @@ func Test_templatedCard_Convert(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:          "card with .Env",
+			promAlertFile: "./testdata/prom_post_request.json",
+			templateFile:  "./testdata/env-message-card.tmpl",
+			want: Office365ConnectorCard{
+				Type:  "MessageCard",
+				Title: "EXAMPLE",
+			},
+		},
 	}
+
+	os.Setenv("EXAMPLE", "EXAMPLE")
 
 	for _, tt := range tests {
 		tt := tt
