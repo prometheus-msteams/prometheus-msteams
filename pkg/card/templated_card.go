@@ -158,8 +158,8 @@ func envToMap() map[string]string {
 	envMap := make(map[string]string)
 
 	for _, v := range os.Environ() {
-		split_v := strings.Split(v, "=")
-		envMap[split_v[0]] = strings.Join(split_v[1:], "=")
+		splitV := strings.Split(v, "=")
+		envMap[splitV[0]] = strings.Join(splitV[1:], "=")
 	}
 
 	return envMap
