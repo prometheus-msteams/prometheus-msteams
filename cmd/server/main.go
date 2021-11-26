@@ -57,6 +57,8 @@ type ConnectorWithCustomTemplate struct {
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
 }
 
+
+
 func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
@@ -251,72 +253,10 @@ func main() { //nolint: funlen
 		dRoutes = append(dRoutes, r)
 	}
 
-	// Connectors from config file.
-	for _, c := range tc.Connectors {
-		for uri, webhook := range c {
-			err := validateWebhook(uri)
-			if *validateWebhookURL && err != nil {
-				logger.Log("err", err)
-				os.Exit(1)
-			}
-
-			var r transport.Route
-			r.RequestPath = uri
-			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook)
-			r.Service = service.NewLoggingService(logger, r.Service)
-			routes = append(routes, r)
-		}
-	}
-
-	// Connectors with custom template files.
-	for _, c := range tc.ConnectorsWithCustomTemplates {
-		if len(c.RequestPath) == 0 {
-			logger.Log("err", "one of the 'templated_connectors' is missing a 'request_path'")
-			os.Exit(1)
-		}
-		if len(c.WebhookURL) == 0 {
-			logger.Log(
-				"err",
-				fmt.Sprintf("The webhook_url is required for request_path '%s'", c.RequestPath),
-			)
-			os.Exit(1)
-		}
-		err := validateWebhook(c.WebhookURL)
-		if *validateWebhookURL && err != nil {
-			logger.Log("err", err)
-			os.Exit(1)
-		}
-		if len(c.TemplateFile) == 0 {
-			logger.Log(
-				"err",
-				fmt.Sprintf("The template_file is required for request_path '%s'", c.RequestPath),
-			)
-			os.Exit(1)
-		}
-
-		var converter card.Converter
-		tmpl, err := card.ParseTemplateFile(c.TemplateFile)
-		if err != nil {
-			logger.Log("err", err)
-			os.Exit(1)
-		}
-
-		// converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores, c.DisableGrouping)
-		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
-		converter = card.NewCreatorLoggingMiddleware(
-			log.With(
-				logger,
-				"template_file", c.TemplateFile,
-				"escaped_underscores", c.EscapeUnderscores,
-			),
-			converter,
-		)
-
-		var r transport.Route
-		r.RequestPath = c.RequestPath
-		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
-		r.Service = service.NewLoggingService(logger, r.Service)
-		routes = append(routes, r)
+	routes, err = setupServices(tc, defaultConverter, httpClient, routes, validateWebhookURL, logger)
+	if err != nil {
+		logger.Log("err", err)
+		os.Exit(1)
 	}
 
 	if err := checkDuplicateRequestPath(routes); err != nil {
@@ -337,7 +277,7 @@ func main() { //nolint: funlen
 		logger.Log("err", err)
 		os.Exit(1)
 	}
-
+	
 	// Prometheus msteams HTTP handler setup.
 	var handler *echo.Echo
 	{
@@ -358,6 +298,12 @@ func main() { //nolint: funlen
 				logger.Log("err", err)
 				return c.JSON(500, err)
 			}
+			routes, err = setupServices(tc, defaultConverter, httpClient, routes, validateWebhookURL, logger)
+			if err != nil {
+				logger.Log("err", err)
+				return c.JSON(500, err)
+			}
+			transport.ReloadRoutes(handler, routes, logger)
 			return c.JSON(200, tc.Connectors)
 		})
 	}
@@ -392,6 +338,66 @@ func main() { //nolint: funlen
 		g.Add(run.SignalHandler(context.Background(), syscall.SIGINT, syscall.SIGTERM))
 	}
 	logger.Log("exit", g.Run())
+}
+
+func setupServices(tc PromTeamsConfig, converter card.Converter, httpClient *http.Client, routes []transport.Route, validateWebhookURL *bool, logger log.Logger) ([]transport.Route, error) {
+
+	var rt []transport.Route
+	
+	// Connectors from config file.
+	for _, c := range tc.Connectors {
+		for uri, webhook := range c {
+			err := validateWebhook(uri)
+			if *validateWebhookURL && err != nil {
+				return nil, err
+			}
+			var r transport.Route
+			r.RequestPath = uri
+			r.Service = service.NewSimpleService(converter, httpClient, webhook)
+			r.Service = service.NewLoggingService(logger, r.Service)
+			rt = append(rt, r)
+		}
+	}
+
+	// Connectors with custom template files.
+	for _, c := range tc.ConnectorsWithCustomTemplates {
+		if len(c.RequestPath) == 0 {
+			return nil, errors.New("one of the 'templated_connectors' is missing a 'request_path'")
+		}
+		if len(c.WebhookURL) == 0 {
+			return nil, errors.New(fmt.Sprintf("The webhook_url is required for request_path '%s'", c.RequestPath))
+		}
+		err := validateWebhook(c.WebhookURL)
+		if *validateWebhookURL && err != nil {
+			return nil, err
+		}
+		if len(c.TemplateFile) == 0 {
+			return nil, errors.New(fmt.Sprintf("The template_file is required for request_path '%s'", c.RequestPath))
+		}
+
+	
+		tmpl, err := card.ParseTemplateFile(c.TemplateFile)
+		if err != nil {
+			return nil, err
+		}
+		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
+		converter = card.NewCreatorLoggingMiddleware(
+			log.With(
+				logger,
+				"template_file", c.TemplateFile,
+				"escaped_underscores", c.EscapeUnderscores,
+			),
+			converter,
+		)
+
+		var r transport.Route
+		r.RequestPath = c.RequestPath
+		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
+		r.Service = service.NewLoggingService(logger, r.Service)
+		rt = append(rt, r)
+	}
+
+	return rt, nil
 }
 
 func ocviews() []*view.View {
