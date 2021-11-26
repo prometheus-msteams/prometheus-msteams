@@ -253,7 +253,7 @@ func main() { //nolint: funlen
 		dRoutes = append(dRoutes, r)
 	}
 
-	routes, err = setupServices(tc, defaultConverter, httpClient, routes, validateWebhookURL, logger)
+	routes, err = setupServices(tc, defaultConverter, httpClient, validateWebhookURL, logger)
 	if err != nil {
 		logger.Log("err", err)
 		os.Exit(1)
@@ -298,7 +298,7 @@ func main() { //nolint: funlen
 				logger.Log("err", err)
 				return c.JSON(500, err)
 			}
-			routes, err = setupServices(tc, defaultConverter, httpClient, routes, validateWebhookURL, logger)
+			routes, err = setupServices(tc, defaultConverter, httpClient, validateWebhookURL, logger)
 			if err != nil {
 				logger.Log("err", err)
 				return c.JSON(500, err)
@@ -340,7 +340,7 @@ func main() { //nolint: funlen
 	logger.Log("exit", g.Run())
 }
 
-func setupServices(tc PromTeamsConfig, converter card.Converter, httpClient *http.Client, routes []transport.Route, validateWebhookURL *bool, logger log.Logger) ([]transport.Route, error) {
+func setupServices(tc PromTeamsConfig, converter card.Converter, httpClient *http.Client, validateWebhookURL *bool, logger log.Logger) ([]transport.Route, error) {
 
 	var rt []transport.Route
 	
