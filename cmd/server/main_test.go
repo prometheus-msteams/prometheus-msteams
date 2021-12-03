@@ -61,7 +61,7 @@ func Test_reloadHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Configure the reload handler
+	// Configure handlers
 	handler := transport.NewServer(logger, routes, nil)
 	handler.POST("/reload", func(c echo.Context) error {
 		routes, err = setupServices(tc, nil, httpClient, &validateURL, logger)
@@ -70,6 +70,9 @@ func Test_reloadHandler(t *testing.T) {
 			return c.JSON(500, err)
 		}
 		transport.ReloadRoutes(handler, routes, logger)
+		return c.JSON(200, tc.Connectors)
+	})
+	handler.GET("/config", func(c echo.Context) error {
 		return c.JSON(200, tc.Connectors)
 	})
 
@@ -93,6 +96,11 @@ func Test_reloadHandler(t *testing.T) {
 	resp, body = testURL(handler, "/connector2", http.MethodGet, nil)
 	assert.Equal(t, "{\"message\":\"Method Not Allowed\"}\n", string(body))
 	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
+
+	// Also call /config to ensure that it returns an expected list of connectors
+	resp, body = testURL(handler, "/config", http.MethodGet, nil)
+	assert.Equal(t, "[{\"connector1\":\"https://localhost:8080\"},{\"connector2\":\"https://localhost:8443\"}]\n", string(body))
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 }
 

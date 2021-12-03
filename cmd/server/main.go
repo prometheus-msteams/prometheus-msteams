@@ -57,8 +57,6 @@ type ConnectorWithCustomTemplate struct {
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
 }
 
-
-
 func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
