@@ -5,9 +5,6 @@
 
 ![](./docs/teams_screenshot.png)
 
-# !!! Additional Maintainers wanted !!! 
-> We are looking for some more maintainers and collaborators to keep this project awesome. See more information in [#237](https://github.com/prometheus-msteams/prometheus-msteams/issues/237).
-
 # Overview
 
 A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://quay.io/repository/prometheusmsteams/prometheus-msteams?tab=tags)!
