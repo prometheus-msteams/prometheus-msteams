@@ -9,14 +9,6 @@
 
 A lightweight Go Web Server that receives __POST__ alert messages from __Prometheus Alert Manager__ and sends it to a __Microsoft Teams Channel__ using an incoming webhook url. How light? See the [docker image](https://quay.io/repository/prometheusmsteams/prometheus-msteams?tab=tags)!
 
-## Synopsis
-
-Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python.
-
-## Why choose Go? Not Python or Ruby or Node?
-
-Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the other simple language (python, ruby, node). Having a static binary means that there is no need for you to install your program's dependencies and these dependencies takes up a lot of space in your docker image! Try it out DevOps folks!
-
 ## Table of Contents
 
 <!-- vim-markdown-toc GFM -->
@@ -40,6 +32,14 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 - [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
+
+## Synopsis
+
+Alertmanager doesn't support sending to Microsoft Teams out of the box. Fortunately, they allow you to use a generic [webhook_config](https://prometheus.io/docs/alerting/configuration/#webhook_config) for cases like this. This project was inspired from [idealista's](https://github.com/idealista/) [prom2teams](https://github.com/idealista/prom2teams) which was written in Python.
+
+## Why choose Go? Not Python or Ruby or Node?
+
+Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the other simple language (python, ruby, node). Having a static binary means that there is no need for you to install your program's dependencies and these dependencies takes up a lot of space in your docker image! Try it out DevOps folks!
 
 ## Getting Started (Quickstart)
 
