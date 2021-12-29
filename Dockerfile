@@ -1,6 +1,7 @@
-FROM alpine:3.13
+FROM alpine:3.15
 
-RUN apk --no-cache add ca-certificates tini tzdata
+RUN apk --no-cache add ca-certificates tini tzdata &&\
+    apk -U upgrade
 
 LABEL description="A lightweight Go Web Server that accepts POST alert message from Prometheus Alertmanager and sends it to Microsoft Teams Channels using an incoming webhook url."
 
