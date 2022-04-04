@@ -37,8 +37,8 @@ create_bin_dir:
 
 github_release:
 	github-release release -u bzon -r prometheus-msteams -t $(VERSION) -n $(VERSION)
-	
-linux: 
+
+linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) ./cmd/server
 
 darwin:

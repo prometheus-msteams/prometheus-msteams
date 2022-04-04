@@ -5,6 +5,7 @@ linters:
     - depguard
     - dogsled
     - dupl
+    - exportloopref
     - errcheck
     - funlen
     - gochecknoinits
@@ -13,17 +14,15 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
     - misspell
     - nakedret
+    - revive
     - rowserrcheck
-    - scopelint
     - staticcheck
     - structcheck
     - stylecheck
@@ -36,7 +35,7 @@ linters:
 issues:
   exclude-rules:
     - linters:
-       - golint
+       - revive
       text: "don't use ALL_CAPS in Go names"
     - linters:
        - stylecheck
