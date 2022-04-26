@@ -67,8 +67,12 @@ spec:
             - -config-file=/etc/config/connectors.yaml
             - -template-file={{ .Values.templateFile }}
           {{- with .Values.container.additionalArgs }}
-{{ toYaml . | indent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end}}
+          {{- with .Values.container.securityContext }}
+          securityContext:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
           ports:
           - name: http
             containerPort: {{ .Values.container.port }}
