@@ -68,6 +68,8 @@ extraVolumeMounts: []
 #   - name: volume-name
 #     mountPath: /etc/custom_path
 
+enableConnectorsConfigMap: true
+
 connectors: []
 
 # ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel
