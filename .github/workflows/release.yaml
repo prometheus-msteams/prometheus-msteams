@@ -1,27 +1,98 @@
-name: Release Charts
+name: Release Docker
 
 on:
   push:
+    tags: 
+      - 'v*.*.*'
     branches:
-      - master
+      - 'master'
 
+env:
+  REGISTRY: quay.io
+  IMAGE_NAME: prometheusmsteams/prometheus-msteams
+  
 jobs:
-  release:
+  build:
+
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Configure Git
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_QUAY_USER }}
+          password: ${{ secrets.DOCKER_QUAY_TOKEN }}
+
+# build
+
+      - name: Build binaries
+        id: build-binary
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          make all
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.0.0
+      - name: Build Docker image
+        id: build-docker
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
         with:
-          charts_dir: chart
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          context: .
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+# tests
+
+      - name: Run tests
+        id: test-binary
+        run: |
+          make test
+
+      - name: Test docker image
+        id: test-docker
+        # kudos: https://stackoverflow.com/questions/63641822/run-command-with-timeout-in-github-workflow/63643845?noredirect=1#comment112574154_63643845
+        # keep docker image running for 2 minutes. It should timeout (error code 124).
+        run: | 
+          timeout 120 docker run --rm $(echo ${{ steps.meta.outputs.tags }}|head -n1) || code=$?
+          if [[ $code -ne 124 ]]; then
+            echo "Docker image stopped with ${code}. It was expected to run forever." 
+            exit 1;
+          fi
+
+# deploy releases
+
+      - name: Create github release
+        id: github-release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          files: |
+            default-message-card.tmpl
+            bin/prometheus-msteams-darwin-amd64
+            bin/prometheus-msteams-linux-amd64
+            bin/prometheus-msteams-windows-amd64.exe
+            bin/shasum256.txt
+
+      - name: Push docker image
+        id: push-docker
+        uses: docker/build-push-action@ac9327eae2b366085ac7f6a2d02df8aa8ead720a
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
