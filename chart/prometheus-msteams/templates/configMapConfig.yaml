@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ template "app.name" . }}-config
+  namespace: {{ .Release.Namespace }}
 data:
   connectors.yaml: |
     {{- with $.Values.connectors }}
