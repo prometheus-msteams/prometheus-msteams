@@ -45,6 +45,10 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+{{- if .Values.containerSecurityContext }}
+          securityContext:
+{{ toYaml .Values.containerSecurityContext | indent 12 }}
+{{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             {{- range $key, $value := $.Values.extraEnvs }}
