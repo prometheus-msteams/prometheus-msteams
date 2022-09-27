@@ -356,8 +356,9 @@ func main() { //nolint: funlen
 	var g run.Group
 	{
 		srv := http.Server{
-			Addr:    *httpAddr,
-			Handler: handler,
+			Addr:              *httpAddr,
+			Handler:           handler,
+			ReadHeaderTimeout: 30 * time.Second,
 		}
 		g.Add(
 			func() error {

@@ -32,6 +32,8 @@ tolerations: []
 
 affinity: {}
 
+containerSecurityContext: {}
+
 podSecurityContext:
   runAsUser: 1000
   runAsNonRoot: true

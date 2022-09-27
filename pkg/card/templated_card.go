@@ -106,7 +106,9 @@ func jsonEscapeMessage(promAlert webhook.Message) webhook.Message {
 	return retPromAlert
 }
 
-/* ParseTemplateFile creates an alertmanager template from the given file.
+/*
+	ParseTemplateFile creates an alertmanager template from the given file.
+
 The functions include all functions (except 'env' and 'expandenv' ) from sprig (http://masterminds.github.io/sprig/)
 and the following functions from HELM templating:
   - toToml
