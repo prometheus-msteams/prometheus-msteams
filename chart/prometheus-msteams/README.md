@@ -94,7 +94,8 @@ To define a custom message template per MS Teams channel you can use the followi
 
 ```yaml
 connectorsWithCustomTemplates:
-  - request_path: /alert2
+  - name: custom_alert_channel
+    request_path: /alert2
     webhook_url: https://outlook.office.com/webhook/xxxx/xxxx
     escape_underscores: true
 ```
@@ -113,8 +114,12 @@ Otherwise you can also set the value by specifying the template data directly vi
 
 ```yaml
 connectorsWithCustomTemplates:
-  - request_path: /alert2
+  - name: custom_alert_channel
+    request_path: /alert2
     webhook_url: https://outlook.office.com/webhook/xxxx/xxxx
+    webhook_secret: 
+      name: msteams-webhook
+      key: url
     escape_underscores: true
     template_file: |
       {{ define "teams.card" }}
