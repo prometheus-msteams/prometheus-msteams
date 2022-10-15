@@ -277,11 +277,15 @@ func main() { //nolint: funlen
 		if len(c.WebhookURL) == 0 {
 			logger.Log(
 				"err",
-				fmt.Sprintf("The webhook_url is required for request_path '%s'", c.RequestPath),
+				fmt.Sprintf("The webhook_url or webhook_secret is required for request_path '%s'", c.RequestPath),
 			)
 			os.Exit(1)
 		}
-		err := validateWebhook(c.WebhookURL)
+		logger.Log(
+			"debug",
+			fmt.Sprintf("c.WebhookSecret '%s'", os.Getenv(c.WebhookURL)),
+		) 
+		err := validateWebhook(os.Getenv(c.WebhookURL))
 		if *validateWebhookURL && err != nil {
 			logger.Log("err", err)
 			os.Exit(1)
@@ -314,7 +318,7 @@ func main() { //nolint: funlen
 
 		var r transport.Route
 		r.RequestPath = c.RequestPath
-		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
+		r.Service = service.NewSimpleService(converter, httpClient, os.Getenv(c.WebhookURL))
 		r.Service = service.NewLoggingService(logger, r.Service)
 		routes = append(routes, r)
 	}
