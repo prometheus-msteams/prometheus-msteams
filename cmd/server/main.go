@@ -281,10 +281,6 @@ func main() { //nolint: funlen
 			)
 			os.Exit(1)
 		}
-		logger.Log(
-			"debug",
-			fmt.Sprintf("c.WebhookSecret '%s'", os.Getenv(c.WebhookURL)),
-		) 
 		err := validateWebhook(os.Getenv(c.WebhookURL))
 		if *validateWebhookURL && err != nil {
 			logger.Log("err", err)
