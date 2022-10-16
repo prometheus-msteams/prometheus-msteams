@@ -55,6 +55,21 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- range $index, $connectorWithCustomTemplate := .Values.connectorsWithCustomTemplates }}
+              {{- if $connectorWithCustomTemplate.webhook_url }}
+            - name: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "app.name" $ }}-secret
+                  key: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+              {{- else if $connectorWithCustomTemplate.webhook_secret }}
+            - name: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $connectorWithCustomTemplate.webhook_secret.name }}
+                  key: {{ $connectorWithCustomTemplate.webhook_secret.key }}
+              {{- end}}
+            {{- end}}
           {{- if .Values.envFrom }}
           envFrom:
             {{- toYaml .Values.envFrom | nindent 12 }}

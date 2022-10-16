@@ -74,12 +74,16 @@ connectors: []
 
 # ref: https://github.com/prometheus-msteams/prometheus-msteams#customise-messages-per-ms-teams-channel
 connectorsWithCustomTemplates: []
-# - request_path: /alert2
+# - name: <name>
+#   request_path: /alert2
 #   template_file: |
 #     {{ define "teams.card" }}
 #     {...}
 #     {{ end }}
-#   webhook_url: <webhook>
+#   webhook_url: <webhook_url>
+#   webhook_secret: 
+#     name: <secret_name>
+#     key: <secret_key>
 #   escape_underscores: true
 
 # Env from existing secrets or configmaps (in same namespace), will passed through to contains 'envFrom'

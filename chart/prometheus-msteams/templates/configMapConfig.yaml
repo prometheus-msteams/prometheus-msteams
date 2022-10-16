@@ -12,8 +12,16 @@ data:
     connectors_with_custom_templates:
 {{- range $index, $connectorWithCustomTemplate := .Values.connectorsWithCustomTemplates }}
       - request_path: {{ $connectorWithCustomTemplate.request_path }}
+        {{- if $connectorWithCustomTemplate.template_file }}
         template_file: /etc/template/custom_card_{{ $index }}.tmpl
-        webhook_url: {{ $connectorWithCustomTemplate.webhook_url }}
+        {{- else }}
+        template_file: /etc/template/card.tmpl
+        {{- end}}
+        {{- if $connectorWithCustomTemplate.webhook_url }}
+        webhook_secret: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+        {{- else if and $connectorWithCustomTemplate.webhook_secret.name $connectorWithCustomTemplate.webhook_secret.key }}
+        webhook_secret: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+        {{- end}}
 {{- if hasKey $connectorWithCustomTemplate "escape_underscores" }}
         escape_underscores: {{ $connectorWithCustomTemplate.escape_underscores }}
 {{- end }}
