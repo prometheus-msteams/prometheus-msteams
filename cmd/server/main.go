@@ -288,8 +288,6 @@ func main() { //nolint: funlen
 			webhookURL = os.Getenv(c.WebhookSecret)
 		}
 
-		logger.Log("debug", webhookURL)
-
 		err := validateWebhook(webhookURL)
 		if *validateWebhookURL && err != nil {
 			logger.Log("err", err)
