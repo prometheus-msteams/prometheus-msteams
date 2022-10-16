@@ -54,6 +54,7 @@ type ConnectorWithCustomTemplate struct {
 	RequestPath       string `yaml:"request_path"`
 	TemplateFile      string `yaml:"template_file"`
 	WebhookURL        string `yaml:"webhook_url"`
+	WebhookSecret     string `yaml:"webhook_secret"`
 	EscapeUnderscores bool   `yaml:"escape_underscores"`
 }
 
@@ -106,6 +107,7 @@ func main() { //nolint: funlen
 		insecureSkipVerify            = fs.Bool("insecure-skip-verify", false, "Disable validation of the server certificate.")
 		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
 		validateWebhookURL            = fs.Bool("validate-webhook-url", false, "Enforce strict validation of webhook url")
+		webhookURL string
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -274,18 +276,26 @@ func main() { //nolint: funlen
 			logger.Log("err", "one of the 'templated_connectors' is missing a 'request_path'")
 			os.Exit(1)
 		}
-		if len(c.WebhookURL) == 0 {
+		if len(c.WebhookURL) == 0 && len(c.WebhookSecret) == 0 {
 			logger.Log(
 				"err",
 				fmt.Sprintf("The webhook_url or webhook_secret is required for request_path '%s'", c.RequestPath),
 			)
 			os.Exit(1)
+		} else if len(c.WebhookURL) != 0 {
+			webhookURL = c.WebhookURL
+		} else if len(c.WebhookSecret) != 0 {
+			webhookURL = os.Getenv(c.WebhookSecret)
 		}
-		err := validateWebhook(os.Getenv(c.WebhookURL))
+
+		logger.Log("debug", webhookURL)
+
+		err := validateWebhook(webhookURL)
 		if *validateWebhookURL && err != nil {
 			logger.Log("err", err)
 			os.Exit(1)
 		}
+
 		if len(c.TemplateFile) == 0 {
 			logger.Log(
 				"err",
@@ -314,7 +324,7 @@ func main() { //nolint: funlen
 
 		var r transport.Route
 		r.RequestPath = c.RequestPath
-		r.Service = service.NewSimpleService(converter, httpClient, os.Getenv(c.WebhookURL))
+		r.Service = service.NewSimpleService(converter, httpClient, webhookURL)
 		r.Service = service.NewLoggingService(logger, r.Service)
 		routes = append(routes, r)
 	}

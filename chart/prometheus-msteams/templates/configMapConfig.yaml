@@ -18,9 +18,9 @@ data:
         template_file: /etc/template/card.tmpl
         {{- end}}
         {{- if $connectorWithCustomTemplate.webhook_url }}
-        webhook_url: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+        webhook_secret: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
         {{- else if and $connectorWithCustomTemplate.webhook_secret.name $connectorWithCustomTemplate.webhook_secret.key }}
-        webhook_url: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
+        webhook_secret: {{ $connectorWithCustomTemplate.name | upper }}_SECRET_VAR
         {{- end}}
 {{- if hasKey $connectorWithCustomTemplate "escape_underscores" }}
         escape_underscores: {{ $connectorWithCustomTemplate.escape_underscores }}
