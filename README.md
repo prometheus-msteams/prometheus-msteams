@@ -110,11 +110,36 @@ route:
 
 receivers:
 - name: 'prometheus-msteams'
-  webhook_configs: 
+  webhook_configs:
   - send_resolved: true
     url: 'http://localhost:2000/_dynamicwebhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/_dynamicwebhook/" + webhook url (without prefix "https://")
     # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
 ```
+
+Alternatively you can also use the webhook as a means of authorization:
+
+```yaml
+route:
+  group_by: ['alertname']
+  group_interval: 30s
+  repeat_interval: 30s
+  group_wait: 30s
+  receiver: 'prometheus-msteams'
+
+receivers:
+- name: 'prometheus-msteams'
+  webhook_configs:
+  - send_resolved: true
+    http_Config:
+      authorization:
+        type: 'webhook'
+        credentials: 'outlook.office.com/webhook/xxx' # webhook url (without prefix "https://")
+        # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
+    url: 'http://localhost:2000/_dynamicwebhook/' # the prometheus-msteams proxy + "/_dynamicwebhook/"
+```
+
+This provides the added benefit that alertmanager will treat the Incoming
+Webhook as a credential and hides it from view in the Web UI.
 
 > If you don't have Prometheus running yet and you wan't to try how this works,  
 > try [stefanprodan's](https://github.com/stefanprodan) [Prometheus in Docker](https://github.com/stefanprodan/dockprom) to help you install a local Prometheus setup quickly in a single machine.

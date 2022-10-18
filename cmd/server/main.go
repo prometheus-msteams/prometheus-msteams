@@ -232,13 +232,25 @@ func main() { //nolint: funlen
 		)
 	}
 
+	const bearerType = "webhook"
+
 	{ // dynamic uri handler: webhook uri is retrieved from request.URL
 		var r transport.DynamicRoute
 		r.RequestPath = "/_dynamicwebhook/*"
 		r.ServiceGenerator = func(c echo.Context) (service.Service, error) {
 			path := c.Request().URL.Path
 			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
-			webhook := fmt.Sprintf("https://%s", path)
+			var webhook string
+			if len(path) > 0 {
+				webhook = fmt.Sprintf("https://%s", path)
+			} else {
+				authHeader := c.Request().Header.Get("Authorization")
+				if !strings.HasPrefix(authHeader, bearerType) {
+					return nil, fmt.Errorf("invalid bearer on authorization")
+				}
+				path := strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerType))
+				webhook = fmt.Sprintf("https://%s", path)
+			}
 
 			err := validateWebhook(webhook)
 			if *validateWebhookURL && err != nil {
