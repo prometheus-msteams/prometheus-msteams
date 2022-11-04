@@ -14,13 +14,13 @@ container:
   port: 2000
   additionalArgs: []
 
-resources:
-  limits:
-    cpu: 10m
-    memory: 32Mi
-  requests:
-    cpu: 1m
-    memory: 8Mi
+resources: {}
+#  limits:
+#    cpu: 10m
+#    memory: 32Mi
+#  requests:
+#    cpu: 1m
+#    memory: 8Mi
 
 service:
   type: ClusterIP
