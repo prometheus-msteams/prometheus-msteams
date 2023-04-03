@@ -14,7 +14,6 @@ require (
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
@@ -37,7 +36,7 @@ require (
 	github.com/prometheus/alertmanager v0.20.0
 	github.com/prometheus/client_golang v1.4.0
 	github.com/satori/go.uuid v1.2.0 // indirect
-	go.opencensus.io v0.22.2
+	go.opencensus.io v0.24.0
 	golang.org/x/crypto v0.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.18.2 // indirect
