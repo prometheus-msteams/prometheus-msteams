@@ -39,7 +39,7 @@ require (
 	github.com/satori/go.uuid v1.2.0 // indirect
 	go.opencensus.io v0.22.2
 	golang.org/x/crypto v0.1.0 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.18.2 // indirect
 	k8s.io/helm v2.16.6+incompatible
 )
