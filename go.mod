@@ -23,7 +23,7 @@ require (
 	github.com/hashicorp/memberlist v0.1.5 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/josephburnett/jd v0.0.0-20191228205456-aa1a7c66b42f
+	github.com/josephburnett/jd v1.7.1
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/miekg/dns v1.1.27 // indirect
