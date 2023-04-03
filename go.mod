@@ -38,9 +38,7 @@ require (
 	github.com/prometheus/client_golang v1.4.0
 	github.com/satori/go.uuid v1.2.0 // indirect
 	go.opencensus.io v0.22.2
-	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
-	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/apimachinery v0.18.2 // indirect
 	k8s.io/helm v2.16.6+incompatible
