@@ -26,8 +26,7 @@ require (
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/josephburnett/jd v0.0.0-20191228205456-aa1a7c66b42f
 	github.com/jpillora/backoff v1.0.0 // indirect
-	github.com/labstack/echo/v4 v4.6.1
-	github.com/labstack/gommon v0.3.1 // indirect
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/miekg/dns v1.1.27 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
