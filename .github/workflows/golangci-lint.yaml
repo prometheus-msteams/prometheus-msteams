@@ -13,11 +13,9 @@ jobs:
     steps:
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.17'
+          go-version: '1.18'
       - uses: actions/checkout@v3
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.49
           args: --timeout=2m30s
