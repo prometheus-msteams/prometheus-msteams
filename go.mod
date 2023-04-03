@@ -38,7 +38,7 @@ require (
 	go.opencensus.io v0.24.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.18.2 // indirect
-	k8s.io/helm v2.16.6+incompatible
+	k8s.io/helm v2.17.0+incompatible
 )
 
 go 1.13
