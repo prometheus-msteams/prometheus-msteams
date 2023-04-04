@@ -45,7 +45,7 @@ jobs:
           tags: 'prometheusmsteams:scan-${{ github.sha }}'
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        uses: aquasecurity/trivy-action@v0.9.2
         with:
           image-ref: 'prometheusmsteams:scan-${{ github.sha }}'
           format: 'sarif'
