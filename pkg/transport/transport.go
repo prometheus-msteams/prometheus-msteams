@@ -47,6 +47,13 @@ func NewServer(logger log.Logger, routes []Route, dRoutes []DynamicRoute) *echo.
 	return e
 }
 
+func ReloadRoutes(e *echo.Echo, routes []Route, logger log.Logger) {
+	for _, r := range routes {
+		level.Debug(logger).Log("request_path_added", r.RequestPath)
+		addRoute(e, r.RequestPath, r.Service, logger)
+	}
+}
+
 func opencensusMiddleware() echo.MiddlewareFunc {
 	return echo.WrapMiddleware(func(h http.Handler) http.Handler {
 		return &ochttp.Handler{
