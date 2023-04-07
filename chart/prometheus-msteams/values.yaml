@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: quay.io/prometheusmsteams/prometheus-msteams
-  tag: v1.5.1
+  tag: v1.5.2
   pullPolicy: Always
 
 imagePullSecrets: []
@@ -56,7 +56,7 @@ customCardTemplate: ""
 #   {...}
 #   {{ end }}
 
-templateFile: "/etc/template/card.tmpl"
+templateFile: /etc/template/card.tmpl
 
 extraConfigmapMounts: []
 # extraConfigmapMounts:
