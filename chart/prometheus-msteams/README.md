@@ -63,7 +63,7 @@ See [Helm Configuration](#helm-configuration) and [App Configuration](https://gi
 
 ```bash
 helm upgrade --install prometheus-msteams \
-  --namespace default -f config.yaml
+  --namespace default -f config.yaml \
   prometheus-msteams/prometheus-msteams
 ```
 
