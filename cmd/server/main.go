@@ -254,7 +254,7 @@ func main() { //nolint: funlen
 	// Connectors from config file.
 	for _, c := range tc.Connectors {
 		for uri, webhook := range c {
-			err := validateWebhook(uri)
+			err := validateWebhook(webhook)
 			if *validateWebhookURL && err != nil {
 				logger.Log("err", err)
 				os.Exit(1)
