@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
-	github.com/go-kit/kit v0.9.1-0.20191018122245-9f5354e50d79
+	github.com/go-kit/kit v0.12.0
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
