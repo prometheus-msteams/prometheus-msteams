@@ -63,7 +63,7 @@ See [Helm Configuration](#helm-configuration) and [App Configuration](https://gi
 
 ```bash
 helm upgrade --install prometheus-msteams \
-  --namespace default -f config.yaml
+  --namespace default -f config.yaml \
   prometheus-msteams/prometheus-msteams
 ```
 
@@ -144,6 +144,7 @@ connectorsWithCustomTemplates:
 | `priorityClassName`                        | Pod priority class                                                                                                                                            | `""`                                            |
 | `podAnnotations`                           | Pod annotations                                                                                                                                               | `{}`                                            |
 | `podLabels`                                | Labels to add to each pod                                                                                                                                     | `{}`                                            |
+| `containerSecurityContext`                 | Pod containerSecurityContext                                                                                                                                  | `{}`                                            |
 | `podSecurityContext`                       | Pod securityContext                                                                                                                                           | See [default](./values.yaml)                    |
 | `customCardTemplate`                       | Custom message card template for MS teams                                                                                                                     | `""`                                            |
 | `metrics.serviceMonitor.enabled`           | Set this to `true` to create ServiceMonitor for Prometheus operator                                                                                           | `false`                                         |
