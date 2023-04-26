@@ -236,11 +236,14 @@ func main() { //nolint: funlen
 		var r transport.DynamicRoute
 		r.RequestPath = "/_dynamicwebhook/*"
 		r.ServiceGenerator = func(c echo.Context) (service.Service, error) {
-			path := c.Request().URL.Path
-			path = strings.TrimPrefix(path, "/_dynamicwebhook/")
-			webhook := fmt.Sprintf("https://%s", path)
+			webhook, err := extractWebhookFromRequest(c.Request(), "/_dynamicwebhook/")
+			if err != nil {
+				err = errors.Wrapf(err, "webhook extraction failed for /_dynamicwebhook/")
+				logger.Log("err", err)
+				return nil, err
+			}
 
-			err := validateWebhook(webhook)
+			err = validateWebhook(webhook)
 			if *validateWebhookURL && err != nil {
 				err = errors.Wrapf(err, "webhook validation failed for /_dynamicwebhook/")
 				logger.Log("err", err)
@@ -467,4 +470,25 @@ func checkDuplicateRequestPath(routes []transport.Route) error {
 		added[r.RequestPath] = true
 	}
 	return nil
+}
+
+const bearerType = "webhook"
+
+func extractWebhookFromRequest(request *http.Request, requestPathPrefix string) (string, error) {
+	path := request.URL.Path
+	path = strings.TrimPrefix(path, requestPathPrefix)
+	if path != "" {
+		return fmt.Sprintf("https://%s", path), nil
+	}
+
+	authHeader := request.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("neither webhook url nor bearer authorization present")
+	}
+
+	if !strings.HasPrefix(authHeader, bearerType) {
+		return "", fmt.Errorf("invalid bearer on authorization")
+	}
+	path = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerType))
+	return fmt.Sprintf("https://%s", path), nil
 }
