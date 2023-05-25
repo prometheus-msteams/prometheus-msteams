@@ -89,3 +89,9 @@ envFrom: {}
 #       name: my-prometheus-msteams-env-secret
 #   - configMapRef:
 #       name: my-prometheus-msteams-env-cm
+
+# Allow PodDisruptionBudget to be configured
+podDisruptionBudget:
+  enabled: false
+# maxUnavailable: <number|percentage>
+# minAvailable: <number|percentage>
