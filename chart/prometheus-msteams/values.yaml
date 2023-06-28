@@ -89,3 +89,12 @@ envFrom: {}
 #       name: my-prometheus-msteams-env-secret
 #   - configMapRef:
 #       name: my-prometheus-msteams-env-cm
+
+# Allows overriding the deployment's volume used for providing the config file.
+# Can be any valid k8s volume spec but without the "name". E.g. it could be a Secret rather
+# than a ConfigMap.
+# The volume being mounted must result in a file called "connectors.yaml" being available
+# when mounted into the container.
+configVolume:
+# secret:
+#   secretName: my-secret-with-config

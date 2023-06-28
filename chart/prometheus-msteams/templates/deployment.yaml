@@ -34,8 +34,12 @@ spec:
       {{- end}}
       volumes:
         - name: config-volume
+{{- if .Values.configVolume }}
+{{ toYaml .Values.configVolume | indent 10 }}
+{{- else }}
           configMap:
             name: {{ template "app.name" . }}-config
+{{- end }}
         - name: card-template-volume
           configMap:
             name: {{ template "app.name" . }}-card-template
