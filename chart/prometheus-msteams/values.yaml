@@ -95,6 +95,6 @@ envFrom: {}
 # than a ConfigMap.
 # The volume being mounted must result in a file called "connectors.yaml" being available
 # when mounted into the container.
-configVolume:
+configVolume: {}
 # secret:
 #   secretName: my-secret-with-config
