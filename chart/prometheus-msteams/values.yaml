@@ -83,7 +83,7 @@ connectorsWithCustomTemplates: []
 #   escape_underscores: true
 
 # Env from existing secrets or configmaps (in same namespace), will passed through to contains 'envFrom'
-envFrom: {}
+envFrom: []
 # envFrom:
 #   - secretRef:
 #       name: my-prometheus-msteams-env-secret
