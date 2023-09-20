@@ -3,6 +3,11 @@
 [![codecov](https://codecov.io/gh/prometheus-msteams/prometheus-msteams/branch/master/graph/badge.svg)](https://codecov.io/gh/prometheus-msteams/prometheus-msteams)
 [![Go Report Card](https://goreportcard.com/badge/github.com/prometheus-msteams/prometheus-msteams)](https://goreportcard.com/report/github.com/prometheus-msteams/prometheus-msteams)
 
+# Sunset of this repository
+
+Thanks for your attention. As MSTeams has been integrated in Alertmanager directly. There is no need to forward the messages
+through `prometheus-msteams`. Here is the [Alertmanager doc](https://prometheus.io/docs/alerting/latest/configuration/#msteams_config).
+
 ![](./docs/teams_screenshot.png)
 
 # Overview
@@ -19,25 +24,26 @@ Why use [Go](https://golang.org/)? A Go binary is statically compiled unlike the
 
 ## Table of Contents
 
-<!-- vim-markdown-toc GFM -->
-
-- [Synopsis](#synopsis)
-- [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
-- [Getting Started (Quickstart)](#getting-started-quickstart)
-  - [Installation](#installation)
-  - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
-    - [static uri handler (e.g. /alertmanager)](#static-uri-handler-eg-alertmanager)
-    - [dynamic uri handler /_dynamicwebhook/*](#dynamic-uri-handler-_dynamicwebhook)
-  - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
-- [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
-  - [Creating the Configuration File](#creating-the-configuration-file)
-  - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
-- [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
-  - [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
-  - [Use Template functions to improve your templates](#use-template-functions-to-improve-your-templates)
-- [Configuration](#configuration)
-- [Kubernetes Deployment](#kubernetes-deployment)
-- [Contributing](#contributing)
+- [Sunset of this repository](#sunset-of-this-repository)
+- [Overview](#overview)
+  - [Synopsis](#synopsis)
+  - [Why choose Go? Not Python or Ruby or Node?](#why-choose-go-not-python-or-ruby-or-node)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started (Quickstart)](#getting-started-quickstart)
+    - [Installation](#installation)
+    - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager)
+      - [static uri handler (e.g. /alertmanager)](#static-uri-handler-eg-alertmanager)
+      - [dynamic uri handler /\_dynamicwebhook/\*](#dynamic-uri-handler-_dynamicwebhook)
+    - [Simulating a Prometheus Alerts to Teams Channel](#simulating-a-prometheus-alerts-to-teams-channel)
+  - [Sending Alerts to Multiple Teams Channel](#sending-alerts-to-multiple-teams-channel)
+    - [Creating the Configuration File](#creating-the-configuration-file)
+    - [Setting up Prometheus Alert Manager](#setting-up-prometheus-alert-manager-1)
+  - [Customise Messages to MS Teams](#customise-messages-to-ms-teams)
+    - [Customise Messages per MS Teams Channel](#customise-messages-per-ms-teams-channel)
+    - [Use Template functions to improve your templates](#use-template-functions-to-improve-your-templates)
+  - [Configuration](#configuration)
+  - [Kubernetes Deployment](#kubernetes-deployment)
+  - [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
