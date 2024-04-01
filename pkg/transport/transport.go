@@ -3,7 +3,7 @@ package transport
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -105,7 +105,7 @@ func handleRoute(c echo.Context, s service.Service, logger log.Logger) error {
 	ctx, span := trace.StartSpan(c.Request().Context(), "alertmanager-handler")
 	defer span.End()
 
-	b, err := ioutil.ReadAll(c.Request().Body)
+	b, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		logger.Log("err", err)
 		span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
