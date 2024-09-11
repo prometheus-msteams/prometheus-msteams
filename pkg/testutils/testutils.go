@@ -3,7 +3,6 @@ package testutils
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,7 +13,7 @@ import (
 
 // ParseWebhookJSONFromFile is a helper for parsing webhook data from JSON files.
 func ParseWebhookJSONFromFile(f string) (webhook.Message, error) {
-	b, err := ioutil.ReadFile(f)
+	b, err := os.ReadFile(f)
 	if err != nil {
 		return webhook.Message{}, err
 	}
@@ -38,15 +37,15 @@ func CompareToGoldenFile(t *testing.T, v interface{}, file string, update bool) 
 		_ = os.MkdirAll(dir, 0755)
 	}
 	if _, err := os.Stat(gp); os.IsNotExist(err) {
-		_ = ioutil.WriteFile(gp, []byte{}, 0600)
+		_ = os.WriteFile(gp, []byte{}, 0600)
 	}
 	if update {
 		t.Log("updating golden file")
-		if err := ioutil.WriteFile(gp, gotBytes, 0600); err != nil {
+		if err := os.WriteFile(gp, gotBytes, 0600); err != nil {
 			t.Fatalf("failed to update golden file: %s", err)
 		}
 	}
-	want, err := ioutil.ReadFile(gp)
+	want, err := os.ReadFile(gp)
 	if err != nil {
 		t.Fatalf("failed reading the golden file: %s", err)
 	}
