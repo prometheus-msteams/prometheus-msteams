@@ -28,7 +28,7 @@ DOCKER_QUAY_USER=prometheusmsteams+ci
 DOCKER_HUB_REPO=prometheusmsteams/prometheus-msteams
 
 # Build the project
-all: clean dep create_bin_dir linux darwin windows
+all: clean dep create_bin_dir linux darwin windows linux_arm64
 	cd $(BINDIR) && shasum -a 256 ** > shasum256.txt
 
 create_bin_dir:
@@ -40,6 +40,9 @@ github_release:
 
 linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) ./cmd/server
+
+linux_arm64:
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-arm64 ./cmd/server
 
 darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
