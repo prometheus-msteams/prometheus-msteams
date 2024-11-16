@@ -115,7 +115,7 @@ func main() { //nolint: funlen
 		httpAddr                      = fs.String("http-addr", ":2000", "HTTP listen address.")
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
-		templateFile                  = fs.String("template-file", "./default-message-card.tmpl", "The Microsoft Teams Message Card template file.")
+		templateFile                  = fs.String("template-file", "", "The Microsoft Teams Message Card template file.")
 		escapeUnderscores             = fs.Bool("auto-escape-underscores", true, "Automatically replace all '_' with '\\_' from texts in the alert.")
 		configFile                    = fs.String("config-file", "", "The connectors configuration file.")
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
@@ -135,8 +135,14 @@ func main() { //nolint: funlen
 	var webhookType WebhookType
 	if *useWorkflowWebhook {
 		webhookType = Workflow
+		if *templateFile == "" {
+			*templateFile = "./default-message-workflow-card.tmpl"
+		}
 	} else {
 		webhookType = O365
+		if *templateFile == "" {
+			*templateFile = "./default-message-card.tmpl"
+		}
 	}
 
 	if *promVersion {
