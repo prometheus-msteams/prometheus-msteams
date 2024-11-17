@@ -1,4 +1,4 @@
-package cardPowerPlateform
+package cardWorkflow
 
 import (
 	"context"
@@ -46,14 +46,14 @@ type AdaptiveCardItem struct {
 	Content     Content `json:"content"`
 }
 
-type PowerPlatformConnectorCard struct {
+type WorkflowConnectorCard struct {
 	Type        string             `json:"type"`
 	Attachments []AdaptiveCardItem `json:"attachments"`
 }
 
-// Converter converts an alert manager webhook message to PowerPlatformConnectorCard.
+// Converter converts an alert manager webhook message to WorkflowConnectorCard.
 type Converter interface {
-	Convert(context.Context, webhook.Message) (PowerPlatformConnectorCard, error)
+	Convert(context.Context, webhook.Message) (WorkflowConnectorCard, error)
 }
 
 type loggingMiddleware struct {
@@ -66,7 +66,7 @@ func NewCreatorLoggingMiddleware(l log.Logger, n Converter) Converter {
 	return loggingMiddleware{l, n}
 }
 
-func (l loggingMiddleware) Convert(ctx context.Context, a webhook.Message) (c PowerPlatformConnectorCard, err error) {
+func (l loggingMiddleware) Convert(ctx context.Context, a webhook.Message) (c WorkflowConnectorCard, err error) {
 	defer func(begin time.Time) {
 		// if len(c.Actions) > 5 {
 		// 	l.logger.Log(

@@ -1,4 +1,4 @@
-package cardPowerPlateform
+package cardWorkflow
 
 import (
 	"bytes"
@@ -27,22 +27,22 @@ func NewTemplatedCardCreator(template *template.Template, escapeUnderscores bool
 	return &templatedCard{template, escapeUnderscores}
 }
 
-func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) (PowerPlatformConnectorCard, error) {
+func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) (WorkflowConnectorCard, error) {
 	_, span := trace.StartSpan(ctx, "templatedCard.Convert")
 	defer span.End()
 
 	cardString, err := m.executeTemplate(promAlert)
 	if err != nil {
-		return PowerPlatformConnectorCard{}, err
+		return WorkflowConnectorCard{}, err
 	}
 
-	var card PowerPlatformConnectorCard
+	var card WorkflowConnectorCard
 	if err := json.Unmarshal([]byte(cardString), &card); err != nil {
-		return PowerPlatformConnectorCard{}, err
+		return WorkflowConnectorCard{}, err
 	}
 
 	if card.Type != "message" {
-		return PowerPlatformConnectorCard{}, errors.New("only message type is supported")
+		return WorkflowConnectorCard{}, errors.New("only message type is supported")
 	}
 
 	return card, nil
@@ -143,7 +143,7 @@ func ParseTemplateFile(f string) (*template.Template, error) {
 	// failfast wrong template
 	// b, _ := ioutil.ReadFile(f)
 	// if strings.Contains(string(b), `"@type": "MessageCard"`) {
-	// 	return nil, fmt.Errorf("wrong template %s used, expecting a PowerPlatform template", f)
+	// 	return nil, fmt.Errorf("wrong template %s used, expecting a Workflow template", f)
 	// }
 
 	return tmpl, nil

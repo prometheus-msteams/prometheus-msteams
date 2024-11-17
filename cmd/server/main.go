@@ -20,7 +20,7 @@ import (
 	ocprometheus "contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
-	"github.com/prometheus-msteams/prometheus-msteams/pkg/cardPowerPlateform"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/cardWorkflow"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/service"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/transport"
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/version"
@@ -50,11 +50,11 @@ type PromTeamsConfig struct {
 	ConnectorsWithCustomTemplates []ConnectorWithCustomTemplate `yaml:"connectors_with_custom_templates"`
 }
 
-type WorkflowType string
+type WebhookType string
 
 const (
-	O365          WorkflowType = "o365"
-	PowerPlatform WorkflowType = "microsoft-workflow"
+	O365     WebhookType = "o365"
+	Workflow WebhookType = "microsoft-workflow"
 )
 
 // ConnectorWithCustomTemplate .
@@ -79,10 +79,10 @@ func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 
 // New Webhook URL format : https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/
 var validWebhookPatternO365 = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+(/[a-zA-Z0-9\-]+)?$`)
-var validWebhookPatternPowerPlateform = regexp.MustCompile((`^[a-z0-9\-\.]+\.logic\.azure\.com/workflows/[\w]+/triggers/manual/paths/invoke\?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1\.0&sig=[a-zA-Z0-9\-_]+`))
+var validWebhookPatternWorkflow = regexp.MustCompile((`^[a-z0-9\-\.]+\.logic\.azure\.com/workflows/[\w]+/triggers/manual/paths/invoke\?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1\.0&sig=[a-zA-Z0-9\-_]+`))
 var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only valid until 11. april '21
 
-func validateWebhook(workflowType WorkflowType, u string) error {
+func validateWebhook(workflowType WebhookType, u string) error {
 	path := strings.TrimPrefix(u, "https://")
 	if u == path {
 		return fmt.Errorf("the webhook_url must start with 'https://'. url: '%s'", u)
@@ -93,8 +93,8 @@ func validateWebhook(workflowType WorkflowType, u string) error {
 		if !isValidTeamsHook {
 			return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
 		}
-	} else if workflowType == PowerPlatform {
-		isValidTeamsHook := validWebhookPatternPowerPlateform.MatchString(path)
+	} else if workflowType == Workflow {
+		isValidTeamsHook := validWebhookPatternWorkflow.MatchString(path)
 		if !isValidTeamsHook {
 			return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
 		}
@@ -124,7 +124,7 @@ func main() { //nolint: funlen
 		insecureSkipVerify            = fs.Bool("insecure-skip-verify", false, "Disable validation of the server certificate.")
 		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
 		validateWebhookURL            = fs.Bool("validate-webhook-url", false, "Enforce strict validation of webhook url")
-		usePowerWorkflow              = fs.Bool("team-workflow", false, "Use new Team PowerPlatform workflows")
+		useWorkflowWebhook            = fs.Bool("workflow-webhook", false, "Use Workflow webhooks")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
@@ -132,11 +132,11 @@ func main() { //nolint: funlen
 		os.Exit(1)
 	}
 
-	var workflowType WorkflowType
-	if *usePowerWorkflow {
-		workflowType = PowerPlatform
+	var webhookType WebhookType
+	if *useWorkflowWebhook {
+		webhookType = Workflow
 	} else {
-		workflowType = O365
+		webhookType = O365
 	}
 
 	if *promVersion {
@@ -164,7 +164,7 @@ func main() { //nolint: funlen
 		logger = log.With(logger, "ts", log.DefaultTimestamp, "caller", log.DefaultCaller)
 	}
 	level.Debug(logger).Log(
-		"webhook-type", workflowType,
+		"webhook-type", webhookType,
 	)
 
 	// Tracer.
@@ -223,21 +223,21 @@ func main() { //nolint: funlen
 		)
 	}
 
-	// Templated card defaultConverterPowerPlatform setup.
-	var defaultConverterPowerPlatform cardPowerPlateform.Converter
+	// Templated card defaultConverterWorkflow setup.
+	var defaultConverterWorkflow cardWorkflow.Converter
 	{
-		tmpl, err := cardPowerPlateform.ParseTemplateFile(*templateFile)
+		tmpl, err := cardWorkflow.ParseTemplateFile(*templateFile)
 		if err != nil {
 			logger.Log("err", err)
 		}
-		defaultConverterPowerPlatform = cardPowerPlateform.NewTemplatedCardCreator(tmpl, *escapeUnderscores)
-		defaultConverterPowerPlatform = cardPowerPlateform.NewCreatorLoggingMiddleware(
+		defaultConverterWorkflow = cardWorkflow.NewTemplatedCardCreator(tmpl, *escapeUnderscores)
+		defaultConverterWorkflow = cardWorkflow.NewCreatorLoggingMiddleware(
 			log.With(
 				logger,
 				"template_file", *templateFile,
 				"escaped_underscores", *escapeUnderscores,
 			),
-			defaultConverterPowerPlatform,
+			defaultConverterWorkflow,
 		)
 	}
 
@@ -290,7 +290,7 @@ func main() { //nolint: funlen
 				return nil, err
 			}
 
-			err = validateWebhook(workflowType, webhook)
+			err = validateWebhook(webhookType, webhook)
 			if *validateWebhookURL && err != nil {
 				err = errors.Wrapf(err, "webhook validation failed for /_dynamicwebhook/")
 				logger.Log("err", err)
@@ -298,11 +298,11 @@ func main() { //nolint: funlen
 			}
 
 			var s service.Service
-			if workflowType == O365 {
+			if webhookType == O365 {
 				s = service.NewSimpleService(defaultConverterO365, httpClient, webhook)
 				s = service.NewLoggingService(logger, s)
 			} else {
-				s = service.NewPowerPlatformService(defaultConverterPowerPlatform, httpClient, webhook)
+				s = service.NewWorkflowService(defaultConverterWorkflow, httpClient, webhook)
 				s = service.NewLoggingService(logger, s)
 			}
 			return s, nil
@@ -313,7 +313,7 @@ func main() { //nolint: funlen
 	// Connectors from config file.
 	for _, c := range tc.Connectors {
 		for uri, webhook := range c {
-			err := validateWebhook(workflowType, webhook)
+			err := validateWebhook(webhookType, webhook)
 			if *validateWebhookURL && err != nil {
 				logger.Log("err", err)
 				os.Exit(1)
@@ -321,10 +321,10 @@ func main() { //nolint: funlen
 
 			var r transport.Route
 			r.RequestPath = uri
-			if workflowType == O365 {
+			if webhookType == O365 {
 				r.Service = service.NewSimpleService(defaultConverterO365, httpClient, webhook)
 			} else {
-				r.Service = service.NewPowerPlatformService(defaultConverterPowerPlatform, httpClient, webhook)
+				r.Service = service.NewWorkflowService(defaultConverterWorkflow, httpClient, webhook)
 			}
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
@@ -344,7 +344,7 @@ func main() { //nolint: funlen
 			)
 			os.Exit(1)
 		}
-		err := validateWebhook(workflowType, c.WebhookURL)
+		err := validateWebhook(webhookType, c.WebhookURL)
 		if *validateWebhookURL && err != nil {
 			logger.Log("err", err)
 			os.Exit(1)
@@ -364,7 +364,7 @@ func main() { //nolint: funlen
 		}
 
 		// converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores, c.DisableGrouping)
-		if workflowType == O365 {
+		if webhookType == O365 {
 			var converter card.Converter
 			converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
 			converter = card.NewCreatorLoggingMiddleware(
@@ -381,10 +381,10 @@ func main() { //nolint: funlen
 			r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
-		} else if workflowType == PowerPlatform {
-			var converter cardPowerPlateform.Converter
-			converter = cardPowerPlateform.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
-			converter = cardPowerPlateform.NewCreatorLoggingMiddleware(
+		} else if webhookType == Workflow {
+			var converter cardWorkflow.Converter
+			converter = cardWorkflow.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
+			converter = cardWorkflow.NewCreatorLoggingMiddleware(
 				log.With(
 					logger,
 					"template_file", c.TemplateFile,
@@ -395,7 +395,7 @@ func main() { //nolint: funlen
 
 			var r transport.Route
 			r.RequestPath = c.RequestPath
-			r.Service = service.NewPowerPlatformService(converter, httpClient, c.WebhookURL)
+			r.Service = service.NewWorkflowService(converter, httpClient, c.WebhookURL)
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
 		}

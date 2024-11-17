@@ -1,4 +1,4 @@
-package cardPowerPlateform
+package cardWorkflow
 
 import (
 	"context"
@@ -14,7 +14,7 @@ func Test_templatedCard_Convert(t *testing.T) {
 		promAlertFile     string
 		templateFile      string
 		escapeUnderscores bool
-		want              PowerPlatformConnectorCard
+		want              WorkflowConnectorCard
 		wantErr           bool
 	}{
 		// {

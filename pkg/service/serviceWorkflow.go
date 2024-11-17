@@ -8,24 +8,24 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/prometheus-msteams/prometheus-msteams/pkg/cardPowerPlateform"
+	"github.com/prometheus-msteams/prometheus-msteams/pkg/cardWorkflow"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"go.opencensus.io/trace"
 )
 
-type powerPlatformService struct {
-	converter  cardPowerPlateform.Converter
+type workflowService struct {
+	converter  cardWorkflow.Converter
 	client     *http.Client
 	webhookURL string
 }
 
-// NewPowerPlatformService creates a powerPlatformService.
-func NewPowerPlatformService(converter cardPowerPlateform.Converter, client *http.Client, webhookURL string) Service {
-	return powerPlatformService{converter, client, webhookURL}
+// NewWorkflowService creates a workflowService.
+func NewWorkflowService(converter cardWorkflow.Converter, client *http.Client, webhookURL string) Service {
+	return workflowService{converter, client, webhookURL}
 }
 
-func (s powerPlatformService) Post(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
-	ctx, span := trace.StartSpan(ctx, "powerPlatformService.Post")
+func (s workflowService) Post(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
+	ctx, span := trace.StartSpan(ctx, "workflowService.Post")
 	defer span.End()
 
 	prs := []PostResponse{}
@@ -44,8 +44,8 @@ func (s powerPlatformService) Post(ctx context.Context, wm webhook.Message) ([]P
 	return prs, nil
 }
 
-func (s powerPlatformService) post(ctx context.Context, c cardPowerPlateform.PowerPlatformConnectorCard, url string) (PostResponse, error) {
-	ctx, span := trace.StartSpan(ctx, "powerPlatformService.post")
+func (s workflowService) post(ctx context.Context, c cardWorkflow.WorkflowConnectorCard, url string) (PostResponse, error) {
+	ctx, span := trace.StartSpan(ctx, "workflowService.post")
 	defer span.End()
 
 	pr := PostResponse{WebhookURL: url}
