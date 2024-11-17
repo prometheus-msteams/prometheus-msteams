@@ -25,7 +25,7 @@ func Test_validateWebhook(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validateWebhook(tt.args.u); (err != nil) != tt.wantErr {
+			if err := validateWebhook(O365, tt.args.u); (err != nil) != tt.wantErr {
 				t.Errorf("validateWebhook() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

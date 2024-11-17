@@ -1,0 +1,36 @@
+{
+  "version": "4",
+  "groupKey": "{}:{alertname=\"high_memory_load\"}",
+  "status": "firing",
+  "receiver": "teams_proxy",
+  "groupLabels": {
+      "alertname": "high_memory_load"
+  },
+  "commonLabels": {
+      "alertname": "high_memory_load",
+      "monitor": "master",
+      "severity": "warning"
+  },
+  "commonAnnotations": {
+      "summary": "Prometheus Test",
+      "runbook": "https://github.com/bzon/prometheus-msteams"
+  },
+  "externalURL": "http://docker.for.mac.host.internal:9093",
+  "alerts": [
+      {
+          "labels": {
+              "alertname": "high_memory_load",
+              "instance": "instance-with-hyphen_and_underscore",
+              "job": "docker_nodes",
+              "monitor": "master",
+              "severity": "warning"
+          },
+          "annotations": {
+              "description": "10.80.40.11 reported high memory usage with 23.28%.",
+              "summary": "Server High Memory usage"
+          },
+          "startsAt": "2018-03-07T06:33:21.873077559-05:00",
+          "endsAt": "0001-01-01T00:00:00Z"
+      }
+  ]
+}
