@@ -10,16 +10,16 @@
         "type": "AdaptiveCard",
         "version": "1.2",
         "backgroundImage": {
-            {{- $color := "808080" }}
-            {{- if eq .Status "resolved" -}}2DC72D
+            {{- $color := "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAAAAABqswrmAAAAEElEQVR42mJogEBAAAAA//8ICAIBsBUbsAAAAABJRU5ErkJggg==" }}
+            {{- if eq .Status "resolved" -}}data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLQPa6LjAEBAAD//yQwBIUSNPBIAAAAAElFTkSuQmCC
             {{- else if eq .Status "firing" -}}
               {{- if eq .CommonLabels.severity "critical" -}}
-              {{- $color = "8C1A1A" }}
+              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLokZJCxoAAAAD//xnYAwEPSWrRAAAAAElFTkSuQmCC" }}
               {{- else if eq .CommonLabels.severity "warning" -}}
-              {{- $color = "FFA500" }}
+              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mL4v5QBGQMCAAD//ziMBpHr7M3UAAAAAElFTkSuQmCC" }}
               {{- end -}}
             {{- end -}}
-            "url": "https://singlecolorimage.com/get/{{- $color -}}/10x4",
+            "url": "{{- $color -}}",
             "fillMode": "RepeatHorizontally"
         },
         "body": [
