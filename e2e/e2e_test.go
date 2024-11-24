@@ -74,7 +74,7 @@ func TestServer(t *testing.T) {
 					Service: service.NewLoggingService(
 						logger,
 						service.NewSimpleService(
-							c, http.DefaultClient, testWebhookURL,
+							c, http.DefaultClient, testWebhookURL, service.O365,
 						),
 					),
 				},

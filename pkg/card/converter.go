@@ -53,6 +53,7 @@ type FactSection struct {
 // Converter converts an alert manager webhook message to Office365ConnectorCard.
 type Converter interface {
 	Convert(context.Context, webhook.Message) (Office365ConnectorCard, error)
+	ConvertWorkflow(context.Context, webhook.Message) (WorkflowConnectorCard, error)
 }
 
 type loggingMiddleware struct {
