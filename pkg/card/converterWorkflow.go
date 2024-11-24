@@ -51,13 +51,6 @@ type WorkflowConnectorCard struct {
 
 func (l loggingMiddleware) ConvertWorkflow(ctx context.Context, a webhook.Message) (c WorkflowConnectorCard, err error) {
 	defer func(begin time.Time) {
-		// if len(c.Actions) > 5 {
-		// 	l.logger.Log(
-		// 		"warning", "There can only be a maximum of 5 actions in a potentialAction collection",
-		// 		"actions", c.Actions,
-		// 	)
-		// }
-
 		for _, attachment := range c.Attachments {
 			if len(attachment.Content.Actions) > 5 {
 				l.logger.Log(

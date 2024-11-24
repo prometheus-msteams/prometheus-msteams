@@ -50,9 +50,11 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 
 	if s.webhookType == O365 {
 		return s.postO365Webhook(ctx, wm)
-	} else {
+	} else if s.webhookType == Workflow {
 		return s.postWorkflowWebhook(ctx, wm)
 	}
+
+	return nil, fmt.Errorf("unhandled webhookType: %s", s.webhookType)
 }
 
 func (s simpleService) postO365Webhook(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
@@ -81,9 +83,6 @@ func (s simpleService) postO365Webhook(ctx context.Context, wm webhook.Message) 
 }
 
 func (s simpleService) postWorkflowWebhook(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
-	ctx, span := trace.StartSpan(ctx, "workflowService.Post")
-	defer span.End()
-
 	prs := []PostResponse{}
 
 	c, err := s.converter.ConvertWorkflow(ctx, wm)
@@ -91,7 +90,6 @@ func (s simpleService) postWorkflowWebhook(ctx context.Context, wm webhook.Messa
 		return nil, fmt.Errorf("failed to parse webhook message: %w", err)
 	}
 
-	// TODO(@bzon): post concurrently.
 	_, err = s.post(ctx, c, s.webhookURL)
 	if err != nil {
 		return prs, err

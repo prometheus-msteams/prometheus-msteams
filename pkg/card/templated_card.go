@@ -49,7 +49,7 @@ func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) 
 }
 
 func (m *templatedCard) ConvertWorkflow(ctx context.Context, promAlert webhook.Message) (WorkflowConnectorCard, error) {
-	_, span := trace.StartSpan(ctx, "templatedCard.Convert")
+	_, span := trace.StartSpan(ctx, "templatedCard.ConvertWorkflow")
 	defer span.End()
 
 	cardString, err := m.executeTemplate(promAlert)

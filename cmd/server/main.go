@@ -329,6 +329,7 @@ func main() { //nolint: funlen
 			os.Exit(1)
 		}
 
+		var converter card.Converter
 		tmpl, err := card.ParseTemplateFile(c.TemplateFile)
 		if err != nil {
 			logger.Log("err", err)
@@ -336,7 +337,6 @@ func main() { //nolint: funlen
 		}
 
 		// converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores, c.DisableGrouping)
-		var converter card.Converter
 		converter = card.NewTemplatedCardCreator(tmpl, c.EscapeUnderscores)
 		converter = card.NewCreatorLoggingMiddleware(
 			log.With(
