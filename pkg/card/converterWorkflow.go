@@ -1,29 +1,27 @@
-package cardWorkflow
+package card
 
 import (
 	"context"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
 	"github.com/prometheus/alertmanager/notify/webhook"
 )
 
-type FactSection struct {
+type FactSectionWorkflow struct {
 	Title string `json:"title"`
 	Value string `json:"value"`
 }
 
 type Body struct {
-	Type   string        `json:"type"`
-	Text   string        `json:"text"`
-	Weight string        `json:"weigth,omitempty"`
-	Size   string        `json:"size,omitempty"`
-	Wrap   bool          `json:"wrap,omitempty"`
-	Style  string        `json:"style,omitempty"`
-	Color  string        `json:"color,omitempty"`
-	Bleed  bool          `json:"bleed,omitempty"`
-	Facts  []FactSection `json:"facts,omitempty"`
+	Type   string                `json:"type"`
+	Text   string                `json:"text"`
+	Weight string                `json:"weigth,omitempty"`
+	Size   string                `json:"size,omitempty"`
+	Wrap   bool                  `json:"wrap,omitempty"`
+	Style  string                `json:"style,omitempty"`
+	Color  string                `json:"color,omitempty"`
+	Bleed  bool                  `json:"bleed,omitempty"`
+	Facts  []FactSectionWorkflow `json:"facts,omitempty"`
 }
 
 type BackgroundImage struct {
@@ -36,7 +34,7 @@ type Content struct {
 	Type            string          `json:"type"`
 	Version         string          `json:"version"`
 	Body            []Body          `json:"body"`
-	Actions         []card.Action   `json:"actions,omitempty"`
+	Actions         []Action        `json:"actions,omitempty"`
 	BackgroundImage BackgroundImage `json:"backgroundImage,omitempty"`
 }
 
@@ -51,22 +49,7 @@ type WorkflowConnectorCard struct {
 	Attachments []AdaptiveCardItem `json:"attachments"`
 }
 
-// Converter converts an alert manager webhook message to WorkflowConnectorCard.
-type Converter interface {
-	Convert(context.Context, webhook.Message) (WorkflowConnectorCard, error)
-}
-
-type loggingMiddleware struct {
-	logger log.Logger
-	next   Converter
-}
-
-// NewCreatorLoggingMiddleware creates a loggingMiddleware.
-func NewCreatorLoggingMiddleware(l log.Logger, n Converter) Converter {
-	return loggingMiddleware{l, n}
-}
-
-func (l loggingMiddleware) Convert(ctx context.Context, a webhook.Message) (c WorkflowConnectorCard, err error) {
+func (l loggingMiddleware) ConvertWorkflow(ctx context.Context, a webhook.Message) (c WorkflowConnectorCard, err error) {
 	defer func(begin time.Time) {
 		// if len(c.Actions) > 5 {
 		// 	l.logger.Log(
@@ -90,5 +73,5 @@ func (l loggingMiddleware) Convert(ctx context.Context, a webhook.Message) (c Wo
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	return l.next.Convert(ctx, a)
+	return l.next.ConvertWorkflow(ctx, a)
 }

@@ -13,6 +13,13 @@ import (
 	"go.opencensus.io/trace"
 )
 
+type WebhookType string
+
+const (
+	O365     WebhookType = "o365"
+	Workflow WebhookType = "microsoft-workflow"
+)
+
 // PostResponse is the prometheus msteams service response.
 type PostResponse struct {
 	WebhookURL string `json:"webhook_url"`
@@ -26,20 +33,29 @@ type Service interface {
 }
 
 type simpleService struct {
-	converter  card.Converter
-	client     *http.Client
-	webhookURL string
+	converter   card.Converter
+	client      *http.Client
+	webhookURL  string
+	webhookType WebhookType
 }
 
 // NewSimpleService creates a simpleService.
-func NewSimpleService(converter card.Converter, client *http.Client, webhookURL string) Service {
-	return simpleService{converter, client, webhookURL}
+func NewSimpleService(converter card.Converter, client *http.Client, webhookURL string, webhookType WebhookType) Service {
+	return simpleService{converter, client, webhookURL, webhookType}
 }
 
 func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "simpleService.Post")
 	defer span.End()
 
+	if s.webhookType == O365 {
+		return s.postO365Webhook(ctx, wm)
+	} else {
+		return s.postWorkflowWebhook(ctx, wm)
+	}
+}
+
+func (s simpleService) postO365Webhook(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
 	prs := []PostResponse{}
 
 	c, err := s.converter.Convert(ctx, wm)
@@ -61,11 +77,30 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 			return prs, err
 		}
 	}
+	return prs, nil
+}
+
+func (s simpleService) postWorkflowWebhook(ctx context.Context, wm webhook.Message) ([]PostResponse, error) {
+	ctx, span := trace.StartSpan(ctx, "workflowService.Post")
+	defer span.End()
+
+	prs := []PostResponse{}
+
+	c, err := s.converter.ConvertWorkflow(ctx, wm)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse webhook message: %w", err)
+	}
+
+	// TODO(@bzon): post concurrently.
+	_, err = s.post(ctx, c, s.webhookURL)
+	if err != nil {
+		return prs, err
+	}
 
 	return prs, nil
 }
 
-func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, url string) (PostResponse, error) {
+func (s simpleService) post(ctx context.Context, c interface{}, url string) (PostResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "simpleService.post")
 	defer span.End()
 
@@ -83,7 +118,7 @@ func (s simpleService) post(ctx context.Context, c card.Office365ConnectorCard, 
 		return pr, err
 	}
 
-        req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := s.client.Do(req)
 	if err != nil {
 		err = fmt.Errorf("http client failed: %w", err)

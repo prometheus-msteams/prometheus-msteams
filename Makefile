@@ -73,6 +73,9 @@ run:
 run-test-config:
 	go run cmd/server/main.go -http-addr=localhost:2000 -config-file ./test-connectors.yaml
 
+run-test-config-workflow:
+	go run cmd/server/main.go -http-addr=localhost:2000 -config-file ./test-connectors.yaml -workflow-webhook
+
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
