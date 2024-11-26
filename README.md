@@ -225,7 +225,7 @@ docker run -d -p 2000:2000 \
 When running as a binary, use the __-config-file__ flag.
 
 ```bash
-./prometheus-msteams server \
+./prometheus-msteams \
     -l localhost \
     -p 2000 \
     -config-file /tmp/config.yml
@@ -296,7 +296,7 @@ docker run -d -p 2000:2000 \
 When running as a binary, use the __-template-file__ flag.
 
 ```bash
-./prometheus-msteams server \
+./prometheus-msteams \
     -l localhost \
     -p 2000 \
     -template-file /tmp/card.tmpl
