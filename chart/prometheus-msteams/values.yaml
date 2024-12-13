@@ -98,3 +98,6 @@ envFrom: {}
 #       name: my-prometheus-msteams-env-secret
 #   - configMapRef:
 #       name: my-prometheus-msteams-env-cm
+
+# Whether to use the new Microsoft Workflow webhooks
+workflowWebhook: false

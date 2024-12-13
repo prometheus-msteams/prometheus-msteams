@@ -8,7 +8,11 @@ binaryData:
 {{- if .Values.customCardTemplate }}
 {{ .Values.customCardTemplate | b64enc | indent 4 }}
 {{- else }}
+  {{- if .Values.workflowWebhook}}
+{{ .Files.Get "cardWorkflow.tmpl" | b64enc | indent 4 }}
+  {{- else }}
 {{ .Files.Get "card.tmpl" | b64enc | indent 4 }}
+  {{- end }}
 {{- end }}
 {{- range $index, $customCardTemplate := .Values.connectorsWithCustomTemplates }}
 {{- if hasKey $customCardTemplate "template_file" }}

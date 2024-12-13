@@ -1,0 +1,81 @@
+{{ define "teams.card" }}
+{
+  "type":"message",
+  "attachments":[
+  {
+      "contentType":"application/vnd.microsoft.card.adaptive",
+      "contentUrl":null,
+      "content":{
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "type": "AdaptiveCard",
+        "version": "1.2",
+        "backgroundImage": {
+            {{- $color := "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAAAAABqswrmAAAAEElEQVR42mJogEBAAAAA//8ICAIBsBUbsAAAAABJRU5ErkJggg==" }}
+            {{- if eq .Status "resolved" -}}
+              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLQPa6LjAEBAAD//yQwBIUSNPBIAAAAAElFTkSuQmCC" -}}
+            {{- else if eq .Status "firing" -}}
+              {{- if eq .CommonLabels.severity "critical" -}}
+              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLokZJCxoAAAAD//xnYAwEPSWrRAAAAAElFTkSuQmCC" }}
+              {{- else if eq .CommonLabels.severity "warning" -}}
+              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mL4v5QBGQMCAAD//ziMBpHr7M3UAAAAAElFTkSuQmCC" }}
+              {{- end -}}
+            {{- end -}}
+            "url": "{{- $color -}}",
+            "fillMode": "RepeatHorizontally"
+        },
+        "body": [
+            {
+              "type": "TextBlock",
+              "text": "Prometheus Alert ({{ .Status | title }})",
+              "weight": "bolder",
+              "size": "medium"
+            },
+            {
+              "type": "TextBlock",
+              "text": "{{- if eq .CommonAnnotations.summary "" -}}
+              {{- if eq .CommonAnnotations.message "" -}}
+                {{- if eq .CommonLabels.alertname "" -}}
+                  Prometheus Alert
+                {{- else -}}
+                  {{- .CommonLabels.alertname -}}
+                {{- end -}}
+              {{- else -}}
+                {{- .CommonAnnotations.message -}}
+              {{- end -}}
+          {{- else -}}
+              {{- .CommonAnnotations.summary -}}
+          {{- end -}}",
+              "wrap": true
+            },
+            {{$externalUrl := .ExternalURL}}
+            {{- range $index, $alert := .Alerts }}{{- if $index }},{{- end }}
+            {
+              "type": "TextBlock",
+              "text": "[{{ $alert.Annotations.description }}]({{ $externalUrl }})",
+              "wrap": true
+            },
+            {
+              "type": "FactSet",
+              "facts": [
+                {{- range $key, $value := $alert.Annotations }}
+                {
+                  {{- if ne $key "description" -}}
+                    "title": "{{ $key }}",
+                    "value": "{{ $value }}"
+                  {{- end -}}
+                },
+                {{- end -}}
+                {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}},{{ end }}
+                {
+                  "title": "{{ $key }}",
+                  "value": "{{ $value }}"
+                }
+                {{- end }}
+              ]
+            }
+          {{- end }}
+        ]
+      }
+  }]
+}
+{{ end }}
