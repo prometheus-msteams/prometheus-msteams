@@ -56,7 +56,7 @@ __OPTION 1:__ Run using docker.
 ```bash
 docker run -d -p 2000:2000 \
     --name="promteams" \
-    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
+    -e TEAMS_INCOMING_WEBHOOK_URL="https://example.webhook.office.com/webhookb2/xxx" \
     -e TEAMS_REQUEST_URI=alertmanager \
     quay.io/prometheusmsteams/prometheus-msteams
 ```
@@ -67,7 +67,7 @@ Download the binary for your platform and the default card template from [RELEAS
 
 ```bash
 ./prometheus-msteams -teams-request-uri alertmanager \
-  -teams-incoming-webhook-url "https://outlook.office.com/webhook/xxx"
+  -teams-incoming-webhook-url "https://example.webhook.office.com/webhookb2/xxx"
 ```
 
 __OPTION 3:__ If you are going to deploy this in a **Kubernetes cluster**, checkout the [Kubernetes Deployment Guide](#kubernetes-deployment).
@@ -98,7 +98,7 @@ receivers:
 The dynamic webhook handler allows you to pass the webhook url to prometheus-msteams proxy directly from alertmanager.
 
 By default the passed URL is not validated. If validation is needed, pass flag `-validate-webhook-url` to prometheus-msteams on start.
-A valid url starts with `outlook.office.com/webhook/` or matches the regular expression `^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`.
+A valid url matches the regular expression `^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+(/[a-zA-Z0-9\-]+)?$`.
 
 ```yaml
 route:
@@ -112,8 +112,7 @@ receivers:
 - name: 'prometheus-msteams'
   webhook_configs:
   - send_resolved: true
-    url: 'http://localhost:2000/_dynamicwebhook/outlook.office.com/webhook/xxx' # the prometheus-msteams proxy + "/_dynamicwebhook/" + webhook url (without prefix "https://")
-    # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
+    url: 'http://localhost:2000/_dynamicwebhook/example.webhook.office.com/webhookb2/xxx' # the prometheus-msteams proxy + "/_dynamicwebhook/" + webhook url (without prefix "https://")
 ```
 
 Alternatively you can also use the webhook as a means of authorization:
@@ -133,8 +132,7 @@ receivers:
     http_Config:
       authorization:
         type: 'webhook'
-        credentials: 'outlook.office.com/webhook/xxx' # webhook url (without prefix "https://")
-        # new created webhooks have a different format: https://yourtenant.webhook.office.com/webhookb2/xxx...
+        credentials: 'example.webhook.office.com/webhookb2/xxx' # webhook url (without prefix "https://")
     url: 'http://localhost:2000/_dynamicwebhook/' # the prometheus-msteams proxy + "/_dynamicwebhook/"
 ```
 
@@ -206,8 +204,8 @@ Create a yaml file with the following format.
 
 ```yaml
 connectors:
-- high_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/bbb"
-- low_priority_channel: "https://outlook.office.com/webhook/xxxx/aaa/ccc"
+- high_priority_channel: "https://example.webhook.office.com/webhookb2/xxxx/aaa/bbb"
+- low_priority_channel: "https://example.webhook.office.com/webhookb2/xxxx/aaa/ccc"
 ```
 
 > __NOTE__: high_priority_channel and low_priority_channel are example handler or request path names.
@@ -240,10 +238,10 @@ curl localhost:2000/config
 
 [
   {
-    "high_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/bbb"
+    "high_priority_channel": "https://example.webhook.office.com/webhookb2/xxxx/aaa/bbb"
   },
   {
-    "low_priority_channel": "https://outlook.office.com/webhook/xxxx/aaa/ccc"
+    "low_priority_channel": "https://example.webhook.office.com/webhookb2/xxxx/aaa/ccc"
   }
 ]
 ```
@@ -287,7 +285,7 @@ When running as a docker container, mount the template file in the container and
 ```bash
 docker run -d -p 2000:2000 \
     --name="promteams" \
-    -e TEAMS_INCOMING_WEBHOOK_URL="https://outlook.office.com/webhook/xxx" \
+    -e TEAMS_INCOMING_WEBHOOK_URL="https://example.webhook.office.com/webhookb2/xxx" \
     -v /tmp/card.tmpl:/tmp/card.tmpl \
     -e TEMPLATE_FILE="/tmp/card.tmpl" \
     quay.io/prometheusmsteams/prometheus-msteams
