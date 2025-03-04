@@ -3,7 +3,7 @@ appVersion: "v1.5.2"
 description: A Helm chart for Kubernetes
 name: prometheus-msteams
 home: https://github.com/prometheus-msteams/prometheus-msteams
-version: 1.3.4
+version: 1.3.5
 maintainers:
   - name: bzon
     url: https://github.com/bzon
