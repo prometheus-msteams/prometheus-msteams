@@ -69,16 +69,15 @@ func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 	return tc, nil
 }
 
-// New Webhook URL announcement: https://admin.microsoft.com/AdminPortal/Home#/MessageCenter/:/messages/MC234048
-var validWebhookPattern = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+$`)
-var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only valid until 11. april '21
+// New Webhook URL format : https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/
+var validWebhookPattern = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+(/[a-zA-Z0-9\-]+)?$`)
 
 func validateWebhook(u string) error {
 	path := strings.TrimPrefix(u, "https://")
 	if u == path {
 		return fmt.Errorf("the webhook_url must start with 'https://'. url: '%s'", u)
 	}
-	isValidTeamsHook := validWebhookPattern.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
+	isValidTeamsHook := validWebhookPattern.MatchString(path)
 	if !isValidTeamsHook {
 		return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
 	}
