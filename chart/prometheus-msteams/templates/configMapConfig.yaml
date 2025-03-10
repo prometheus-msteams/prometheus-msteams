@@ -1,3 +1,4 @@
+{{- if (or .Values.connectors .Values.connectorsWithCustomTemplates) }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -16,5 +17,6 @@ data:
         webhook_url: {{ $connectorWithCustomTemplate.webhook_url }}
 {{- if hasKey $connectorWithCustomTemplate "escape_underscores" }}
         escape_underscores: {{ $connectorWithCustomTemplate.escape_underscores }}
+{{- end }}
 {{- end }}
 {{- end }}
