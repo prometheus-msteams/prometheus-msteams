@@ -52,9 +52,7 @@ func (m *templatedCard) executeTemplate(promAlert webhook.Message) (string, erro
 	// TODO(bzon): Maybe we can escape underscores after the office 365 card is finally created?
 	// That approach would be simpler to read and probably a performance gain because
 	// we don't have to run json.NewEncoder(v).Encode() multiple times.
-	if m.escapeUnderscores {
-		promAlert = jsonEscapeMessage(promAlert)
-	}
+	promAlert = jsonEscapeMessage(promAlert, m.escapeUnderscores)
 
 	data := &template.Data{
 		Receiver:          promAlert.Receiver,
@@ -88,20 +86,24 @@ func jsonEncode(str string) string {
 
 // json escape all string values in kvData and also escape
 // '_' char so it does not get processed as markdown italic
-func jsonEncodeAlertmanagerKV(kvData template.KV) {
+func jsonEncodeAlertmanagerKV(kvData template.KV, escapeUnderscores bool) {
 	for k, v := range kvData {
-		kvData[k] = strings.ReplaceAll(jsonEncode(v), `_`, `\\_`)
+		kvData[k] = jsonEncode(v)
+
+		if (escapeUnderscores) {
+			kvData[k] = strings.ReplaceAll(kvData[k], `_`, `\\_`)
+		}
 	}
 }
 
-func jsonEscapeMessage(promAlert webhook.Message) webhook.Message {
+func jsonEscapeMessage(promAlert webhook.Message, escapeUnderscores bool) webhook.Message {
 	retPromAlert := promAlert
-	jsonEncodeAlertmanagerKV(retPromAlert.GroupLabels)
-	jsonEncodeAlertmanagerKV(retPromAlert.CommonLabels)
-	jsonEncodeAlertmanagerKV(retPromAlert.CommonAnnotations)
+	jsonEncodeAlertmanagerKV(retPromAlert.GroupLabels, escapeUnderscores)
+	jsonEncodeAlertmanagerKV(retPromAlert.CommonLabels, escapeUnderscores)
+	jsonEncodeAlertmanagerKV(retPromAlert.CommonAnnotations, escapeUnderscores)
 	for _, alert := range retPromAlert.Alerts {
-		jsonEncodeAlertmanagerKV(alert.Labels)
-		jsonEncodeAlertmanagerKV(alert.Annotations)
+		jsonEncodeAlertmanagerKV(alert.Labels, escapeUnderscores)
+		jsonEncodeAlertmanagerKV(alert.Annotations, escapeUnderscores)
 	}
 	return retPromAlert
 }
