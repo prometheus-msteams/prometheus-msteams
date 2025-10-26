@@ -29,11 +29,16 @@ type BackgroundImage struct {
 	FillMode string `json:"fillMode,omitempty"`
 }
 
+type MsTeams struct {
+	Width string `json:width`
+}
+
 type Content struct {
 	Schema          string          `json:"$schema"`
 	Type            string          `json:"type"`
 	Version         string          `json:"version"`
 	Body            []Body          `json:"body"`
+	MsTeams         MsTeams         `json:"msteams"`
 	Actions         []Action        `json:"actions,omitempty"`
 	BackgroundImage BackgroundImage `json:"backgroundImage,omitempty"`
 }

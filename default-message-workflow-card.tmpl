@@ -1,4 +1,20 @@
 {{ define "teams.card" }}
+
+{{- $cardHeadingLineColor := "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAAAAABqswrmAAAAEElEQVR42mJogEBAAAAA//8ICAIBsBUbsAAAAABJRU5ErkJggg==" }}
+{{- $headingColor := "" }}
+{{- if eq .Status "resolved" -}}
+  {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLQPa6LjAEBAAD//yQwBIUSNPBIAAAAAElFTkSuQmCC" -}}
+  {{- $headingColor := "Good" }}
+{{- else if eq .Status "firing" -}}
+  {{- if eq .CommonLabels.severity "critical" -}}
+  {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLokZJCxoAAAAD//xnYAwEPSWrRAAAAAElFTkSuQmCC" }}
+  {{- $headingColor := "Attention" }}
+  {{- else if eq .CommonLabels.severity "Warning" -}}
+  {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mL4v5QBGQMCAAD//ziMBpHr7M3UAAAAAElFTkSuQmCC" }}
+  {{- $headingColor := "warning" }}
+  {{- end -}}
+{{- end -}}
+
 {
   "type":"message",
   "attachments":[
@@ -10,24 +26,20 @@
         "type": "AdaptiveCard",
         "version": "1.2",
         "backgroundImage": {
-            {{- $color := "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAAAAABqswrmAAAAEElEQVR42mJogEBAAAAA//8ICAIBsBUbsAAAAABJRU5ErkJggg==" }}
-            {{- if eq .Status "resolved" -}}data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLQPa6LjAEBAAD//yQwBIUSNPBIAAAAAElFTkSuQmCC
-            {{- else if eq .Status "firing" -}}
-              {{- if eq .CommonLabels.severity "critical" -}}
-              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLokZJCxoAAAAD//xnYAwEPSWrRAAAAAElFTkSuQmCC" }}
-              {{- else if eq .CommonLabels.severity "warning" -}}
-              {{- $color = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mL4v5QBGQMCAAD//ziMBpHr7M3UAAAAAElFTkSuQmCC" }}
-              {{- end -}}
-            {{- end -}}
-            "url": "{{- $color -}}",
+            "url": "{{- $cardHeadingLineColor -}}",
             "fillMode": "RepeatHorizontally"
+        },
+        "msteams": {
+            "width": "Full"
         },
         "body": [
             {
               "type": "TextBlock",
               "text": "Prometheus Alert ({{ .Status | title }})",
               "weight": "bolder",
-              "size": "medium"
+              "size": "medium",
+              "style": "heading",
+              "color": "{{- $headingColor -}}"
             },
             {
               "type": "TextBlock",
