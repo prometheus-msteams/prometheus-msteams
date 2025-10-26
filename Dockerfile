@@ -11,6 +11,7 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=certs /usr/share/zoneinfo /usr/share/zoneinfo
 
 COPY ./default-message-card.tmpl /default-message-card.tmpl
+COPY ./default-message-workflow-card.tmpl /default-message-workflow-card.tmpl
 COPY bin/prometheus-msteams-linux-amd64 /promteams
 
 ENTRYPOINT ["/promteams"]
