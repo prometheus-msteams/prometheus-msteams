@@ -15,7 +15,7 @@ type FactSectionWorkflow struct {
 type Body struct {
 	Type   string                `json:"type"`
 	Text   string                `json:"text"`
-	Weight string                `json:"weigth,omitempty"`
+	Weight string                `json:"weight,omitempty"`
 	Size   string                `json:"size,omitempty"`
 	Wrap   bool                  `json:"wrap,omitempty"`
 	Style  string                `json:"style,omitempty"`
