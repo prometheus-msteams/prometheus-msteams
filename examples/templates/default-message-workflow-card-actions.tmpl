@@ -1,0 +1,132 @@
+{{ define "teams.card" }}
+
+{{/* Should the potential actions field be included? */}}
+{{ $should_have_potential_actions := true }}
+
+{{/* For example 'https://www.google.com/alertkarma/?'. Ignored if empty. */}}
+{{ $alertkarma_prefix := ""}}
+
+{{- $cardHeadingLineColor := "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAAAAABqswrmAAAAEElEQVR42mJogEBAAAAA//8ICAIBsBUbsAAAAABJRU5ErkJggg==" }}
+{{- $headingColor := "" }}
+{{- if eq .Status "resolved" -}}
+  {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLQPa6LjAEBAAD//yQwBIUSNPBIAAAAAElFTkSuQmCC" -}}
+  {{- $headingColor := "Good" }}
+{{- else if eq .Status "firing" -}}
+  {{- if eq .CommonLabels.severity "critical" -}}
+  {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLokZJCxoAAAAD//xnYAwEPSWrRAAAAAElFTkSuQmCC" }}
+  {{- $headingColor := "Attention" }}
+  {{- else if eq .CommonLabels.severity "Warning" -}}
+  {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mL4v5QBGQMCAAD//ziMBpHr7M3UAAAAAElFTkSuQmCC" }}
+  {{- $headingColor := "warning" }}
+  {{- end -}}
+{{- end -}}
+
+{
+  "type":"message",
+  "attachments":[
+  {
+      "contentType":"application/vnd.microsoft.card.adaptive",
+      "contentUrl":null,
+      "content":{
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "type": "AdaptiveCard",
+        "version": "1.2",
+        "backgroundImage": {
+            "url": "{{- $cardHeadingLineColor -}}",
+            "fillMode": "RepeatHorizontally"
+        },
+        "msteams": {
+            "width": "Full"
+        },
+        "body": [
+            {
+              "type": "TextBlock",
+              "text": "Prometheus Alert ({{ .Status | title }})",
+              "weight": "bolder",
+              "size": "medium",
+              "style": "heading",
+              "color": "{{- $headingColor -}}"
+            },
+            {
+              "type": "TextBlock",
+              "text": "{{- if eq .CommonAnnotations.summary "" -}}
+              {{- if eq .CommonAnnotations.message "" -}}
+                {{- if eq .CommonLabels.alertname "" -}}
+                  Prometheus Alert
+                {{- else -}}
+                  {{- .CommonLabels.alertname -}}
+                {{- end -}}
+              {{- else -}}
+                {{- .CommonAnnotations.message -}}
+              {{- end -}}
+          {{- else -}}
+              {{- .CommonAnnotations.summary -}}
+          {{- end -}}",
+              "wrap": true
+            },
+            {{$externalUrl := .ExternalURL}}
+            {{- range $index, $alert := .Alerts }}{{- if $index }},{{- end }}
+            {
+              "type": "TextBlock",
+              "text": "[{{ $alert.Annotations.description }}]({{ $externalUrl }})",
+              "wrap": true
+            },
+            {
+              "type": "FactSet",
+              "facts": [
+                {{- range $key, $value := $alert.Annotations }}
+                {
+                  {{- if ne $key "description" -}}
+                    "title": "{{ $key }}",
+                    "value": "{{ $value }}"
+                  {{- end -}}
+                },
+                {{- end -}}
+                {{$c := counter}}{{ range $key, $value := $alert.Labels }}{{if call $c}},{{ end }}
+                {
+                  "title": "{{ $key }}",
+                  "value": "{{ $value }}"
+                }
+                {{- end }}
+              ]
+            }
+          {{- end }}
+        ]
+        {{ if $should_have_potential_actions }}
+        ,
+        "actions": [
+          {
+              "type": "Action.OpenUrl",
+              "title": "View in Alertmanager",
+              "url": "{{ .ExternalURL }}/#?alerts/silenced=true&inhibited=true&active=true&filter=%7B{{$c := counter}}{{ range $key, $value := .CommonLabels }}{{if call $c}}%22%2C%20{{ end }}{{ $key }}%3D%22{{ $value }}{{- end }}%22%7D"
+          }
+        {{ if gt (len $alertkarma_prefix) 0 }}
+          ,
+          {
+            "type": "Action.OpenUrl",
+            "title": "View in Alertkarma",
+            "uri": "{{ $alertkarma_prefix }}q=alertname%3D{{ .CommonLabels.alertname }}"
+          }
+        {{ end }}
+        {{ if gt (len .CommonAnnotations.investigate_link) 0 }}
+          ,
+          {
+            "type": "Action.OpenUrl",
+            "title": "Investigate",
+            "uri": "{{- .CommonAnnotations.investigate_link | trim -}}"
+          }
+        {{ end }}
+        {{- if .CommonAnnotations.runbook -}}
+          ,
+          {
+              "type": "Action.OpenUrl",
+              "title": "runbook",
+              "url": "{{ reReplaceAll "_" "\\\\_" .CommonAnnotations.runbook }}"
+          }
+        {{- end -}}
+        ]
+        {{- end -}}
+      }
+  }]
+}
+{{ end }}
