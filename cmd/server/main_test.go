@@ -16,18 +16,21 @@ func Test_validateWebhook(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
+		webhook service.WebhookType
 		wantErr bool
 	}{
-		{name: "legacy hook", args: args{u: "https://example.webhook.office.com/webhookb2/1e21eb6d-60f4-432f-9428-82cf86ec55a3@b12d4011-2ea0-4377-a99b-35c565546afd/IncomingWebhook/091d20cd2a594db0b2d7ed2937d7bd6d/91f7b1cc-96d0-4612-bedd-8b820c869464"}, wantErr: false},
-		{name: "new webhook", args: args{u: "https://example.webhook.office.com/webhookb2/5c51ab94-86c0-4ba3-a66c-c2ad73acc531@e3ebcd52-aa57-25e8-a214-94fb325450f4/IncomingWebhook/9f226e3c36fb47249f14d4dab2d5b845/92bac26e-62c5-427f-ac91-e51a268f94ca/V2QaKKUiGE6BMqWd-DeObKqCFmiQE5WSekPuAwjhc6ads1"}, wantErr: false},
-		{name: "missing https", args: args{u: "outlook.office.com/webhook/xxxx/xxxx"}, wantErr: true},
-		{name: "only http", args: args{u: "http://outlook.office.com/webhook/xxxx/xxxx"}, wantErr: true},
-		{name: "https but invalid", args: args{u: "https://example.com"}, wantErr: true},
+		{name: "legacy hook", webhook: service.O365, args: args{u: "https://example.webhook.office.com/webhookb2/1e21eb6d-60f4-432f-9428-82cf86ec55a3@b12d4011-2ea0-4377-a99b-35c565546afd/IncomingWebhook/091d20cd2a594db0b2d7ed2937d7bd6d/91f7b1cc-96d0-4612-bedd-8b820c869464"}, wantErr: false},
+		{name: "new webhook", webhook: service.O365, args: args{u: "https://example.webhook.office.com/webhookb2/5c51ab94-86c0-4ba3-a66c-c2ad73acc531@e3ebcd52-aa57-25e8-a214-94fb325450f4/IncomingWebhook/9f226e3c36fb47249f14d4dab2d5b845/92bac26e-62c5-427f-ac91-e51a268f94ca/V2QaKKUiGE6BMqWd-DeObKqCFmiQE5WSekPuAwjhc6ads1"}, wantErr: false},
+		{name: "missing https", webhook: service.O365, args: args{u: "outlook.office.com/webhook/xxxx/xxxx"}, wantErr: true},
+		{name: "only http", webhook: service.O365, args: args{u: "http://outlook.office.com/webhook/xxxx/xxxx"}, wantErr: true},
+		{name: "https but invalid", webhook: service.O365, args: args{u: "https://example.com"}, wantErr: true},
+
+		{name: "workflow webhook", webhook: service.Workflow, args: args{u: "https://example.cd.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/b008d545fb784/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Ogxlm1IT-Hs"}, wantErr: false},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validateWebhook(service.O365, tt.args.u); (err != nil) != tt.wantErr {
+			if err := validateWebhook(tt.webhook, tt.args.u); (err != nil) != tt.wantErr {
 				t.Errorf("validateWebhook() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -37,6 +40,7 @@ func Test_validateWebhook(t *testing.T) {
 func Test_extractWebhookFromRequest(t *testing.T) {
 	oldStyleWebhook := "example.webhook.office.com/webhookb2/1e21eb6d-60f4-432f-9428-82cf86ec55a3@b12d4011-2ea0-4377-a99b-35c565546afd/IncomingWebhook/091d20cd2a594db0b2d7ed2937d7bd6d/91f7b1cc-96d0-4612-bedd-8b820c869464"
 	newStyleWebhook := "example.webhook.office.com/webhookb2/5c51ab94-86c0-4ba3-a66c-c2ad73acc531@e3ebcd52-aa57-25e8-a214-94fb325450f4/IncomingWebhook/9f226e3c36fb47249f14d4dab2d5b845/92bac26e-62c5-427f-ac91-e51a268f94ca/V2QaKKUiGE6BMqWd-DeObKqCFmiQE5WSekPuAwjhc6ads1"
+	workflowWebhook := "example.cd.environment.api.powerplatform.com/powerautomate/automations/direct/workflows/b008d545fb784/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Ogxlm1IT-Hs"
 	tests := []struct {
 		name          string
 		request       *http.Request
@@ -76,6 +80,12 @@ func Test_extractWebhookFromRequest(t *testing.T) {
 			name:    "missing webhook and header",
 			request: newDummyRequest("/_dynamicwebhook/", ""),
 			wantErr: true,
+		},
+		{
+			name:          "workflow webhook",
+			request:       newDummyRequest(fmt.Sprintf("/_dynamicwebhook/%s", workflowWebhook), ""),
+			webhookResult: fmt.Sprintf("https://%s", workflowWebhook),
+			wantErr:       false,
 		},
 	}
 	prefix := "/_dynamicwebhook/"

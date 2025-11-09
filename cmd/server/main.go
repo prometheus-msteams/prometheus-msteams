@@ -504,12 +504,19 @@ func checkDuplicateRequestPath(routes []transport.Route) error {
 const bearerType = "webhook"
 
 func extractWebhookFromRequest(request *http.Request, requestPathPrefix string) (string, error) {
-	path := request.URL.Path
-	path = strings.TrimPrefix(path, requestPathPrefix)
-	if path != "" {
-		return fmt.Sprintf("https://%s", path), nil
+	var pathAndQuery string
+
+	// Query contains mandatory "api-version" for "worflow"
+	if len(request.URL.Query()) > 0 {
+		pathAndQuery = request.URL.Path + "?" + request.URL.RawQuery
+	} else {
+		pathAndQuery = request.URL.Path
 	}
 
+	pathAndQuery = strings.TrimPrefix(pathAndQuery, requestPathPrefix)
+	if pathAndQuery != "" {
+		return fmt.Sprintf("https://%s", pathAndQuery), nil
+	}
 	authHeader := request.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", fmt.Errorf("neither webhook url nor bearer authorization present")
@@ -518,6 +525,6 @@ func extractWebhookFromRequest(request *http.Request, requestPathPrefix string) 
 	if !strings.HasPrefix(authHeader, bearerType) {
 		return "", fmt.Errorf("invalid bearer on authorization")
 	}
-	path = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerType))
-	return fmt.Sprintf("https://%s", path), nil
+	pathAndQuery = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerType))
+	return fmt.Sprintf("https://%s", pathAndQuery), nil
 }
