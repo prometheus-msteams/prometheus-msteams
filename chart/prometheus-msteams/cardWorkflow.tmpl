@@ -9,7 +9,7 @@
   {{- if eq .CommonLabels.severity "critical" -}}
   {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mLokZJCxoAAAAD//xnYAwEPSWrRAAAAAElFTkSuQmCC" }}
   {{- $headingColor := "Attention" }}
-  {{- else if eq .CommonLabels.severity "Warning" -}}
+  {{- else if eq .CommonLabels.severity "warning" -}}
   {{- $cardHeadingLineColor = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAEklEQVR42mL4v5QBGQMCAAD//ziMBpHr7M3UAAAAAElFTkSuQmCC" }}
   {{- $headingColor := "warning" }}
   {{- end -}}
