@@ -25,12 +25,12 @@ type Body struct {
 }
 
 type BackgroundImage struct {
-	Url      string `json:"url"`
+	URL      string `json:"url"`
 	FillMode string `json:"fillMode,omitempty"`
 }
 
 type MsTeams struct {
-	Width string `json:width`
+	Width string `json:"width"`
 }
 
 type Content struct {

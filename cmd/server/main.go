@@ -80,12 +80,13 @@ func validateWebhook(workflowType service.WebhookType, u string) error {
 		return fmt.Errorf("the webhook_url must start with 'https://'. url: '%s'", u)
 	}
 
-	if workflowType == service.O365 {
+	switch workflowType {
+	case service.O365:
 		isValidTeamsHook := validWebhookPatternO365.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
 		if !isValidTeamsHook {
 			return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
 		}
-	} else if workflowType == service.Workflow {
+	case service.Workflow:
 		isValidTeamsHook := validWebhookPatternWorkflow.MatchString(path)
 		if !isValidTeamsHook {
 			return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)

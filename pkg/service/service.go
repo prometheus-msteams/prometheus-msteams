@@ -48,9 +48,10 @@ func (s simpleService) Post(ctx context.Context, wm webhook.Message) ([]PostResp
 	ctx, span := trace.StartSpan(ctx, "simpleService.Post")
 	defer span.End()
 
-	if s.webhookType == O365 {
+	switch s.webhookType {
+	case O365:
 		return s.postO365Webhook(ctx, wm)
-	} else if s.webhookType == Workflow {
+	case Workflow:
 		return s.postWorkflowWebhook(ctx, wm)
 	}
 
