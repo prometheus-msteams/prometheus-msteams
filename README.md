@@ -88,7 +88,7 @@ route:
 
 receivers:
 - name: 'prometheus-msteams'
-  webhook_configs: # https://prometheus.io/docs/alerting/configuration/#webhook_config 
+  webhook_configs: # https://prometheus.io/docs/alerting/configuration/#webhook_config
   - send_resolved: true
     url: 'http://localhost:2000/alertmanager' # the prometheus-msteams proxy
 ```
@@ -139,7 +139,7 @@ receivers:
 This provides the added benefit that alertmanager will treat the Incoming
 Webhook as a credential and hides it from view in the Web UI.
 
-> If you don't have Prometheus running yet and you wan't to try how this works,  
+> If you don't have Prometheus running yet and you wan't to try how this works,
 > try [stefanprodan's](https://github.com/stefanprodan) [Prometheus in Docker](https://github.com/stefanprodan/dockprom) to help you install a local Prometheus setup quickly in a single machine.
 
 ### Simulating a Prometheus Alerts to Teams Channel
@@ -307,13 +307,13 @@ You can also use a custom template per webhook by using the `connectors_with_cus
 ```yaml
 # alerts in the connectors here will use the default template.
 connectors:
-- alert1: <webhook> 
+- alert1: <webhook>
 
 # alerts in the connectors here will use template_file specified.
 connectors_with_custom_templates:
 - request_path: /alert2
   template_file: ./default-message-card.tmpl
-  webhook_url: <webhook> 
+  webhook_url: <webhook>
   escape_underscores: true # get the effect of -auto-escape-underscores.
 ```
 
@@ -362,6 +362,8 @@ Usage of prometheus-msteams:
       The retry maximum for sending requests to the webhook. (default 3)
   -validate-webhook-url
       Enforce strict validation of webhook url. (default false)
+  -workflow-webhook
+    Use Workflow webhooks
 
 ```
 
