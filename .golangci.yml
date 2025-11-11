@@ -79,7 +79,7 @@ linters-settings:
   errcheck:
     # path to a file containing a list of functions to exclude from checking
     # see https://github.com/kisielk/errcheck#excluding-functions for details
-    exclude-functions: ./errcheck-exclude.txt
+    exclude: ./errcheck-exclude.txt
   unused:
     # treat code as a program (not a library) and report unused exported identifiers; default is false.
     # XXX: if you enable this setting, unused will report a lot of false-positives in text editors:
