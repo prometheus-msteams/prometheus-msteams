@@ -51,6 +51,32 @@ linters-settings:
     statements: 50
   misspell:
     locale: US
+  depguard:
+    rules:
+      main:
+        allow:
+         - $gostd
+
+         - contrib.go.opencensus.io/exporter/jaeger
+         - contrib.go.opencensus.io/exporter/prometheus
+         - go.opencensus.io/plugin/ochttp
+         - go.opencensus.io/stats/view
+         - go.opencensus.io/tag
+         - go.opencensus.io/trace
+         - github.com/go-kit/kit/log
+         - github.com/google/go-cmp/cmp
+         - github.com/hashicorp/go-retryablehttp
+         - github.com/josephburnett/jd/lib
+         - github.com/labstack/echo/v4
+         - github.com/oklog/run
+         - github.com/peterbourgon/ff
+         - github.com/pkg/errors
+         - github.com/prometheus/alertmanager/notify/webhook
+         - github.com/prometheus/alertmanager/template
+         - github.com/prometheus/client_golang/prometheus
+         - github.com/prometheus-msteams/prometheus-msteams
+         - gopkg.in/yaml.v2
+         - k8s.io/helm/pkg/engine
   errcheck:
     # path to a file containing a list of functions to exclude from checking
     # see https://github.com/kisielk/errcheck#excluding-functions for details
