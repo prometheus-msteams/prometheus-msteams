@@ -70,16 +70,28 @@ func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
 }
 
 // New Webhook URL format : https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/
-var validWebhookPattern = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+(/[a-zA-Z0-9\-]+)?$`)
+var validWebhookPatternO365 = regexp.MustCompile(`^[a-z0-9]+\.webhook\.office\.com/webhookb2/[a-z0-9\-]+@[a-z0-9\-]+/IncomingWebhook/[a-z0-9]+/[a-z0-9\-]+(/[a-zA-Z0-9\-]+)?$`)
+var validWebhookPatternWorkflow = regexp.MustCompile((`^[a-z0-9\-\.]+\.environment\.api\.powerplatform\.com/powerautomate/automations/direct/workflows/[\w]+/triggers/manual/paths/invoke\?api-version=\d+&sp=%2Ftriggers%2Fmanual%2Frun&sv=1\.0&sig=[a-zA-Z0-9\-_]+`))
+var legacyWebhookPrefix = "outlook.office.com/webhook/" // old format is only valid until 11. april '21
 
-func validateWebhook(u string) error {
+func validateWebhook(workflowType service.WebhookType, u string) error {
 	path := strings.TrimPrefix(u, "https://")
 	if u == path {
 		return fmt.Errorf("the webhook_url must start with 'https://'. url: '%s'", u)
 	}
-	isValidTeamsHook := validWebhookPattern.MatchString(path)
-	if !isValidTeamsHook {
-		return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
+
+	switch workflowType {
+	case service.O365:
+		isValidTeamsHook := validWebhookPatternO365.MatchString(path) || strings.HasPrefix(path, legacyWebhookPrefix)
+		if !isValidTeamsHook {
+			return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
+		}
+	case service.Workflow:
+		isValidTeamsHook := validWebhookPatternWorkflow.MatchString(path)
+		if !isValidTeamsHook {
+			return fmt.Errorf("the webhook_url has an unexpected format '%s'", u)
+		}
+		return nil
 	}
 	return nil
 }
@@ -96,7 +108,7 @@ func main() { //nolint: funlen
 		httpAddr                      = fs.String("http-addr", ":2000", "HTTP listen address.")
 		requestURI                    = fs.String("teams-request-uri", "", "The default request URI path where Prometheus will post to.")
 		teamsWebhookURL               = fs.String("teams-incoming-webhook-url", "", "The default Microsoft Teams webhook connector.")
-		templateFile                  = fs.String("template-file", "./default-message-card.tmpl", "The Microsoft Teams Message Card template file.")
+		templateFile                  = fs.String("template-file", "", "The Microsoft Teams Message Card template file.")
 		escapeUnderscores             = fs.Bool("auto-escape-underscores", true, "Automatically replace all '_' with '\\_' from texts in the alert.")
 		configFile                    = fs.String("config-file", "", "The connectors configuration file.")
 		httpClientIdleConnTimeout     = fs.Duration("idle-conn-timeout", 90*time.Second, "The HTTP client idle connection timeout duration.")
@@ -105,11 +117,26 @@ func main() { //nolint: funlen
 		insecureSkipVerify            = fs.Bool("insecure-skip-verify", false, "Disable validation of the server certificate.")
 		retryMax                      = fs.Int("max-retry-count", 3, "The retry maximum for sending requests to the webhook")
 		validateWebhookURL            = fs.Bool("validate-webhook-url", false, "Enforce strict validation of webhook url")
+		useWorkflowWebhook            = fs.Bool("workflow-webhook", false, "Use Workflow webhooks")
 	)
 
 	if err := ff.Parse(fs, os.Args[1:], ff.WithEnvVarNoPrefix()); err != nil {
 		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
+	}
+
+	var webhookType service.WebhookType
+	// Set default template based on webhookType if not already set
+	if *useWorkflowWebhook {
+		webhookType = service.Workflow
+		if *templateFile == "" {
+			*templateFile = "./default-message-workflow-card.tmpl"
+		}
+	} else {
+		webhookType = service.O365
+		if *templateFile == "" {
+			*templateFile = "./default-message-card.tmpl"
+		}
 	}
 
 	if *promVersion {
@@ -136,6 +163,9 @@ func main() { //nolint: funlen
 		}
 		logger = log.With(logger, "ts", log.DefaultTimestamp, "caller", log.DefaultCaller)
 	}
+	level.Debug(logger).Log(
+		"webhook-type", webhookType,
+	)
 
 	// Tracer.
 	if *jaegerTrace {
@@ -242,14 +272,15 @@ func main() { //nolint: funlen
 				return nil, err
 			}
 
-			err = validateWebhook(webhook)
+			err = validateWebhook(webhookType, webhook)
 			if *validateWebhookURL && err != nil {
 				err = errors.Wrapf(err, "webhook validation failed for /_dynamicwebhook/")
 				logger.Log("err", err)
 				return nil, err
 			}
 
-			s := service.NewSimpleService(defaultConverter, httpClient, webhook)
+			var s service.Service
+			s = service.NewSimpleService(defaultConverter, httpClient, webhook, webhookType)
 			s = service.NewLoggingService(logger, s)
 			return s, nil
 		}
@@ -259,7 +290,7 @@ func main() { //nolint: funlen
 	// Connectors from config file.
 	for _, c := range tc.Connectors {
 		for uri, webhook := range c {
-			err := validateWebhook(webhook)
+			err := validateWebhook(webhookType, webhook)
 			if *validateWebhookURL && err != nil {
 				logger.Log("err", err)
 				os.Exit(1)
@@ -267,7 +298,7 @@ func main() { //nolint: funlen
 
 			var r transport.Route
 			r.RequestPath = uri
-			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook)
+			r.Service = service.NewSimpleService(defaultConverter, httpClient, webhook, webhookType)
 			r.Service = service.NewLoggingService(logger, r.Service)
 			routes = append(routes, r)
 		}
@@ -286,7 +317,7 @@ func main() { //nolint: funlen
 			)
 			os.Exit(1)
 		}
-		err := validateWebhook(c.WebhookURL)
+		err := validateWebhook(webhookType, c.WebhookURL)
 		if *validateWebhookURL && err != nil {
 			logger.Log("err", err)
 			os.Exit(1)
@@ -319,7 +350,7 @@ func main() { //nolint: funlen
 
 		var r transport.Route
 		r.RequestPath = c.RequestPath
-		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL)
+		r.Service = service.NewSimpleService(converter, httpClient, c.WebhookURL, webhookType)
 		r.Service = service.NewLoggingService(logger, r.Service)
 		routes = append(routes, r)
 	}
@@ -474,12 +505,19 @@ func checkDuplicateRequestPath(routes []transport.Route) error {
 const bearerType = "webhook"
 
 func extractWebhookFromRequest(request *http.Request, requestPathPrefix string) (string, error) {
-	path := request.URL.Path
-	path = strings.TrimPrefix(path, requestPathPrefix)
-	if path != "" {
-		return fmt.Sprintf("https://%s", path), nil
+	var pathAndQuery string
+
+	// Query contains mandatory "api-version" for "worflow"
+	if len(request.URL.Query()) > 0 {
+		pathAndQuery = request.URL.Path + "?" + request.URL.RawQuery
+	} else {
+		pathAndQuery = request.URL.Path
 	}
 
+	pathAndQuery = strings.TrimPrefix(pathAndQuery, requestPathPrefix)
+	if pathAndQuery != "" {
+		return fmt.Sprintf("https://%s", pathAndQuery), nil
+	}
 	authHeader := request.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", fmt.Errorf("neither webhook url nor bearer authorization present")
@@ -488,6 +526,6 @@ func extractWebhookFromRequest(request *http.Request, requestPathPrefix string) 
 	if !strings.HasPrefix(authHeader, bearerType) {
 		return "", fmt.Errorf("invalid bearer on authorization")
 	}
-	path = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerType))
-	return fmt.Sprintf("https://%s", path), nil
+	pathAndQuery = strings.TrimPrefix(authHeader, fmt.Sprintf("%s ", bearerType))
+	return fmt.Sprintf("https://%s", pathAndQuery), nil
 }

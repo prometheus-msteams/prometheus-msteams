@@ -48,6 +48,27 @@ func (m *templatedCard) Convert(ctx context.Context, promAlert webhook.Message) 
 	return card, nil
 }
 
+func (m *templatedCard) ConvertWorkflow(ctx context.Context, promAlert webhook.Message) (WorkflowConnectorCard, error) {
+	_, span := trace.StartSpan(ctx, "templatedCard.ConvertWorkflow")
+	defer span.End()
+
+	cardString, err := m.executeTemplate(promAlert)
+	if err != nil {
+		return WorkflowConnectorCard{}, err
+	}
+
+	var card WorkflowConnectorCard
+	if err := json.Unmarshal([]byte(cardString), &card); err != nil {
+		return WorkflowConnectorCard{}, err
+	}
+
+	if card.Type != "message" {
+		return WorkflowConnectorCard{}, errors.New("only message type is supported")
+	}
+
+	return card, nil
+}
+
 func (m *templatedCard) executeTemplate(promAlert webhook.Message) (string, error) {
 	// TODO(bzon): Maybe we can escape underscores after the office 365 card is finally created?
 	// That approach would be simpler to read and probably a performance gain because
