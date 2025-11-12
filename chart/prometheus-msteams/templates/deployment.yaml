@@ -71,7 +71,9 @@ spec:
           args:
             - -config-file=/etc/config/connectors.yaml
             - -template-file={{ .Values.templateFile }}
+{{- if .Values.workflowWebhook }}
             - -workflow-webhook={{ .Values.workflowWebhook }}
+{{- end }}
           {{- with .Values.container.additionalArgs }}
 {{ toYaml . | indent 12 }}
           {{- end}}
