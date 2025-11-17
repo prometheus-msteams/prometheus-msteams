@@ -9,12 +9,12 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/go-kit/kit v0.9.1-0.20191018122245-9f5354e50d79
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/josephburnett/jd v1.7.1
+	github.com/josephburnett/jd v1.9.2
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/oklog/run v1.1.0
