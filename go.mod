@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
-	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
+	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/go-kit/kit v0.9.1-0.20191018122245-9f5354e50d79
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/google/go-cmp v0.5.9
