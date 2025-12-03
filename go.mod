@@ -24,7 +24,7 @@ require (
 	github.com/prometheus/client_golang v1.15.0
 	go.opencensus.io v0.24.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/apimachinery v0.18.2 // indirect
+	k8s.io/apimachinery v0.18.8 // indirect
 	k8s.io/helm v2.17.0+incompatible
 )
 
