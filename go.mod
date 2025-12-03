@@ -20,7 +20,7 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/peterbourgon/ff v1.7.1
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/alertmanager v0.25.0
+	github.com/prometheus/alertmanager v0.25.1
 	github.com/prometheus/client_golang v1.15.0
 	go.opencensus.io v0.24.0
 	gopkg.in/yaml.v2 v2.4.0
