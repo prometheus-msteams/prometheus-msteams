@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/josephburnett/jd v1.9.2
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/oklog/run v1.1.0
+	github.com/oklog/run v1.2.0
 	github.com/peterbourgon/ff v1.7.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.25.1
