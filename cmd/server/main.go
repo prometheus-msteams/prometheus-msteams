@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -58,7 +57,7 @@ type ConnectorWithCustomTemplate struct {
 }
 
 func parseTeamsConfigFile(f string) (PromTeamsConfig, error) {
-	b, err := ioutil.ReadFile(f)
+	b, err := os.ReadFile(f)
 	if err != nil {
 		return PromTeamsConfig{}, err
 	}

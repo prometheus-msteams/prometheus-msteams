@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,7 +38,7 @@ func TestServer(t *testing.T) {
 	// Create a dummy Microsoft teams server.
 	teamsSrv := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			b, _ := ioutil.ReadAll(r.Body)
+			b, _ := io.ReadAll(r.Body)
 			logger.Log("request", string(b))
 			w.WriteHeader(200)
 			_, _ = w.Write([]byte("1"))
