@@ -1,14 +1,14 @@
 {{- if .Values.podDisruptionBudget.enabled }}
-{{- if (semverCompare ">=1.21-0" .Capabilities.KubeVersion.GitVersion) }}itVersion) }}
+{{- if (semverCompare ">=1.21-0" .Capabilities.KubeVersion.GitVersion) }}
 apiVersion: policy/v1
 {{- else }}
 apiVersion: policy/v1beta1
 {{- end }}
 kind: PodDisruptionBudget
 metadata:
-  name: {{ template "app.name" . }}quot; . }}
+  name: {{ template "app.name" . }}
   labels:
-    app: {{ template "app.name" . }}quot; . }}
+    app: {{ template "app.name" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -19,6 +19,6 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      app: {{ template "app.name" . }}quot; . }}
+      app: {{ template "app.name" . }}
       release: {{ .Release.Name }}
 {{- end }}
