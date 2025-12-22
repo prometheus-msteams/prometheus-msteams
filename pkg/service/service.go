@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/prometheus-msteams/prometheus-msteams/pkg/card"
@@ -127,7 +127,7 @@ func (s simpleService) post(ctx context.Context, c interface{}, url string) (Pos
 
 	pr.Status = resp.StatusCode
 
-	rb, err := ioutil.ReadAll(resp.Body)
+	rb, err := io.ReadAll(resp.Body)
 	if err != nil {
 		err = fmt.Errorf("failed reading http response body: %w", err)
 		pr.Message = err.Error()
