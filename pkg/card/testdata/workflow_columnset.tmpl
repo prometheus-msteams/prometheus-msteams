@@ -1,0 +1,24 @@
+{{ define "teams.card" }}
+{
+  "type": "message",
+  "attachments": [{
+    "contentType": "application/vnd.microsoft.card.adaptive",
+    "contentUrl": null,
+    "content": {
+      "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+      "type": "AdaptiveCard",
+      "version": "1.2",
+      "msteams": { "width": "Full" },
+      "body": [{
+        "type": "ColumnSet",
+        "style": "attention",
+        "columns": [{
+          "type": "Column",
+          "width": "stretch",
+          "items": [{ "type": "TextBlock", "text": "test" }]
+        }]
+      }]
+    }
+  }]
+}
+{{ end }}

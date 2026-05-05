@@ -7,25 +7,6 @@ import (
 	"github.com/prometheus/alertmanager/notify/webhook"
 )
 
-// FactSectionWorkflow represents a name/value pair fact for Workflow connector cards.
-type FactSectionWorkflow struct {
-	Title string `json:"title"`
-	Value string `json:"value"`
-}
-
-// Body represents a body element in an adaptive card for Workflow connector cards.
-type Body struct {
-	Type   string                `json:"type"`
-	Text   string                `json:"text"`
-	Weight string                `json:"weight,omitempty"`
-	Size   string                `json:"size,omitempty"`
-	Wrap   bool                  `json:"wrap,omitempty"`
-	Style  string                `json:"style,omitempty"`
-	Color  string                `json:"color,omitempty"`
-	Bleed  bool                  `json:"bleed,omitempty"`
-	Facts  []FactSectionWorkflow `json:"facts,omitempty"`
-}
-
 // BackgroundImage represents the background image configuration for an adaptive card.
 type BackgroundImage struct {
 	URL      string `json:"url"`
@@ -42,7 +23,7 @@ type Content struct {
 	Schema          string          `json:"$schema"`
 	Type            string          `json:"type"`
 	Version         string          `json:"version"`
-	Body            []Body          `json:"body"`
+	Body            []map[string]interface{} `json:"body"`
 	MsTeams         MsTeams         `json:"msteams"`
 	Actions         []Action        `json:"actions,omitempty"`
 	BackgroundImage BackgroundImage `json:"backgroundImage,omitempty"`
