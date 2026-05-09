@@ -20,13 +20,13 @@ type MsTeams struct {
 
 // Content represents the content of an adaptive card for Workflow connector cards.
 type Content struct {
-	Schema          string          `json:"$schema"`
-	Type            string          `json:"type"`
-	Version         string          `json:"version"`
+	Schema          string                   `json:"$schema"`
+	Type            string                   `json:"type"`
+	Version         string                   `json:"version"`
 	Body            []map[string]interface{} `json:"body"`
-	MsTeams         MsTeams         `json:"msteams"`
-	Actions         []Action        `json:"actions,omitempty"`
-	BackgroundImage BackgroundImage `json:"backgroundImage,omitempty"`
+	MsTeams         MsTeams                  `json:"msteams"`
+	Actions         []Action                 `json:"actions,omitempty"`
+	BackgroundImage BackgroundImage          `json:"backgroundImage,omitempty"`
 }
 
 // AdaptiveCardItem represents an adaptive card item within a Workflow connector card attachment.

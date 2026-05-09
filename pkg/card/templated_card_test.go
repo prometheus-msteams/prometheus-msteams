@@ -175,8 +175,8 @@ func Test_templatedCard_ConvertWorkflow(t *testing.T) {
 			templateFile:  "../../default-message-workflow-card.tmpl",
 			checkFn: func(t *testing.T, got WorkflowConnectorCard) {
 				t.Helper()
-				if got.Type != "message" {
-					t.Fatalf("want type %q, got %q", "message", got.Type)
+				if got.Type != workflowCardType {
+					t.Fatalf("want type %q, got %q", workflowCardType, got.Type)
 				}
 				if len(got.Attachments) != 1 {
 					t.Fatalf("want 1 attachment, got %d", len(got.Attachments))
@@ -213,8 +213,8 @@ func Test_templatedCard_ConvertWorkflow(t *testing.T) {
 			templateFile:  "./testdata/workflow_columnset.tmpl",
 			checkFn: func(t *testing.T, got WorkflowConnectorCard) {
 				t.Helper()
-				if got.Type != "message" {
-					t.Fatalf("want type %q, got %q", "message", got.Type)
+				if got.Type != workflowCardType {
+					t.Fatalf("want type %q, got %q", workflowCardType, got.Type)
 				}
 				if len(got.Attachments) != 1 {
 					t.Fatalf("want 1 attachment, got %d", len(got.Attachments))

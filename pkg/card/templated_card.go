@@ -17,6 +17,9 @@ import (
 
 const messageCardType = "MessageCard"
 
+const workflowCardType = "message"
+
+
 // templatedCard implements Converter using Alert manager templating.
 type templatedCard struct {
 	template *template.Template
@@ -64,7 +67,7 @@ func (m *templatedCard) ConvertWorkflow(ctx context.Context, promAlert webhook.M
 		return WorkflowConnectorCard{}, err
 	}
 
-	if card.Type != "message" {
+	if card.Type != workflowCardType {
 		return WorkflowConnectorCard{}, errors.New("only message type is supported")
 	}
 
