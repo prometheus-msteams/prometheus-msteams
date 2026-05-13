@@ -19,7 +19,6 @@ const messageCardType = "MessageCard"
 
 const workflowCardType = "message"
 
-
 // templatedCard implements Converter using Alert manager templating.
 type templatedCard struct {
 	template *template.Template

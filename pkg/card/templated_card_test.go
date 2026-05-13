@@ -24,6 +24,7 @@ const (
 	testLabelSummary    = "summary"
 	testLabelMonitor    = "monitor"
 	testSeverityWarning = "warning"
+	testTextBlockType   = "TextBlock"
 )
 
 func Test_templatedCard_Convert(t *testing.T) {
@@ -191,7 +192,7 @@ func Test_templatedCard_ConvertWorkflow(t *testing.T) {
 						types = append(types, typ)
 					}
 				}
-				wantTypes := []string{"TextBlock", "TextBlock", "TextBlock", "FactSet"}
+				wantTypes := []string{testTextBlockType, testTextBlockType, testTextBlockType, "FactSet"}
 				if diff := cmp.Diff(wantTypes, types); diff != "" {
 					t.Fatalf("body element types mismatch (-want +got):\n%s", diff)
 				}
