@@ -28,8 +28,8 @@ DOCKER_QUAY_USER=prometheusmsteams+ci
 DOCKER_HUB_REPO=prometheusmsteams/prometheus-msteams
 
 # Build the project
-all: clean dep create_bin_dir linux darwin windows
-	cd $(BINDIR) && shasum -a 256 ** > shasum256.txt
+all: clean dep create_bin_dir linux-amd64 linux-arm64 darwin windows
+	cd $(BINDIR) && shasum -a 256 * > shasum256.txt
 
 create_bin_dir:
 	rm -fr $(BINDIR)
@@ -41,6 +41,12 @@ github_release:
 linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-linux-$(GOARCH) ./cmd/server
 
+linux-amd64:
+	$(MAKE) linux GOARCH=amd64
+
+linux-arm64:
+	$(MAKE) linux GOARCH=arm64
+
 darwin:
 	CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-darwin-$(GOARCH) ./cmd/server
 
@@ -48,8 +54,9 @@ windows:
 	CGO_ENABLED=0 GOOS=windows GOARCH=$(GOARCH) $(GO) build $(LDFLAGS) -o $(BINDIR)/$(BINARY)-windows-$(GOARCH).exe ./cmd/server
 
 docker:
-	docker build -t $(DOCKER_HUB_REPO):$(VERSION) .
+	docker build --build-arg TARGETARCH=$(GOARCH) -t $(DOCKER_HUB_REPO):$(VERSION) .
 	docker tag $(DOCKER_HUB_REPO):$(VERSION) $(DOCKER_QUAY_REPO):$(VERSION)
+
 
 docker-hub-login:
 	echo ${DOCKER_PASSWORD} | docker login --password-stdin -u ${DOCKER_USER}
