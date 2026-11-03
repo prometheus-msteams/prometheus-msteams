@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    "schedule:weekly"
+  ],
+  "labels": ["dependencies"],
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
+  "packageRules": [
+    {
+      "description": "Wait a few days before taking a new release",
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "One grouped PR for non-major updates, merged automatically once required checks pass",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "non-major dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Minor bumps of 0.x versions can break, so they get their own PR and wait for review",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "/^v?0\\./",
+      "groupName": null,
+      "automerge": false
+    },
+    {
+      "description": "Major updates wait for approval on the Dependency Dashboard",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "The chart's own image tag follows our releases, not Renovate (ct lint would also need a chart version bump)",
+      "matchPackageNames": ["quay.io/prometheusmsteams/prometheus-msteams"],
+      "enabled": false
+    }
+  ]
+}
